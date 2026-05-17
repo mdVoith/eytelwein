@@ -1,0 +1,49 @@
+parameters:
+  python: ""
+  source_dir: ""
+  build_dir: ""
+  conf_dir: ""
+
+jobs:
+- job: sphinxsetup
+  pool:
+    vmImage: windows-latest
+  variables:
+    SPHINX_HOME: $(Pipeline.Workspace)/sphinx-cache
+
+  steps:
+  - task: UsePythonVersion@0
+    inputs:
+      versionSpec: ${{ parameters.python }}
+
+  - script: python -m pip install --upgrade pip setuptools wheel
+    displayName: "Upgrade pip, setuptools, and wheel"
+
+  - script: |
+      python -m pip install uv
+    displayName: "Install uv package manager"
+
+  - script: |
+      uv sync --dev
+    displayName: "Install project dependencies with uv"
+
+  - script: |
+      uv run pip install sphinx sphinx-autodoc-typehints sphinx-click
+    displayName: "Install Sphinx and Extensions in uv environment"
+
+  - script: |
+      uv run sphinx-apidoc -o ${{ parameters.conf_dir}} ${{ parameters.source_dir}} --force
+    displayName: "Run sphinx-apidoc"
+
+  - script: |
+      uv run sphinx-build -b html ${{ parameters.conf_dir}} ${{ parameters.build_dir}}
+    displayName: "Build Sphinx Documentation"
+    continueOnError: false
+
+  - task: PublishPipelineArtifact@1
+    inputs:
+      targetPath: ${{ parameters.build_dir }}
+      artifact: SphinxDocumentation
+      publishLocation: 'pipeline'
+    displayName: "Publish Sphinx Documentation Artifact"
+    condition: succeededOrFailed()

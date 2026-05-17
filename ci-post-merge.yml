@@ -1,0 +1,132 @@
+# Post-Merge Pipeline: Version bump and tag creation after PR merge to master
+# Runs ONLY on master branch after successful merge
+# Creates version bump commit and git tag on the actual master commit
+
+trigger:
+  branches:
+    include:
+      - master
+  paths:
+    include:
+      - 'src/**'
+      - 'tests/**'
+      - 'requirements.txt'
+    exclude:
+      - 'pyproject.toml'
+      - 'VERSION'
+
+parameters:
+  - name: python
+    displayName: Python version
+    type: string
+    default: '3.13'
+    values:
+      - '3.11'
+      - '3.12'
+      - '3.13'
+
+jobs:
+
+# VERSION BUMP: Automatic version bump and tag creation on master
+- job: VersionBump
+  displayName: "Version Bump & Tag Creation"
+  condition: and(
+      succeeded(),
+      ne(variables['Build.Reason'], 'PullRequest'),
+      eq(variables['Build.SourceBranch'], 'refs/heads/master'))
+  pool:
+    vmImage: windows-latest
+  variables:
+    CI: "true"
+
+  steps:
+  - checkout: self
+    persistCredentials: true
+    fetchDepth: 0
+    clean: true
+    displayName: Checkout with full history
+
+  - task: UsePythonVersion@0
+    inputs:
+      versionSpec: ${{ parameters.python }}
+
+  - script: |
+      pip install commitizen
+    displayName: Install Commitizen
+
+  - task: PowerShell@2
+    inputs:
+      targetType: 'inline'
+      script: |
+        git config --global user.name "Azure Pipeline"
+        git config --global user.email "pipeline@azure.com"
+    displayName: Configure git identity
+
+  - task: PowerShell@2
+    inputs:
+      targetType: 'inline'
+      script: |
+        $branchName = "$(Build.SourceBranchName)"
+        Write-Host "Working on branch: $branchName"
+
+        Write-Host "Fetching latest changes and tags..."
+        git fetch --all --tags --force
+        git checkout $branchName
+
+        # Derive increment from the squash-merge commit message (contains the PR title)
+        $msg = git log -1 --pretty=%s
+        Write-Host "Squash commit message: $msg"
+        $increment = if ($msg -match 'BREAKING[- ]CHANGE|!:') { 'MAJOR' }
+                     elseif ($msg -match '\bfeat:') { 'MINOR' }
+                     elseif ($msg -match '\b(fix|perf|refactor):') { 'PATCH' }
+                     else { 'PATCH' }
+        Write-Host "Detected increment: $increment"
+
+        Write-Host "Running Commitizen bump (--increment $increment)..."
+        cz bump --increment $increment --yes
+
+        $NEW_VERSION = (cz version --project).Trim()
+        Write-Host "Bumped project version to: $NEW_VERSION"
+
+        # Update the build run name to show version
+        Write-Host "##vso[build.updatebuildnumber]v$NEW_VERSION"
+
+        # Export for later tasks
+        Write-Host "##vso[task.setvariable variable=NEW_VERSION]$NEW_VERSION"
+    displayName: Run cz bump
+    continueOnError: false
+
+  - task: PowerShell@2
+    inputs:
+      targetType: 'inline'
+      script: |
+        $branchName = "$(Build.SourceBranchName)"
+        Write-Host "Pushing version bump commit to $branchName..."
+        git -c http.extraheader="AUTHORIZATION: bearer $(System.AccessToken)" push origin HEAD:$branchName
+    displayName: Push version bump commit
+    env:
+      System.AccessToken: $(System.AccessToken)
+
+  - task: PowerShell@2
+    inputs:
+      targetType: 'inline'
+      script: |
+        $NEW_VERSION = "$(NEW_VERSION)"
+        $tag = "v$NEW_VERSION"
+        Write-Host "Ensuring tag $tag exists..."
+
+        # Check if tag already exists (Commitizen may have created it)
+        git rev-parse -q --verify "refs/tags/$tag"
+        if ($LASTEXITCODE -ne 0) {
+          Write-Host "Creating annotated tag $tag..."
+          git tag -a "$tag" -m "chore(release): $tag"
+        } else {
+          Write-Host "Tag $tag already exists."
+        }
+
+        Write-Host "Pushing tag $tag..."
+        git -c http.extraheader="AUTHORIZATION: bearer $(System.AccessToken)" push origin "$tag"
+        Write-Host "Created/pushed tag $tag"
+    displayName: Create and push git tag
+    env:
+      System.AccessToken: $(System.AccessToken)

@@ -1,0 +1,161 @@
+# PR Pipeline: Fast feedback on every pull request
+# Runs pre-commit checks (mypy, ruff, commitizen) + full pytest test suite
+# Protects master by catching failures early before merge
+
+trigger: none  # Manual/PR trigger only
+
+pr:
+  branches:
+    include:
+      - master
+      - main
+  paths:
+    include:
+      - 'src/**'
+      - 'tests/**'
+      - 'pyproject.toml'
+      - 'requirements.txt'
+
+parameters:
+  - name: python
+    displayName: Python version
+    type: string
+    default: '3.13'
+    values:
+      - '3.11'
+      - '3.12'
+      - '3.13'
+
+jobs:
+
+# FAST CHECKS: Pre-commit (mypy, ruff, commitizen - exclude pip-compile)
+- job: FastPrecommit
+  displayName: "Fast Pre-commit Checks"
+  pool:
+    vmImage: windows-latest
+  variables:
+    PRE_COMMIT_HOME: $(Pipeline.Workspace)/pre-commit-cache
+    CI: "true"
+
+  steps:
+  - checkout: self
+    clean: true
+    persistCredentials: true
+
+  - task: PowerShell@2
+    displayName: "Validate PR title (conventional commit)"
+    condition: eq(variables['Build.Reason'], 'PullRequest')
+    inputs:
+      targetType: 'inline'
+      script: |
+        $prId = $env:PR_ID
+        $apiUrl = "$env:COLLECTION_URI$env:TEAM_PROJECT/_apis/git/repositories/$env:REPO_ID/pullRequests/${prId}?api-version=7.0"
+        Write-Host "Fetching PR title from: $apiUrl"
+        $response = Invoke-RestMethod -Uri $apiUrl -Headers @{
+          Authorization = "Bearer $env:SYSTEM_TOKEN"
+        } -Method Get
+        $title = $response.title
+        Write-Host "PR #${prId} title: $title"
+
+        $pattern = '^(feat|fix|docs|style|refactor|perf|test|build|ci|chore|revert)(\(.+\))?(!)?: .+'
+        if ($title -notmatch $pattern) {
+          Write-Host "##vso[task.logissue type=error]PR title does not follow conventional commit format: '$title'"
+          Write-Host "Expected format: <type>(<scope>): <description>"
+          Write-Host "Types: feat, fix, docs, style, refactor, perf, test, build, ci, chore, revert"
+          exit 1
+        }
+        Write-Host "PR title OK: $title"
+    env:
+      PR_ID: $(System.PullRequest.PullRequestId)
+      COLLECTION_URI: $(System.CollectionUri)
+      TEAM_PROJECT: $(System.TeamProject)
+      REPO_ID: $(Build.Repository.ID)
+      SYSTEM_TOKEN: $(System.AccessToken)
+
+  - task: UsePythonVersion@0
+    inputs:
+      versionSpec: ${{ parameters.python }}
+
+  - script: |
+      echo "##vso[task.setvariable variable=PY]$(python -VV)"
+    displayName: set version variables
+
+  - task: Cache@2
+    inputs:
+      key: pre-commit | "4" | .pre-commit-config.yaml | "$(PY)"
+      path: $(PRE_COMMIT_HOME)
+    displayName: Cache pre-commit environments
+
+  - script: python -m pip install pre-commit
+    displayName: install pre-commit
+
+  - script: |
+      python -m pip install --upgrade pip
+      pip install -r requirements.txt
+    displayName: install dependencies
+
+  - script: |
+      $env:SKIP = "pip-compile"
+      pre-commit run --all-files --show-diff-on-failure
+    displayName: "run pre-commit (skip pip-compile)"
+    continueOnError: false
+
+# FULL TEST SUITE: Pytest comprehensive validation
+- job: FullTestSuite
+  displayName: "Full Pytest Test Suite"
+  dependsOn: FastPrecommit
+  condition: succeeded()
+  pool:
+    vmImage: windows-latest
+  timeoutInMinutes: 30
+  variables:
+    CI: "true"
+
+  steps:
+  - checkout: self
+    clean: true
+    persistCredentials: true
+
+  - task: UsePythonVersion@0
+    inputs:
+      versionSpec: ${{ parameters.python }}
+
+  - script: |
+      python -m pip install --upgrade pip
+      pip install -r requirements.txt
+      pip install pytest-cov
+    displayName: install dependencies
+
+  - task: Cache@2
+    inputs:
+      key: pytest-cache | "$(Build.SourceVersion)"
+      path: .pytest_cache
+    displayName: Cache pytest results
+
+  - script: |
+      python -m pytest tests/ ^
+        --reverse ^
+        -v ^
+        --tb=short ^
+        --junitxml=junit/test-results.xml ^
+        --cov=src ^
+        --cov-report=term ^
+        --cov-report=xml:coverage.xml ^
+        --cov-report=html:htmlcov
+    displayName: "run full pytest suite (reverse mode with coverage)"
+    continueOnError: false
+
+  - task: PublishTestResults@2
+    inputs:
+      testResultsFiles: 'junit/test-results.xml'
+      testRunTitle: 'Pytest Results'
+    condition: succeededOrFailed()
+    displayName: Publish test results
+
+  - task: PublishCodeCoverageResults@1
+    inputs:
+      codeCoverageTool: Cobertura
+      summaryFileLocation: '$(System.DefaultWorkingDirectory)/**/coverage.xml'
+      reportDirectory: '$(System.DefaultWorkingDirectory)/htmlcov'
+    condition: succeededOrFailed()
+    displayName: Publish code coverage

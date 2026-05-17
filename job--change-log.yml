@@ -1,0 +1,39 @@
+jobs:
+  - job: Generate_Changelog
+    displayName: "Generate Version & Changelog"
+    dependsOn:
+      - precommit
+    condition: and(succeeded(), ne(variables['Build.Reason'], 'PullRequest'))
+    pool:
+      vmImage: "ubuntu-latest"
+
+    steps:
+      - checkout: self
+        persistCredentials: true
+        fetchDepth: 0
+
+      - script: |
+          pip install commitizen
+        displayName: "Install Commitizen"
+
+      - script: |
+          cz bump --yes
+          NEW_VERSION=$(cz version --project)
+          echo "##vso[task.setvariable variable=NEW_VERSION]$NEW_VERSION"
+        displayName: "Bump Version & Generate Changelog"
+
+      - script: |
+          git config --global user.name "Azure Pipeline"
+          git config --global user.email "pipeline@azure.com"
+          git add .
+          git commit -m "chore(release): bump version to $(NEW_VERSION) [skip ci]" || echo "Nothing to commit."
+        displayName: "Commit Version Bump & Changelog"
+
+      - script: |
+          git push origin HEAD:refs/heads/$(Build.SourceBranchName)
+        displayName: "Push Changes to Repository"
+
+      - script: |
+          git tag v$(NEW_VERSION)
+          git push origin v$(NEW_VERSION)
+        displayName: "Create & Push Git Tag"
