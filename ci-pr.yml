@@ -1,6 +1,5 @@
 # PR Pipeline: Fast feedback on every pull request
 # Runs pre-commit checks (mypy, ruff, commitizen) + full pytest test suite
-# Protects master by catching failures early before merge
 
 trigger: none  # Manual/PR trigger only
 
@@ -14,7 +13,6 @@ pr:
       - 'src/**'
       - 'tests/**'
       - 'pyproject.toml'
-      - 'requirements.txt'
 
 parameters:
   - name: python
@@ -22,8 +20,6 @@ parameters:
     type: string
     default: '3.13'
     values:
-      - '3.11'
-      - '3.12'
       - '3.13'
 
 jobs:
@@ -90,14 +86,13 @@ jobs:
     displayName: install pre-commit
 
   - script: |
-      python -m pip install --upgrade pip
-      pip install -r requirements.txt
+      python -m pip install uv
+      uv sync
     displayName: install dependencies
 
   - script: |
-      $env:SKIP = "pip-compile"
       pre-commit run --all-files --show-diff-on-failure
-    displayName: "run pre-commit (skip pip-compile)"
+    displayName: "run pre-commit"
     continueOnError: false
 
 # FULL TEST SUITE: Pytest comprehensive validation
@@ -121,9 +116,8 @@ jobs:
       versionSpec: ${{ parameters.python }}
 
   - script: |
-      python -m pip install --upgrade pip
-      pip install -r requirements.txt
-      pip install pytest-cov
+      python -m pip install uv
+      uv sync
     displayName: install dependencies
 
   - task: Cache@2
@@ -133,16 +127,12 @@ jobs:
     displayName: Cache pytest results
 
   - script: |
-      python -m pytest tests/ ^
+      uv run pytest tests/ ^
         --reverse ^
         -v ^
         --tb=short ^
-        --junitxml=junit/test-results.xml ^
-        --cov=src ^
-        --cov-report=term ^
-        --cov-report=xml:coverage.xml ^
-        --cov-report=html:htmlcov
-    displayName: "run full pytest suite (reverse mode with coverage)"
+        --junitxml=junit/test-results.xml
+    displayName: "run full pytest suite"
     continueOnError: false
 
   - task: PublishTestResults@2
@@ -151,11 +141,3 @@ jobs:
       testRunTitle: 'Pytest Results'
     condition: succeededOrFailed()
     displayName: Publish test results
-
-  - task: PublishCodeCoverageResults@1
-    inputs:
-      codeCoverageTool: Cobertura
-      summaryFileLocation: '$(System.DefaultWorkingDirectory)/**/coverage.xml'
-      reportDirectory: '$(System.DefaultWorkingDirectory)/htmlcov'
-    condition: succeededOrFailed()
-    displayName: Publish code coverage

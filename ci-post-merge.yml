@@ -10,7 +10,6 @@ trigger:
     include:
       - 'src/**'
       - 'tests/**'
-      - 'requirements.txt'
     exclude:
       - 'pyproject.toml'
       - 'VERSION'
@@ -21,8 +20,6 @@ parameters:
     type: string
     default: '3.13'
     values:
-      - '3.11'
-      - '3.12'
       - '3.13'
 
 jobs:

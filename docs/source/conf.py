@@ -9,8 +9,8 @@ sys.path.insert(0, os.path.abspath('../../src/'))
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
-project = 'eytelwein_export'
-copyright = '2026, Marco Dorigo'
+project = 'eytelwein'
+copyright = '2025, Voith Group'
 author = 'Marco Dorigo'
 
 # -- General configuration ---------------------------------------------------

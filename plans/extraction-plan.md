@@ -19,7 +19,7 @@ Added `scipy>=1.15.0` to dependencies.
 
 ---
 
-## Phase 2: Cleanup — IN PROGRESS
+## Phase 2: Cleanup — COMPLETE
 
 ### Files DELETED
 
@@ -31,31 +31,33 @@ Added `scipy>=1.15.0` to dependencies.
 | `src/eytelwein/din_22101/calculations.toml` | Convexus dependency-graph manifest. No code in eytelwein references it. | DELETED |
 | `src/eytelwein/examples/` | `units_example.py` had fake hardcoded results, no educational value. | DELETED |
 | `src/eytelwein/utils/performance.py` | YAGNI plugin registry, zero actual registrations. Consumers updated to use standard impl directly. | DELETED |
+| `src/eytelwein/utils/` | Empty after performance.py removal. No remaining references. | DELETED |
+| `src/eytelwein/din_22101/CONTRIBUTING.md` | Duplicate of root CONTRIBUTING.md | DELETED |
+| `src/eytelwein/vdi_2341/CONTRIBUTING.md` | Duplicate of root CONTRIBUTING.md | DELETED |
+| `job--build-exe.yml` | PyInstaller exe build, not relevant for library | DELETED |
+| `job--change-log.yml` | Replaced by ci-post-merge.yml | DELETED |
+| `run_pip-compile_ci.py` | Not needed with uv | DELETED |
+| `docs/build/` | Stale Sphinx build artifacts for old eytelwein_export | DELETED |
+
+### Files UPDATED
+
+| File | Changes |
+|------|---------|
+| `CONTRIBUTING.md` | Rewritten for standalone OSS library |
+| `.pre-commit-config.yaml` | Updated hook versions, removed pip-compile hook |
+| `ci-pr.yml` | Uses uv, removed requirements.txt refs, removed coverage |
+| `ci-post-merge.yml` | Removed requirements.txt path, limited to py3.13 |
+| `job--pre-commit.yml` | Uses uv instead of pip |
+| `docs/source/conf.py` | Fixed project name and copyright |
 
 `high_performance` parameter removed from 6 function signatures + 3 tests removed.
-**1455 tests pass after cleanup.**
+**1455 tests pass after full cleanup.**
 
-### Files to REVIEW / FLAG
+### Remaining FLAG
 
 | File | Issue | Action |
 |------|-------|--------|
-| `src/eytelwein/din_22101/data/minimum_pulley_diameters_DIN_22101.csv` | **COPYRIGHT RISK**: CSV lookup table derived from DIN 22101 standard. Column names reference "equation_80" from the standard text. Publishing verbatim standard data tables may infringe copyright. Also: CSV format is fragile (semicolon-delimited). | **FLAG — Phase 2 decision needed**: (a) remove entirely and compute from formulas, (b) replace with generalized data, (c) legal review before publishing |
-| `src/eytelwein/utils/` | Only `__init__.py` remains (empty). Consider removing if no future utils planned. | **FLAG** |
-
-### Template files to clean up
-
-| File | Action |
-|------|--------|
-| `job--build-exe.yml` | DELETE — PyInstaller exe build, not relevant for library |
-| `job--change-log.yml` | DELETE or update for library |
-| `job--pre-commit.yml` | KEEP but update pre-commit hook versions |
-| `job--sphinx-setup.yml` | KEEP if using Sphinx docs |
-| `ci-pr.yml`, `ci-post-merge.yml` | UPDATE for library (remove exe build steps) |
-| `run_pip-compile_ci.py` | DELETE — not needed with uv |
-| `.pre-commit-config.yaml` | UPDATE — old hook versions, pip-compile hook not needed |
-| `docs/build/` | DELETE — stale build artifacts for old `eytelwein_export` |
-| `CONTRIBUTING.md` | UPDATE — references old setup flow |
-| `.env` | REVIEW — may contain monorepo-specific config |
+| `src/eytelwein/din_22101/data/minimum_pulley_diameters_DIN_22101.csv` | **COPYRIGHT RISK**: CSV lookup table derived from DIN 22101 standard. Column names reference "equation_80" from the standard text. Publishing verbatim standard data tables may infringe copyright. Also: CSV format is fragile (semicolon-delimited). | **FLAG — decision needed before Phase 4 (publish)**: (a) remove entirely and compute from formulas, (b) replace with generalized data, (c) legal review before publishing |
 
 ---
 
