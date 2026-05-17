@@ -61,12 +61,47 @@ Added `scipy>=1.15.0` to dependencies.
 
 ---
 
-## Phase 3: Renaming (if package name changes from `eytelwein`)
+## Phase 3: Standards Decoupling (Option C — Hybrid) — PENDING
 
-- Find-and-replace all `from eytelwein.` → `from <new_name>.`
-- Rename `src/eytelwein/` → `src/<new_name>/`
-- Update `pyproject.toml`
-- Run full test suite after each rename batch
+**Goal**: Remove all references to copyrighted standards (DIN 22101, VDI 2341) from
+module names and docstrings. Function names, enum names, and private variables are
+already domain-generic and stay unchanged.
+
+**Reference**: [`plans/renaming-map.md`](renaming-map.md) — full mapping of every rename.
+
+### Step 3a: Rename directories
+
+| Old | New |
+|---|---|
+| `src/eytelwein/din_22101/` | `src/eytelwein/belt_conveyor_design/` |
+| `src/eytelwein/vdi_2341/` | `src/eytelwein/idler_design/` |
+| `tests/test_din_22101/` | `tests/test_belt_conveyor_design/` |
+| `tests/test_vdi_2341/` | `tests/test_idler_design/` |
+
+### Step 3b: Fix all import paths
+
+- `eytelwein.din_22101` → `eytelwein.belt_conveyor_design` (in all `__init__.py`, source, and test files)
+- `eytelwein.vdi_2341` → `eytelwein.idler_design` (in all `__init__.py`, source, and test files)
+- Run full test suite after
+
+### Step 3c: Rename CSV file + column
+
+- `minimum_pulley_diameters_DIN_22101.csv` → `minimum_pulley_diameters.csv`
+- Column `D_Tr_as_per_equation_80_mm` → `reference_diameter_mm`
+- Update all code that reads this CSV
+
+### Step 3d: Strip docstring standard references
+
+- Remove all "according to DIN 22101", "per VDI 2341", "DIN 22101-3", equation references
+- Update root `__init__.py` docstring
+- Run full test suite after
+
+### Step 3e: Validate
+
+- `uv run pytest tests/` — all tests pass
+- `uv run ruff check src/` — no lint issues
+- `uv run mypy src/` — no type errors
+- Manual review of `renaming-map.md` — all items addressed
 
 ---
 
@@ -84,8 +119,17 @@ Added `scipy>=1.15.0` to dependencies.
 
 - Add `eytelwein>=0.1.0` to convexus dependencies
 - Remove `src/eytelwein/` from convexus
-- Update all imports in domain
+- Update all imports in domain using `plans/renaming-map.md` as reference
 - Single PR
+
+---
+
+## Phase 6: Cleanup
+
+- Copy `plans/renaming-map.md` into convexus repo (for reference during switchover)
+- Delete `plans/renaming-map.md` from eytelwein repo
+- Delete `plans/extraction-plan.md` from eytelwein repo (extraction is complete)
+- Commit cleanup
 
 ---
 
