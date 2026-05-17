@@ -2,11 +2,11 @@
 Centralized Unit Registry for Eytelwein Package.
 
 This module provides a singleton implementation of Pint's UnitRegistry,
-ensuring consistent unit handling and validation across all standards
-(DIN 22101, VDI 2341, etc.) in the Eytelwein package.
+ensuring consistent unit handling and validation across all calculation
+modules in the Eytelwein package.
 
-It is based on the existing unit registry implementation from DIN 22101
-but is now centralized for all conveyor calculation standards.
+It is based on the existing unit registry implementation
+but is now centralized for all conveyor calculation modules.
 """
 
 import pint
@@ -22,7 +22,7 @@ class UnitRegistrySingleton:
     """
 
     _instance: Optional["UnitRegistrySingleton"] = None
-    _registry: Optional[pint.UnitRegistry] = None
+    _registry: pint.UnitRegistry | None = None
 
     def __new__(cls):
         if cls._instance is None:
@@ -89,7 +89,7 @@ def get_unit_registry() -> pint.UnitRegistry:
 # Common unit utilities
 def ensure_quantity(
     value: Union[float, int, "pint.Quantity"],
-    unit: Optional[Union[str, "pint.Unit"]] = None,
+    unit: Union[str, "pint.Unit"] | None = None,
 ) -> "pint.Quantity":
     """
     Ensure a value is a Quantity object with the specified unit.

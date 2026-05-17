@@ -14,8 +14,8 @@ We use "STANDARD_GRAVITY" rather than just "GRAVITY" for several reasons:
    value of 9.80665 m/s², rather than local gravitational acceleration which varies.
 2. Physical Reality: Actual gravity varies across Earth's surface - it's stronger at the
    poles (9.83 m/s²), weaker at the equator (9.78 m/s²), and decreases with altitude.
-3. Engineering Context: For conveyor belt calculations in DIN 22101, the standard
-   specifically uses this reference value to ensure consistency regardless of location.
+3. Engineering Context: For conveyor belt calculations, the standard
+   reference value ensures consistency regardless of location.
 4. Naming Convention: This follows established naming patterns in scientific libraries
    and engineering standards.
 """

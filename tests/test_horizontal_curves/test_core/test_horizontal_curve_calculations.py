@@ -2,7 +2,7 @@
 Tests for public horizontal curve calculation functions.
 
 This module tests the public API functions with comprehensive unit handling,
-error validation, and the new sections-based architecture following DIN 22101 patterns.
+error validation, and the new sections-based architecture.
 """
 
 import math
@@ -183,7 +183,7 @@ class TestPublicFunctionErrorHandling:
 
 
 class TestSectionsFunction:
-    """Test the sections function following DIN 22101 patterns."""
+    """Test the sections function."""
 
     def test_basic_sections_calculation(self):
         """Test basic multi-section calculation."""

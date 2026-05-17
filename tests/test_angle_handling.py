@@ -1,15 +1,15 @@
 import math
 
-from eytelwein.din_22101.extended._design_layout_of_drive_system import (
+from eytelwein.belt_conveyor_design.extended._design_layout_of_drive_system import (
     _angle_of_inclination_from_horizontal_length_and_lift,
 )
-from eytelwein.din_22101.extended._volume_flow_mass_flow import (
+from eytelwein.belt_conveyor_design.extended._volume_flow_mass_flow import (
     _get_usable_belt_width_from_skirt_board_width,
     _convert_equivalent_angle_of_slope_to_surcharge_angle,
     _convert_surcharge_angle_to_equivalent_angle_of_slope,
     _get_material_bed_depth,
 )
-from eytelwein.din_22101.core._volume_flow_mass_flow import (
+from eytelwein.belt_conveyor_design.core._volume_flow_mass_flow import (
     _partial_cross_section_at_water_fill,
     _partial_cross_section_above_water_fill,
     _cross_section_of_fill,
@@ -162,7 +162,7 @@ def test_partial_cross_sections():
 
 def test_public_interface_with_units():
     """Test the public interface functions with units."""
-    from eytelwein.din_22101.extended.volume_flow_mass_flow import (
+    from eytelwein.belt_conveyor_design.extended.volume_flow_mass_flow import (
         convert_equivalent_angle_of_slope_to_surcharge_angle,
         convert_surcharge_angle_to_equivalent_angle_of_slope,
         get_material_bed_depth,

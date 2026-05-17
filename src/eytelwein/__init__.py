@@ -2,15 +2,15 @@
 Eytelwein library for belt conveyor calculations.
 
 This library provides comprehensive calculations for belt conveyor systems
-based on established standards including DIN 22101 and VDI 2341, as well
+based on established engineering methodologies, as well
 as research-based methodologies for specialized applications.
 
 Modules
 -------
-din_22101
-    Belt conveyor calculations according to DIN 22101 standard
-vdi_2341
-    Idler roll calculations according to VDI 2341 standard
+belt_conveyor_design
+    Belt conveyor design calculations
+idler_design
+    Idler roll load calculations
 horizontal_curves
     Research-based horizontal curve force calculations
 main
@@ -18,14 +18,14 @@ main
 """
 
 # Import key functions for easy access
-from . import din_22101, vdi_2341, horizontal_curves
+from . import belt_conveyor_design, idler_design, horizontal_curves
 from . import main
 
 __version__ = "0.1.0"
 
 __all__ = [
-    "din_22101",
-    "vdi_2341",
+    "belt_conveyor_design",
+    "idler_design",
     "horizontal_curves",
     "main",
 ]
