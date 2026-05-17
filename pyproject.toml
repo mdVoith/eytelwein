@@ -1,16 +1,28 @@
 [project]
-name = "eytelwein-export"
+name = "eytelwein"
 version = "0.1.0"
-description = "Add your description here"
+description = "Belt conveyor calculation library (DIN 22101, VDI 2341, horizontal curves)"
 readme = "README.md"
+license = "Apache-2.0"
 authors = [
     { name = "Dorigo, Marco", email = "marco.dorigo@voith.com" }
 ]
 requires-python = ">=3.13"
-dependencies = []
+dependencies = [
+    "numpy>=2.2.4",
+    "pint>=0.24.4",
+    "scipy>=1.15.0",
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: Apache Software License",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Scientific/Engineering",
+]
 
-[project.scripts]
-eytelwein-export = "eytelwein_export:main"
+[project.urls]
+Repository = "https://github.com/voith/eytelwein"
 
 [build-system]
 requires = ["hatchling"]
@@ -19,10 +31,8 @@ build-backend = "hatchling.build"
 [dependency-groups]
 dev = [
     "mypy>=2.1.0",
-    "pip-tools>=7.5.3",
     "pytest>=9.0.3",
     "ruff>=0.15.13",
-    "sphinx>=9.1.0",
 ]
 
 [tool.ruff.format]
