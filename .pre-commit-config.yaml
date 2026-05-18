@@ -1,0 +1,46 @@
+# Pre-commit hook configuration
+# LOCAL: Runs on changed files only (via 'files' patterns) for fast feedback
+# CI: Runs on all files with --all-files flag to ensure master quality
+
+default_stages: [pre-commit]
+
+repos:
+
+-   repo: https://github.com/commitizen-tools/commitizen
+    rev: v4.4.1
+    hooks:
+      - id: commitizen
+        stages: [commit-msg]
+
+-   repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.15.0
+    hooks:
+    -   id: mypy
+        files: ^src/.*\.py$
+
+-   repo: https://github.com/asottile/pyupgrade
+    rev: v3.19.1
+    hooks:
+    -   id: pyupgrade
+        args: [--py313-plus]
+
+-   repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.11.12
+    hooks:
+      - id: ruff
+        args: [ --fix ]
+        files: ^src/.*\.py$
+      - id: ruff-format
+        files: ^src/.*\.py$
+
+-   repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: check-toml
+      - id: check-yaml
+      - id: check-json
+      - id: end-of-file-fixer
+      - id: trailing-whitespace
+      - id: check-merge-conflict
+      - id: check-case-conflict
+      - id: check-added-large-files

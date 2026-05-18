@@ -1,0 +1,37 @@
+<svg viewBox="0 0 140 60" xmlns="http://www.w3.org/2000/svg">
+  <g fill="none" stroke="#021B80" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+
+    <!-- Upper belt -->
+    <path d="M45 20 L80 20" />
+
+    <!-- Lower belt -->
+    <path d="M45 40 L80 40" />
+
+    <!-- Semicircle -->
+    <path d="M80 20 A10 10 0 0 1 80 40" />
+
+    <!-- Outgoing belt -->
+    <path d="M80 30 L115 30" />
+
+    <!-- Right arrow -->
+    <path d="M115 30 L108 26" />
+    <path d="M115 30 L108 34" />
+
+    <!-- Left arrows -->
+    <path d="M45 20 L53 17" />
+    <path d="M45 20 L53 23" />
+    <path d="M45 40 L53 37" />
+    <path d="M45 40 L53 43" />
+
+  </g>
+
+  <!-- E -->
+  <text x="68" y="36"
+        font-size="18"
+        font-weight="700"
+        font-family="Voith Wide, Arial, sans-serif"
+        text-anchor="middle"
+        fill="#084AFF">
+    E
+  </text>
+</svg>
