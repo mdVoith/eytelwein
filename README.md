@@ -56,6 +56,23 @@ b = usable_belt_width(belt_width=1200 * u.mm)
 print(b)  # 1050.0 millimeter
 ```
 
+## Real-World Example Script
+
+For a more practical, end-to-end workflow, run the example script in
+`examples/real_world_cross_section_flow.py`.
+
+It demonstrates a compact sizing pipeline with hard-coded values:
+
+- usable belt width from belt geometry
+- cross-section of fill from trough geometry
+- volume flow from cross-section and belt speed
+- mass flow from volume flow and bulk density
+- inverse cross-check for required usable width
+
+```bash
+python examples/real_world_cross_section_flow.py
+```
+
 ## Architecture
 
 ```
