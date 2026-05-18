@@ -7,8 +7,8 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/voith/eytelwein/actions"><img src="https://github.com/voith/eytelwein/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
-  <a href="https://github.com/voith/eytelwein/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-Apache--2.0-blue.svg" alt="License"></a>
+  <a href="https://github.com/mdVoith/eytelwein/actions"><img src="https://github.com/mdVoith/eytelwein/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
+  <a href="https://github.com/mdVoith/eytelwein/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-Apache--2.0-blue.svg" alt="License"></a>
   <img src="https://img.shields.io/badge/python-≥3.13-blue.svg" alt="Python">
 </p>
 
