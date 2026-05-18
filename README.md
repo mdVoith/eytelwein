@@ -87,6 +87,9 @@ Dedicated, runnable scripts are available under `examples/features/`.
   Shows dimensional unit mismatch handling (expected `ValueError`).
 - `d_physically_invalid_inputs_are_caught.py`
   Shows physically invalid input handling (expected `ValueError`).
+- `e_output_precision_control.py`
+  Shows how to control rounding with `precision` (default, custom,
+  and unrounded output).
 
 Run each from repository root:
 
@@ -95,6 +98,7 @@ python examples/features/a_output_unit_minimum_tension.py
 python examples/features/b_imperial_input_dual_output.py
 python examples/features/c_unit_errors_are_caught.py
 python examples/features/d_physically_invalid_inputs_are_caught.py
+python examples/features/e_output_precision_control.py
 ```
 
 ## Architecture
