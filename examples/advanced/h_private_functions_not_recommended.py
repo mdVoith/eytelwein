@@ -74,6 +74,28 @@ def main() -> None:
     delta = (area_private_correct - area_public).to(u.meter**2)
     print(f"- Public/private delta (correct): {delta:~P}")
 
+    print("\nAllowable sag input formats:")
+    tension_sag_fraction = minimum_belt_tension_from_sag_carry(
+        line_load_belt=18.0 * u.kilogram / u.meter,
+        line_load_material=62.0 * u.kilogram / u.meter,
+        idler_spacing=1.2 * u.meter,
+        allowable_sag=0.01 * u.dimensionless,
+        unit="kilonewton",
+        precision=None,
+    )
+    tension_sag_percent = minimum_belt_tension_from_sag_carry(
+        line_load_belt=18.0 * u.kilogram / u.meter,
+        line_load_material=62.0 * u.kilogram / u.meter,
+        idler_spacing=1.2 * u.meter,
+        allowable_sag=1.0 * u.percent,
+        unit="kilonewton",
+        precision=None,
+    )
+    sag_delta = (tension_sag_percent - tension_sag_fraction).to(u.kilonewton)
+    print(f"- Sag as 0.01 (dimensionless): {tension_sag_fraction:~P}")
+    print(f"- Sag as 1 % (percent):        {tension_sag_percent:~P}")
+    print(f"- Difference:                  {sag_delta:~P}")
+
     print("\nValidation contrast (negative idler spacing):")
     try:
         minimum_belt_tension_from_sag_carry(
