@@ -109,6 +109,28 @@ python examples/features/f_round_trip_consistency.py
 python examples/features/g_constants_and_enums.py
 ```
 
+## Advanced Example (Private API, Not Recommended)
+
+Advanced example scripts live under `examples/advanced/` and are intentionally
+separate from the standard feature examples.
+
+Use this path only if you explicitly accept the tradeoffs:
+
+- advanced
+- unstable API surface
+- no unit safety
+- no backwards-compatibility promise
+
+`h_private_functions_not_recommended.py` compares public and private calls
+with the same intended inputs, shows that private angle inputs must be radians,
+and demonstrates that private helpers can skip public-layer validation.
+
+Run from repository root:
+
+```bash
+python examples/advanced/h_private_functions_not_recommended.py
+```
+
 ## Architecture
 
 ```
