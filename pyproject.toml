@@ -1,7 +1,7 @@
 [project]
 name = "eytelwein"
 version = "0.1.0"
-description = "Belt conveyor calculation library (DIN 22101, VDI 2341, horizontal curves)"
+description = "Belt conveyor calculation library"
 readme = "README.md"
 license = "Apache-2.0"
 authors = [
