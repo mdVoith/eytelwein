@@ -90,6 +90,9 @@ Dedicated, runnable scripts are available under `examples/features/`.
 - `e_output_precision_control.py`
   Shows how to control rounding with `precision` (default, custom,
   and unrounded output).
+- `f_round_trip_consistency.py`
+  Shows forward/inverse round-trip checks and validates numerical
+  consistency within explicit tolerances.
 
 Run each from repository root:
 
@@ -99,6 +102,7 @@ python examples/features/b_imperial_input_dual_output.py
 python examples/features/c_unit_errors_are_caught.py
 python examples/features/d_physically_invalid_inputs_are_caught.py
 python examples/features/e_output_precision_control.py
+python examples/features/f_round_trip_consistency.py
 ```
 
 ## Architecture
