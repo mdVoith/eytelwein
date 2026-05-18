@@ -93,6 +93,9 @@ Dedicated, runnable scripts are available under `examples/features/`.
 - `f_round_trip_consistency.py`
   Shows forward/inverse round-trip checks and validates numerical
   consistency within explicit tolerances.
+- `g_constants_and_enums.py`
+  Shows using public enums (`IdlerSets`) and shared constants in
+  practical calculations.
 
 Run each from repository root:
 
@@ -103,6 +106,7 @@ python examples/features/c_unit_errors_are_caught.py
 python examples/features/d_physically_invalid_inputs_are_caught.py
 python examples/features/e_output_precision_control.py
 python examples/features/f_round_trip_consistency.py
+python examples/features/g_constants_and_enums.py
 ```
 
 ## Architecture
