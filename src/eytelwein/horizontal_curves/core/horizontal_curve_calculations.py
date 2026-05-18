@@ -592,7 +592,7 @@ def weight_force_belt_outside(
     banking_angle: "Quantity",
     belt_width_on_outside_wing_roll: "Quantity",
     method: str = CONVENTIONAL_METHOD,
-    wing_roll_load_factor: "Quantity" = None,
+    wing_roll_load_factor: Optional["Quantity"] = None,
     unit: str = "newton",
     precision: int = 2,
 ) -> "Quantity":
@@ -767,7 +767,7 @@ def weight_force_belt_center(
     banking_angle: "Quantity",
     belt_width_on_center_section: "Quantity",
     method: str = CONVENTIONAL_METHOD,
-    center_roll_load_factor: "Quantity" = None,
+    center_roll_load_factor: Optional["Quantity"] = None,
     unit: str = "newton",
     precision: int = 2,
 ) -> "Quantity":
@@ -2280,7 +2280,7 @@ def tilted_idler_friction_force_center(
     belt_width_on_outside_wing_roll: "Quantity",
     friction_variation: "Quantity",
     friction_coefficient_tilted_idler: "Quantity",
-    normal_force_on_idler_roll: "Quantity" = None,
+    normal_force_on_idler_roll: Optional["Quantity"] = None,
     method: str = CONVENTIONAL_METHOD,
     center_roll_load_factor: Optional["Quantity"] = None,
     unit: str = "newton",

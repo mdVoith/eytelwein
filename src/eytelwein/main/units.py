@@ -43,6 +43,7 @@ class UnitRegistrySingleton:
         """
         if cls._instance is None:
             cls()  # Initialize if not already done
+        assert cls._registry is not None
         return cls._registry
 
 
@@ -65,7 +66,7 @@ def configure_registry(registry: pint.UnitRegistry) -> None:
     registry.define("meganewton = 1000000 newton = MN")
 
     # Set default system
-    registry.system = "mks"
+    registry.system = "mks"  # type: ignore[attr-defined]
 
 
 def get_unit_registry() -> pint.UnitRegistry:
@@ -117,7 +118,7 @@ def ensure_quantity(
     ureg = get_unit_registry()
 
     if hasattr(value, "units"):
-        return value
+        return value  # type: ignore[return-value]
     elif unit is not None:
         if isinstance(unit, str):
             return ureg.Quantity(value, unit)
