@@ -73,6 +73,30 @@ It demonstrates a compact sizing pipeline with hard-coded values:
 python examples/real_world_cross_section_flow.py
 ```
 
+## Feature Examples
+
+Dedicated, runnable scripts are available under `examples/features/`.
+
+- `a_output_unit_minimum_tension.py`
+  Demonstrates changing output units for the same calculation
+  (minimum belt tension in N and kN).
+- `b_imperial_input_dual_output.py`
+  Uses imperial inputs and calls the same function twice to produce
+  imperial output and SI output.
+- `c_unit_errors_are_caught.py`
+  Shows dimensional unit mismatch handling (expected `ValueError`).
+- `d_physically_invalid_inputs_are_caught.py`
+  Shows physically invalid input handling (expected `ValueError`).
+
+Run each from repository root:
+
+```bash
+python examples/features/a_output_unit_minimum_tension.py
+python examples/features/b_imperial_input_dual_output.py
+python examples/features/c_unit_errors_are_caught.py
+python examples/features/d_physically_invalid_inputs_are_caught.py
+```
+
 ## Architecture
 
 ```
