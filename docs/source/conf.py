@@ -1,5 +1,6 @@
 import os
 import sys
+from datetime import datetime
 sys.path.insert(0, os.path.abspath('../../src/'))
 # Configuration file for the Sphinx documentation builder.
 #
@@ -10,7 +11,7 @@ sys.path.insert(0, os.path.abspath('../../src/'))
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
 project = 'eytelwein'
-copyright = '2025, Voith Group'
+copyright = f"{datetime.now().year}, Voith Group"
 author = 'Marco Dorigo'
 
 # -- General configuration ---------------------------------------------------

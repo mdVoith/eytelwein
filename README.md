@@ -8,6 +8,7 @@
 
 <p align="center">
   <a href="https://github.com/mdVoith/eytelwein/actions"><img src="https://github.com/mdVoith/eytelwein/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
+  <a href="https://mdvoith.github.io/eytelwein/"><img src="https://img.shields.io/badge/docs-GitHub%20Pages-0A7EA4.svg" alt="Docs"></a>
   <a href="https://github.com/mdVoith/eytelwein/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-Apache--2.0-blue.svg" alt="License"></a>
   <img src="https://img.shields.io/badge/python-≥3.13-blue.svg" alt="Python">
 </p>
@@ -50,6 +51,23 @@ uv sync
 
 PyPI packages and wheels are not published yet. Use a local clone (or download
 the repository as a ZIP) and run commands from the project root.
+
+## Documentation
+
+Hosted documentation (GitHub Pages):
+
+- https://mdvoith.github.io/eytelwein/
+
+Build docs locally from repository root:
+
+```bash
+uv run sphinx-apidoc -o docs/source src/eytelwein --force --separate
+uv run sphinx-build -b html docs/source docs/_build/html
+```
+
+Generated HTML entry page:
+
+- `docs/_build/html/index.html`
 
 ## Quick Start
 
@@ -184,6 +202,8 @@ uv sync
 uv run pytest               # 1455 tests
 uv run ruff check src/ tests/
 uv run mypy src/
+uv run sphinx-apidoc -o docs/source src/eytelwein --force --separate
+uv run sphinx-build -b html docs/source docs/_build/html
 ```
 
 ## Contributing
@@ -194,4 +214,4 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for development guidelines.
 
 Apache-2.0 — see [LICENSE](LICENSE) and [NOTICE](NOTICE).
 
-Copyright 2025 Voith Group.
+Copyright (c) Voith Group.
