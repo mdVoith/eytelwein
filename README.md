@@ -64,6 +64,81 @@ b = usable_belt_width(belt_width=1200 * u.mm)
 print(b)  # 1050.0 millimeter
 ```
 
+## Real-World Example Script
+
+For a more practical, end-to-end workflow, run the example script in
+`examples/real_world_cross_section_flow.py`.
+
+It demonstrates a compact sizing pipeline with hard-coded values:
+
+- usable belt width from belt geometry
+- cross-section of fill from trough geometry
+- volume flow from cross-section and belt speed
+- mass flow from volume flow and bulk density
+- inverse cross-check for required usable width
+
+```bash
+python examples/real_world_cross_section_flow.py
+```
+
+## Feature Examples
+
+Dedicated, runnable scripts are available under `examples/features/`.
+
+- `a_output_unit_minimum_tension.py`
+  Demonstrates changing output units for the same calculation
+  (minimum belt tension in N and kN).
+- `b_imperial_input_dual_output.py`
+  Uses imperial inputs and calls the same function twice to produce
+  imperial output and SI output.
+- `c_unit_errors_are_caught.py`
+  Shows dimensional unit mismatch handling (expected `ValueError`).
+- `d_physically_invalid_inputs_are_caught.py`
+  Shows physically invalid input handling (expected `ValueError`).
+- `e_output_precision_control.py`
+  Shows how to control rounding with `precision` (default, custom,
+  and unrounded output).
+- `f_round_trip_consistency.py`
+  Shows forward/inverse round-trip checks and validates numerical
+  consistency within explicit tolerances.
+- `g_constants_and_enums.py`
+  Shows using public enums (`IdlerSets`) and shared constants in
+  practical calculations.
+
+Run each from repository root:
+
+```bash
+python examples/features/a_output_unit_minimum_tension.py
+python examples/features/b_imperial_input_dual_output.py
+python examples/features/c_unit_errors_are_caught.py
+python examples/features/d_physically_invalid_inputs_are_caught.py
+python examples/features/e_output_precision_control.py
+python examples/features/f_round_trip_consistency.py
+python examples/features/g_constants_and_enums.py
+```
+
+## Advanced Example (Private API, Not Recommended)
+
+Advanced example scripts live under `examples/advanced/` and are intentionally
+separate from the standard feature examples.
+
+Use this path only if you explicitly accept the tradeoffs:
+
+- advanced
+- unstable API surface
+- no unit safety
+- no backwards-compatibility promise
+
+`h_private_functions_not_recommended.py` compares public and private calls
+with the same intended inputs, shows that private angle inputs must be radians,
+and demonstrates that private helpers can skip public-layer validation.
+
+Run from repository root:
+
+```bash
+python examples/advanced/h_private_functions_not_recommended.py
+```
+
 ## Architecture
 
 ```
