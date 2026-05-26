@@ -40,8 +40,16 @@ conversion errors.
 ## Installation
 
 ```bash
-pip install git+https://github.com/voith/eytelwein.git
+# Clone the repository
+git clone https://github.com/mdVoith/eytelwein.git
+cd eytelwein
+
+# Create the project environment
+uv sync
 ```
+
+PyPI packages and wheels are not published yet. Use a local clone (or download
+the repository as a ZIP) and run commands from the project root.
 
 ## Quick Start
 
@@ -168,7 +176,7 @@ covering:
 
 ```bash
 # Clone and install
-git clone https://github.com/voith/eytelwein.git
+git clone https://github.com/mdVoith/eytelwein.git
 cd eytelwein
 uv sync
 

@@ -22,7 +22,7 @@ classifiers = [
 ]
 
 [project.urls]
-Repository = "https://github.com/voith/eytelwein"
+Repository = "https://github.com/mdVoith/eytelwein"
 
 [build-system]
 requires = ["hatchling"]
