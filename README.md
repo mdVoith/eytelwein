@@ -214,4 +214,4 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for development guidelines.
 
 Apache-2.0 — see [LICENSE](LICENSE) and [NOTICE](NOTICE).
 
-Copyright 2025 Voith Group.
+Copyright (c) Voith Group.
