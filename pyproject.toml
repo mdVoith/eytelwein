@@ -33,6 +33,7 @@ dev = [
     "mypy>=2.1.0",
     "pytest>=9.0.3",
     "ruff>=0.15.13",
+    "sphinx>=8.0.0",
 ]
 
 [tool.ruff.format]
