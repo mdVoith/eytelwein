@@ -21,31 +21,56 @@ uv sync
     git checkout -b feat/your-feature
     ```
 
-2. Install pre-commit hooks:
+2. Run tests:
     ```powershell
-    uv run pre-commit install
+    uv run pytest tests/ --tb=short
     ```
 
-3. Run tests:
+3. Run linting and formatting:
     ```powershell
-    uv run pytest
-    ```
-
-4. Run linting and formatting:
-    ```powershell
-    uv run ruff check --fix src/ tests/
+    uv run ruff check src/ tests/
     uv run ruff format src/ tests/
     ```
 
-5. Run type checking:
+4. Run type checking:
     ```powershell
     uv run mypy src/
     ```
 
-6. Commit using [conventional commits](https://www.conventionalcommits.org/en/v1.0.0/):
+5. Commit using [conventional commits](https://www.conventionalcommits.org/en/v1.0.0/):
     ```powershell
     git commit -m "feat: add new calculation for X"
     ```
+
+## CI, Docs, and Release Workflows
+
+- CI workflow ([.github/workflows/ci.yml](.github/workflows/ci.yml)) runs on pull requests to `main` and pushes to `main`. It runs ruff, mypy, and pytest.
+- Docs workflow ([.github/workflows/docs.yml](.github/workflows/docs.yml)) runs on pull requests, pushes to `main`, and manual dispatch.
+  - Pull requests build docs only.
+  - Pushes to `main` (and manual dispatch on `main`) also deploy docs to GitHub Pages.
+- Publish workflow ([.github/workflows/publish.yml](.github/workflows/publish.yml)) runs only when a tag matching `v*` is pushed.
+  - This means releases are tag-driven and do not happen on every PR or every merge.
+
+## Releasing a New Version
+
+1. Merge changes into `main` and ensure CI is green.
+2. Ensure the version in `pyproject.toml` is the intended release version.
+3. Create an annotated tag:
+   ```powershell
+   git tag -a vX.Y.Z -m "Release vX.Y.Z"
+   ```
+4. Push the tag to GitHub:
+   ```powershell
+   git push origin vX.Y.Z
+   ```
+5. Monitor the publish run in GitHub Actions and verify the package on PyPI.
+
+Example first release:
+
+```powershell
+git tag -a v0.1.0 -m "Release v0.1.0"
+git push origin v0.1.0
+```
 
 ## Code Conventions
 
@@ -73,7 +98,7 @@ There may be a mixup of legacy python versions, system's python versions or virt
 - Delete the ".venv" folder.
 - Run:
     ```powershell
-     uv run MYAPP.py
+    uv sync
     ```
-UV will then create a new ".venv"-folder with a new virtual enviroment and will install all dependencies according to the "pyproject.toml" configuration file of your application.
-Once installed, UV will go on running your app. Afterwards, you can repeat the above command to re-run the app.
+UV will then create a new ".venv" folder and install dependencies according to the "pyproject.toml" configuration.
+Afterwards, rerun your original command (for example: `uv run pytest tests/ --tb=short`).
