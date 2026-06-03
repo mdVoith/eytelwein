@@ -48,28 +48,24 @@ uv sync
 - Docs workflow ([.github/workflows/docs.yml](.github/workflows/docs.yml)) runs on pull requests, pushes to `main`, and manual dispatch.
   - Pull requests build docs only.
   - Pushes to `main` (and manual dispatch on `main`) also deploy docs to GitHub Pages.
+- Release workflow ([.github/workflows/release.yml](.github/workflows/release.yml)) runs manually on `main` and uses Commitizen to bump version, update `CHANGELOG.md`, create a tag, and push commit+tag.
+    - This workflow requires repository secret `RELEASE_PAT` (fine-grained PAT with Contents: Read and write).
 - Publish workflow ([.github/workflows/publish.yml](.github/workflows/publish.yml)) runs only when a tag matching `v*` is pushed.
   - This means releases are tag-driven and do not happen on every PR or every merge.
 
 ## Releasing a New Version
 
 1. Merge changes into `main` and ensure CI is green.
-2. Ensure the version in `pyproject.toml` is the intended release version.
-3. Create an annotated tag:
-   ```powershell
-   git tag -a vX.Y.Z -m "Release vX.Y.Z"
-   ```
-4. Push the tag to GitHub:
-   ```powershell
-   git push origin vX.Y.Z
-   ```
-5. Monitor the publish run in GitHub Actions and verify the package on PyPI.
+2. Trigger the Release workflow in GitHub Actions and select bump type (PATCH, MINOR, MAJOR).
+3. The workflow runs Commitizen, updates `pyproject.toml` + `CHANGELOG.md`, creates a `vX.Y.Z` tag, and pushes commit+tag.
+4. The tag push triggers Publish to PyPI automatically.
+5. Monitor both Release and Publish runs in GitHub Actions and verify the package on PyPI.
 
-Example first release:
+Manual fallback (if needed):
 
 ```powershell
-git tag -a v0.1.0 -m "Release v0.1.0"
-git push origin v0.1.0
+uv run cz bump
+git push origin main --follow-tags
 ```
 
 ## Code Conventions
