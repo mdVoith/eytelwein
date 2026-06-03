@@ -15,6 +15,7 @@ on:
 
 permissions:
   contents: write
+  pull-requests: write
 
 jobs:
   release:
@@ -39,14 +40,32 @@ jobs:
       - name: Bump version and update changelog
         run: uv run --with commitizen cz bump --yes --increment "${{ inputs.increment }}"
 
-      - name: Push release commit and tag
+      - name: Read new version
+        id: ver
+        run: echo "version=$(uv run --with commitizen cz version -p)" >> "$GITHUB_OUTPUT"
+
+      - name: Push release branch and tag
         env:
           RELEASE_PAT: ${{ secrets.RELEASE_PAT }}
         run: |
           if [ -z "$RELEASE_PAT" ]; then
-            echo "::error::Missing RELEASE_PAT secret. Add a fine-grained PAT with Contents: Read and write."
+            echo "::error::Missing RELEASE_PAT secret. Add a PAT with Contents and Pull requests write access."
             exit 1
           fi
 
           git remote set-url origin "https://x-access-token:${RELEASE_PAT}@github.com/${GITHUB_REPOSITORY}.git"
-          git push origin HEAD:main --follow-tags
+          branch="release/v${{ steps.ver.outputs.version }}"
+          # Push the bump commit to a dedicated branch (main stays protected).
+          git push origin "HEAD:refs/heads/${branch}"
+          # Push the tag (not covered by the branch ruleset) to trigger Publish to PyPI.
+          git push origin "v${{ steps.ver.outputs.version }}"
+
+      - name: Open pull request to main
+        env:
+          GH_TOKEN: ${{ secrets.RELEASE_PAT }}
+        run: |
+          gh pr create \
+            --base main \
+            --head "release/v${{ steps.ver.outputs.version }}" \
+            --title "chore(release): v${{ steps.ver.outputs.version }}" \
+            --body "Automated release for v${{ steps.ver.outputs.version }}. Tag pushed and Publish to PyPI is running; merge this PR to land the version bump and changelog on main."
