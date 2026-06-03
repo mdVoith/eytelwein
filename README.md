@@ -41,6 +41,20 @@ conversion errors.
 
 ## Installation
 
+**With uv (recommended):**
+
+```bash
+uv pip install eytelwein
+```
+
+**With pip:**
+
+```bash
+pip install eytelwein
+```
+
+**Development installation from source:**
+
 ```bash
 # Clone the repository
 git clone https://github.com/mdVoith/eytelwein.git
@@ -49,9 +63,6 @@ cd eytelwein
 # Create the project environment
 uv sync
 ```
-
-PyPI packages and wheels are not published yet. Use a local clone (or download
-the repository as a ZIP) and run commands from the project root.
 
 ## Documentation
 
