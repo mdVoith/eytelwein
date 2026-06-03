@@ -48,8 +48,9 @@ uv sync
 - Docs workflow ([.github/workflows/docs.yml](.github/workflows/docs.yml)) runs on pull requests, pushes to `main`, and manual dispatch.
   - Pull requests build docs only.
   - Pushes to `main` (and manual dispatch on `main`) also deploy docs to GitHub Pages.
-- Release workflow ([.github/workflows/release.yml](.github/workflows/release.yml)) runs manually on `main` and uses Commitizen to bump version, update `CHANGELOG.md`, create a tag, and push commit+tag.
-    - This workflow requires repository secret `RELEASE_PAT` (fine-grained PAT with Contents: Read and write).
+- Release workflow ([.github/workflows/release.yml](.github/workflows/release.yml)) runs manually on `main` and uses Commitizen to bump version, update `CHANGELOG.md`, push a tag, and open a release pull request.
+    - It pushes the `vX.Y.Z` tag (which triggers Publish) and opens a PR with the version + changelog bump for `main`. `main` stays protected; no bypass is required.
+    - This workflow requires repository secret `RELEASE_PAT` (PAT with Contents and Pull requests write access).
 - Publish workflow ([.github/workflows/publish.yml](.github/workflows/publish.yml)) runs only when a tag matching `v*` is pushed.
   - This means releases are tag-driven and do not happen on every PR or every merge.
 
@@ -57,15 +58,15 @@ uv sync
 
 1. Merge changes into `main` and ensure CI is green.
 2. Trigger the Release workflow in GitHub Actions and select bump type (PATCH, MINOR, MAJOR).
-3. The workflow runs Commitizen, updates `pyproject.toml` + `CHANGELOG.md`, creates a `vX.Y.Z` tag, and pushes commit+tag.
-4. The tag push triggers Publish to PyPI automatically.
-5. Monitor both Release and Publish runs in GitHub Actions and verify the package on PyPI.
+3. The workflow runs Commitizen, pushes the `vX.Y.Z` tag (triggering Publish to PyPI), and opens a `release/vX.Y.Z` pull request.
+4. Review and merge the release PR (preferably with a merge or rebase, not squash) to land the version bump and changelog on `main`.
+5. Monitor the Release and Publish runs in GitHub Actions and verify the package on PyPI.
 
 Manual fallback (if needed):
 
 ```powershell
 uv run cz bump
-git push origin main --follow-tags
+git push origin vX.Y.Z
 ```
 
 ## Code Conventions
