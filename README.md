@@ -8,6 +8,7 @@
 
 <p align="center">
   <a href="https://github.com/mdVoith/eytelwein/actions"><img src="https://github.com/mdVoith/eytelwein/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
+  <a href="https://pypi.org/project/eytelwein/"><img src="https://img.shields.io/pypi/v/eytelwein.svg" alt="PyPI"></a>
   <a href="https://mdvoith.github.io/eytelwein/"><img src="https://img.shields.io/badge/docs-GitHub%20Pages-0A7EA4.svg" alt="Docs"></a>
   <a href="https://github.com/mdVoith/eytelwein/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-Apache--2.0-blue.svg" alt="License"></a>
   <img src="https://img.shields.io/badge/python-≥3.13-blue.svg" alt="Python">
