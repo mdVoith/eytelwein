@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="docs/assets/logo.svg" alt="Eytelwein logo" width="200">
+  <img src="https://raw.githubusercontent.com/mdVoith/eytelwein/12d90e9f9436e1023f371de3b8d698ffb109f2dc/docs/assets/logo.svg" alt="Eytelwein logo" width="200">
   <h1 align="center">Eytelwein</h1>
   <p align="center">
     <em>Open-source belt conveyor calculation library for Python</em>
