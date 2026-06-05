@@ -1,6 +1,6 @@
-# Eytelwein Integration Standards
+# Eytelwein Implementation Standards
 
-**Note:** Eytelwein is now an external open-source package (see [eytelwein_two_manifest_integration.md](../eytelwein_two_manifest_integration.md) for integration architecture). This document covers standards for working with eytelwein functions and Pint Quantities in Convexus code.
+**Note:** This document covers standards for implementing eytelwein functions and working with Pint Quantities in the Eytelwein package.
 
 ## Quick Reference
 
@@ -26,22 +26,23 @@
 
 ### Core Commands (PowerShell Compatible)
 
-For testing eytelwein integration in Convexus:
+For testing Eytelwein calculations:
 ```powershell
-# Run eytelwein integration tests
-uv run pytest tests/test_eytelwein_integration.py -v
+# Run all tests
+uv run pytest tests/ -v
 
-# Test domain calculations that use eytelwein
-uv run pytest tests/ -k eytelwein -v
+# Run belt conveyor design tests
+uv run pytest tests/test_belt_conveyor_design/ -v
 
-# Type check domain calculations
-uv run mypy src/domain/calculations/
+# Run horizontal curves tests
+uv run pytest tests/test_horizontal_curves/ -v
+
+# Type check calculations
+uv run mypy src/eytelwein/
 
 # Format code
-uv run black src/domain/
+uv run ruff format src/ tests/
 ```
-
-For developing eytelwein itself, see the external [eytelwein repository](https://github.com/[org]/eytelwein).
 
 ### PowerShell Syntax Standards
 
@@ -54,11 +55,11 @@ uv run pytest 'tests/' -v
 uv run python -c "import sys; print(f'Python version: {sys.version}')"
 
 # Proper escaping for complex strings
-uv run python -c "from eytelwein.module import function; print('Success')"
+uv run python -c "from eytelwein.belt_conveyor_design.core.volume_flow_mass_flow import usable_belt_width; print(f'Imported: {usable_belt_width.__name__}')"
 
 # Line continuation for long commands
 uv run pytest `
-  tests/test_eytelwein_integration.py `
+  tests/test_belt_conveyor_design/ `
   -v
 ```
 
@@ -81,8 +82,8 @@ python script.py  # ❌ Wrong - use uv run python script.py
 
 #### Safe Import Testing
 ```powershell
-# ✅ Test eytelwein integration
-uv run python -c "try: from eytelwein.belt_conveyor_design import belt_weight_per_square_meter; print('✅ Import works') except Exception as e: print(f'❌ Error: {e}')"
+# ✅ Test a real Eytelwein import path
+uv run python -c "from eytelwein.belt_conveyor_design.core.volume_flow_mass_flow import usable_belt_width; print(f'✅ Import works: {usable_belt_width.__name__}')"
 ```
 
 ## Unit Registry Patterns
@@ -678,37 +679,54 @@ def friction_resistance_of_skirting_board_from_material_flow(
 ## Test Structure
 
 ### Test Location
-Eytelwein tests are maintained in the external eytelwein package repository. Within Convexus, write integration tests to verify that eytelwein functions integrate correctly with the dependency graph and domain models.
+Eytelwein tests are organized by module in the `tests/` directory:
 
-### Convexus Integration Test Structure
 ```
 tests/
-├── test_eytelwein_integration.py      # Integration tests for eytelwein with Convexus
-└── ... (other Convexus tests)
+├── test_belt_conveyor_design/
+│   ├── test_core/
+│   │   ├── test__volume_flow_mass_flow.py
+│   │   └── test_volume_flow_mass_flow.py
+│   ├── test_extended/
+│   ├── test_constants.py
+│   └── test_public_api_belt_weight.py
+├── test_horizontal_curves/
+├── test_idler_design/
+└── test_main/
 ```
 
-### Required Convexus Integration Test Coverage
+### Required Test Coverage
 
-When adding eytelwein calculations to Convexus, write integration tests that verify:
+Write tests that verify:
 
-1. **Catalog availability**: Eytelwein catalog loads and contains expected calculations
-2. **Mapping completeness**: Parameter mappings cover all required inputs/outputs
-3. **Auto-registration**: Functions register with dependency graph correctly
-4. **Domain integration**: Calculations work with Convexus domain models
-5. **Unit handling**: Results conform to Convexus unit expectations
-6. **Error propagation**: Eytelwein errors are caught and reported clearly
+1. **Basic functionality**: Functions produce correct results for known inputs
+2. **Unit conversion**: Results correctly convert between different units
+3. **Array broadcasting**: Functions handle Pint Quantity arrays and scalar expansion
+4. **Input validation**: Invalid inputs are rejected with clear error messages
+5. **Physical meaningfulness**: Negative or zero values rejected where physically invalid
+6. **Precision handling**: Results round correctly with precision parameter
 
-**Note:** Comprehensive test coverage for individual eytelwein functions (basic functionality, unit conversion, array broadcasting, etc.) is maintained in the external eytelwein package. Focus Convexus tests on integration concerns.
-
-### Convexus Integration Test Naming Convention
+### Test File Naming Convention
 ```python
-def test_eytelwein_{calculation}_{integration_aspect}(self):
-    """Test {description of integration behavior}."""
+# Private helper tests in the matching module test file
+def test_{private_function}_{behavior}(self):
+    """Test {description}."""
+
+# Public wrapper tests in the corresponding public module test file
+def test_{public_function}_{behavior}(self):
+    """Test {description}."""
 
 # Examples:
-def test_eytelwein_usable_belt_width_dependency_registration(self):
-def test_eytelwein_catalog_mapping_consistency(self):
-def test_eytelwein_calculation_error_handling(self):
+def test_belt_weight_positive_inputs(self):
+def test_belt_weight_unit_conversion(self):
+def test_belt_weight_array_broadcasting(self):
+```
+
+For paired private/public tests, the common pattern in this repo is:
+
+```text
+tests/test_belt_conveyor_design/test_core/test__volume_flow_mass_flow.py
+tests/test_belt_conveyor_design/test_core/test_volume_flow_mass_flow.py
 ```
 
 ## Import Organization
@@ -906,49 +924,48 @@ Before implementing any function, verify:
 
 ## Validation Workflow
 
-### For Eytelwein Development (External Package)
+### Running Tests
 
-When working on eytelwein calculations directly, refer to the external eytelwein repository for testing workflows. The eytelwein package maintains its own comprehensive test suite.
+When developing Eytelwein calculations:
 
-### For Convexus Integration
-
-When integrating eytelwein calculations with Convexus domain models:
-
-#### 1. Verify Eytelwein Package Import
+#### 1. Run Affected Module Tests
 ```powershell
-# Test that eytelwein is available and importable
-uv run python -c "import eytelwein; print('✅ Eytelwein package available')"
+# Test a specific module (e.g., belt conveyor design)
+uv run pytest tests/test_belt_conveyor_design/ -v
 
-# Test specific calculation import
-uv run python -c "from eytelwein.belt_conveyor_design import usable_belt_width; print('✅ Calculation importable')"
+# Test a specific paired private/public module test file
+uv run pytest tests/test_belt_conveyor_design/test_core/test_volume_flow_mass_flow.py -v
 ```
 
-#### 2. Run Convexus Integration Tests
+#### 2. Run Full Test Suite
 ```powershell
-# Test eytelwein integration with Convexus
-uv run pytest tests/test_eytelwein_integration.py -v
+# Run all tests
+uv run pytest tests/ -v
 
-# Expected: Catalog loads, mappings consistent, auto-registration works
+# Expected: All tests pass
 ```
 
-#### 3. Test Domain Integration
+#### 3. Type Check Implementation
 ```powershell
-# Test dependency graph propagation with eytelwein calculations
-uv run pytest tests/ -k eytelwein -v
+# Type check the source code
+uv run mypy src/eytelwein/
 
-# Expected: All integration tests pass, calculations propagate correctly
+# Expected: No type errors
 ```
 
-#### 4. Type Check Convexus Code Using Eytelwein
+#### 4. Format and Lint
 ```powershell
-# Type check domain calculations that use eytelwein
-uv run mypy src/domain/calculations/
+# Format code
+uv run ruff format src/ tests/
+
+# Check linting
+uv run ruff check src/ tests/
 ```
 
 ## Input Type Handling Standards
 
 ### Current Design Decision
-All public functions require strict Quantity inputs with explicit units. Raw numeric values (floats/integers) are not automatically converted to Quantity objects. This maintains architectural clarity, ensures type safety, and provides immediate feedback for incorrect input types. Users must explicitly specify units using the Pint unit registry (e.g., `* u.ureg.newton`, `* u.ureg.dimensionless`)
+All public functions require strict Quantity inputs with explicit units. Raw numeric values (floats/integers) are not automatically converted to Quantity objects. This maintains architectural clarity, ensures type safety, and provides immediate feedback for incorrect input types. Users must explicitly specify units using the module-level unit registry pattern used in this repo (e.g., `* u.newton`, `* u.dimensionless`, or `u.Quantity(...)`).
 
 ### Future Consideration
 Automatic conversion of dimensionless numeric inputs (friction coefficients, load factors) to Quantity objects may be reconsidered if user experience significantly benefits from this flexibility. Any future implementation would require formal documentation, consistent patterns across all functions, and comprehensive testing to ensure type safety is maintained.

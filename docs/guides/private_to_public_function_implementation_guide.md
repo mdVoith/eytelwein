@@ -2,7 +2,7 @@
 
 ## Overview
 
-This guide provides a step-by-step process for implementing public API functions from private functions in the Eytelwein/Convexus codebase.
+This guide provides a step-by-step process for implementing public API functions from private functions in the Eytelwein codebase.
 
 **Important**: This guide must be used with the comprehensive implementation standards documented in [`eytelwein_implementation_standards.md`](eytelwein_implementation_standards.md), which contains:
 - Unit registry patterns
@@ -260,22 +260,26 @@ result = numerator / denominator
 
 ### Step 3: Add to Module's `__init__.py`
 
-1. Export the private function in the private section of `__init__.py`.
-2. Export the public function in the public section of `__init__.py`.
+1. Export the private function in the private section of the module's `__init__.py`.
+2. Export the public function in the public section of the module's `__init__.py`.
 
-Example for core module `__init__.py`:
+Example for `belt_conveyor_design.core` module:
 ```python
-# Private functions from module (e.g., _volume_flow_mass_flow)
-from eytelwein.core._calculations import (
-    # ... other private functions
+# In src/eytelwein/belt_conveyor_design/core/__init__.py
+
+# Private functions
+from ._volume_flow_mass_flow import (
     _length_of_material_on_side_roll,
     # ... other private functions
 )
 
-# ... other imports
+# Public functions
+from .volume_flow_mass_flow import (
+    length_of_material_on_side_roll,
+    # ... other public functions
+)
 
 __all__ = [
-    # ... other public functions
     "length_of_material_on_side_roll",
     # ... other public functions
 ]
@@ -283,21 +287,16 @@ __all__ = [
 
 Example for package-level `__init__.py`:
 ```python
-# ... other imports
+# In src/eytelwein/belt_conveyor_design/__init__.py
 
-# Core - Public functions
-from eytelwein.belt_conveyor_design import (
-    # ... other public functions
+from .core import (
     length_of_material_on_side_roll,
-    # ... other public functions
+    # ... other functions
 )
 
-# ... other imports
-
 __all__ = [
-    # ... other public functions
     "length_of_material_on_side_roll",
-    # ... other public functions
+    # ... other functions
 ]
 ```
 
@@ -382,9 +381,13 @@ def length_of_material_on_side_roll(
     return result
 ```
 
-### Private Function Tests (`test__volume_flow_mass_flow.py`)
+### Private Function Tests
+
+Private function tests validate the calculation logic with raw numeric inputs:
 
 ```python
+# tests/test_belt_conveyor_design/test_core/test__volume_flow_mass_flow.py
+
 class TestLengthOfMaterialOnSideRoll:
     def test_length_of_material_standard_case(self):
         # Standard case
@@ -400,39 +403,22 @@ class TestLengthOfMaterialOnSideRoll:
         # When both values are equal, result should be zero
         result = _length_of_material_on_side_roll(250.0, 250.0)
         assert result == pytest.approx(0.0, rel=1e-6)
-
-    def test_length_of_material_handles_zero_values(self):
-        # Zero values
-        result = _length_of_material_on_side_roll(0.0, 0.0)
-        assert result == 0.0
 ```
 
-### Public Function Tests (`test_volume_flow_mass_flow.py`)
+### Public Function Tests
+
+Public function tests validate unit handling, conversion, and API:
 
 ```python
+# tests/test_belt_conveyor_design/test_core/test_volume_flow_mass_flow.py
+
 class TestLengthOfMaterialOnSideRoll:
     def test_length_of_material_typical_case(self):
-        # Standard case
+        # Standard case with Quantity objects
         part_on_side_idler = u.Quantity(500, u.millimeter)
         belt_edge = u.Quantity(125, u.millimeter)
         result = length_of_material_on_side_roll(part_on_side_idler, belt_edge)
         assert result.magnitude == pytest.approx(375.0, rel=1e-6)
-        assert result.units == u.millimeter
-
-    def test_length_of_material_zero_edge(self):
-        # When edge is zero, length equals part_on_side_idler
-        part_on_side_idler = u.Quantity(500, u.millimeter)
-        belt_edge = u.Quantity(0, u.millimeter)
-        result = length_of_material_on_side_roll(part_on_side_idler, belt_edge)
-        assert result.magnitude == pytest.approx(500.0, rel=1e-6)
-        assert result.units == u.millimeter
-
-    def test_length_of_material_equal_values(self):
-        # When both values are equal, result should be zero
-        part_on_side_idler = u.Quantity(250, u.millimeter)
-        belt_edge = u.Quantity(250, u.millimeter)
-        result = length_of_material_on_side_roll(part_on_side_idler, belt_edge)
-        assert result.magnitude == pytest.approx(0.0, rel=1e-6)
         assert result.units == u.millimeter
 
     def test_length_of_material_unit_conversion(self):
@@ -453,7 +439,6 @@ class TestLengthOfMaterialOnSideRoll:
             part_on_side_idler, belt_edge, precision=0
         )
         assert result.magnitude == 377.0  # Rounded to 0 decimal places
-        assert result.units == u.millimeter
 
     def test_length_of_material_invalid_unit(self):
         # Test with invalid unit
@@ -464,16 +449,6 @@ class TestLengthOfMaterialOnSideRoll:
                 part_on_side_idler, belt_edge, unit="invalid_unit"
             )
         assert "Invalid unit" in str(excinfo.value)
-
-    def test_length_of_material_incompatible_unit(self):
-        # Test with incompatible unit
-        part_on_side_idler = u.Quantity(500, u.millimeter)
-        belt_edge = u.Quantity(125, u.millimeter)
-        with pytest.raises(ValueError) as excinfo:
-            length_of_material_on_side_roll(
-                part_on_side_idler, belt_edge, unit="second"
-            )
-        assert "Cannot convert" in str(excinfo.value)
 ```
 
 ## Best Practices
