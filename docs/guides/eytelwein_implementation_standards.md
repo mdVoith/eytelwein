@@ -20,7 +20,7 @@
 
 ### Tool Stack Requirements
 - **Environment Manager**: UV (handles virtual environments and Python execution)
-- **Operating System**: Windows with PowerShell
+- **Shell examples in this guide**: validated on Windows PowerShell
 - **Command Prefix**: Always use `uv run` for Python execution
 - **Testing Framework**: pytest with UV integration
 
