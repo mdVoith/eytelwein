@@ -70,7 +70,6 @@ instance/
 
 # Sphinx documentation
 docs/_build/
-plans/
 
 # PyBuilder
 .pybuilder/
@@ -152,3 +151,7 @@ cython_debug/
 # VisualStudioCode Patch
 # Ignore all local history of files
 **/.history
+
+# Project specific
+plans/
+scripts/

@@ -90,6 +90,11 @@ git push origin vX.Y.Z
 | `ci:` | CI changes | PATCH |
 | `chore:` | Maintenance | PATCH |
 
+Notes:
+- `build:` is intentionally not used in this repository.
+- Use `chore:` for packaging, build metadata, and distribution-configuration changes.
+- The commit-msg hook rejects unsupported types so this stays consistent.
+
 ## Error: Python or dependency not installed
 There may be a mixup of legacy python versions, system's python versions or virtual environments. However, UV is able to fix this automatically:
 - Delete the ".venv" folder.
