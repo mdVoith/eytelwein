@@ -1,4 +1,7 @@
 from math import isclose
+from pathlib import Path
+import re
+import tomllib
 
 
 def test_constants_defined():
@@ -53,3 +56,21 @@ def test_gravity_regression():
 
     EXPECTED_GRAVITY = 9.80665
     assert STANDARD_GRAVITY_VALUE == EXPECTED_GRAVITY
+
+
+def test_version_is_synced_between_pyproject_and_runtime():
+    """Guard against release-version drift between metadata and __version__."""
+    repo_root = Path(__file__).resolve().parents[2]
+    pyproject_path = repo_root / "pyproject.toml"
+    init_path = repo_root / "src" / "eytelwein" / "__init__.py"
+
+    pyproject_version = tomllib.loads(pyproject_path.read_text(encoding="utf-8"))["project"][
+        "version"
+    ]
+
+    init_content = init_path.read_text(encoding="utf-8")
+    match = re.search(r'^__version__\s*=\s*["\']([^"\']+)["\']', init_content, re.MULTILINE)
+    assert match is not None, "Could not find __version__ string literal in src/eytelwein/__init__.py"
+    runtime_version = match.group(1)
+
+    assert runtime_version == pyproject_version

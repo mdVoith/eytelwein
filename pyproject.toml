@@ -45,7 +45,8 @@ name = "cz_conventional_commits"
 update_changelog_on_bump = true
 tag_format = "v$version"
 version_files = [
-    "pyproject.toml:^version"
+    "pyproject.toml:^version",
+    "src/eytelwein/__init__.py:__version__"
 ]
 version_scheme = "pep440"
 bump_message = "chore(release): $new_version"

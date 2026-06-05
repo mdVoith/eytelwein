@@ -411,8 +411,8 @@ def volume_flow_from_mass_flow_density(
     --------
     >>> import eytelwein.main.units as u
     >>> from eytelwein.belt_conveyor_design import volume_flow_from_mass_flow_density
-    >>> m_flow = 1800 * u.kilogram / u.second
-    >>> density = 1200 * u.kilogram / u.meter**3
+    >>> m_flow = 1800 * u.ureg.kilogram / u.ureg.second
+    >>> density = 1200 * u.ureg.kilogram / u.ureg.meter**3
     >>> volume_flow = volume_flow_from_mass_flow_density(m_flow, density)
     >>> print(volume_flow)  # doctest: +SKIP
     1.5 meter ** 3 / second
