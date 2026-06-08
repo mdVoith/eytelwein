@@ -955,7 +955,7 @@ class TestEffectiveFillingRatioFromAreasPublic:
         actual_area = 0.15 * u.meter**2
         expected_ratio = 0.75 * u.dimensionless
         result = effective_filling_ratio_from_areas(theoretical_area, actual_area)
-        assert result.magnitude == expected_ratio.magnitude
+        assert result.magnitude == pytest.approx(expected_ratio.magnitude)
         assert result.units == expected_ratio.units
 
     def test_effective_filling_ratio_from_areas_different_units(self):
@@ -985,7 +985,7 @@ class TestEffectiveFillingRatioFromAreasPublic:
             theoretical_area, actual_area, unit="percent"
         )
         expected_ratio = 75.0 * u.percent
-        assert result.magnitude == expected_ratio.magnitude
+        assert result.magnitude == pytest.approx(expected_ratio.magnitude)
         assert str(result.units) == str(expected_ratio.units)
 
     def test_effective_filling_ratio_from_areas_precision(self):

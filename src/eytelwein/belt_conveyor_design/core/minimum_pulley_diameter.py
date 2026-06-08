@@ -21,7 +21,7 @@ def minimum_diameter_of_group_A_pulleys(
     minimum_pulley_diameter_coefficient: MinimumPulleyDiameterCoefficient,
     tension_member_thickness: Quantity,
     unit: str = "millimeter",
-    precision: int = 2,
+    precision: int | None = None,
 ) -> Quantity:
     """
     Calculate the minimum diameter of a group A pulley.
@@ -33,8 +33,10 @@ def minimum_diameter_of_group_A_pulleys(
     tension_member_thickness : Quantity
         The thickness of the tension member inmillimeters.
     unit : str, optional
-        The unit for the result, default is "millimeter" and "meter" is a useful alternative.    precision : int, optional
-        The precision for rounding the result, default is 2 for millimeters, while 1 or 2 would be suitable for "m".
+        The unit for the result, default is "millimeter" and "meter" is a useful alternative.
+    precision : int | None, optional
+        The precision for rounding the result. Default is None. Use None to skip
+        rounding and retain maximum available precision.
 
     Returns
     -------
@@ -115,7 +117,7 @@ def minimum_diameter_of_group_A_B_C_pulleys(
     minimum_diameter_of_group_A_pulleys: Quantity,
     pulley_load_factor: PulleyLoadFactor,
     unit: str = "millimeter",
-    precision: int = 2,
+    precision: int | None = None,
 ) -> dict[str, Quantity | None]:
     """
     Calculate the minimum diameters of group A, B, and C pulleys.
@@ -127,8 +129,10 @@ def minimum_diameter_of_group_A_B_C_pulleys(
     pulley_load_factor : PulleyLoadFactor
         The pulley load factor.
     unit : str, optional
-        The unit for the result, default is "millimeter".    precision : int, optional
-        The precision for rounding the result, default is 2.
+        The unit for the result, default is "millimeter".
+    precision : int | None, optional
+        The precision for rounding the result. Default is None. Use None to skip
+        rounding and retain maximum available precision.
 
     Returns
     -------
@@ -178,7 +182,7 @@ def get_max_width_related_tension_at_group_A_pulleys(
     nominal_belt_strength: Quantity,
     pulley_load_factor: PulleyLoadFactor = PulleyLoadFactor.above_60_up_to_100,
     unit: str = "newton / millimeter",
-    precision: int = 2,
+    precision: int | None = None,
 ) -> Quantity:
     """
     Calculate the maximum width-related tension at the point of maximum belt tension in the zone of Group A pulleys in the steady operating condition.
@@ -191,8 +195,9 @@ def get_max_width_related_tension_at_group_A_pulleys(
         The pulley load factor, default is PulleyLoadFactor.above_60_up_to_100.
     unit : str, optional
         The unit for the result, default is "kilonewton".
-    precision : int, optional
-        The precision for rounding the result, default is 2.
+    precision : int | None, optional
+        The precision for rounding the result. Default is None. Use None to skip
+        rounding and retain maximum available precision.
 
     Returns
     -------

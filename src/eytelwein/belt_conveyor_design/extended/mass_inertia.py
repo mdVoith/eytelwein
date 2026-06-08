@@ -27,7 +27,7 @@ def belt_mass_per_strand(
     belt_linear_mass: Quantity,
     center_distance: Quantity,
     unit: str = "kilogram",
-    precision: int = 2,
+    precision: int | None = None,
 ) -> Quantity:
     """Calculate belt mass for one strand.
 
@@ -39,7 +39,7 @@ def belt_mass_per_strand(
         Conveyor center distance quantity.
     unit : str, optional
         Output unit, by default ``"kilogram"``.
-    precision : int, optional
+    precision : int | None, optional
         Decimal rounding precision, by default ``2``. Use ``None`` to skip
         rounding.
 
@@ -78,7 +78,7 @@ def payload_mass_total(
     payload_mass_per_meter: Quantity,
     center_distance: Quantity,
     unit: str = "kilogram",
-    precision: int = 2,
+    precision: int | None = None,
 ) -> Quantity:
     """Calculate total payload mass over conveyor center distance.
 
@@ -90,7 +90,7 @@ def payload_mass_total(
         Conveyor center distance quantity.
     unit : str, optional
         Output unit, by default ``"kilogram"``.
-    precision : int, optional
+    precision : int | None, optional
         Decimal rounding precision, by default ``2``. Use ``None`` to skip
         rounding.
 
@@ -128,7 +128,7 @@ def translating_mass_empty(
     idler_mass_lower_total: Quantity,
     belt_mass_per_strand_value: Quantity,
     unit: str = "kilogram",
-    precision: int = 2,
+    precision: int | None = None,
 ) -> Quantity:
     """Calculate translating mass for empty conveyor.
 
@@ -142,7 +142,7 @@ def translating_mass_empty(
         Belt mass per strand quantity.
     unit : str, optional
         Output unit, by default ``"kilogram"``.
-    precision : int, optional
+    precision : int | None, optional
         Decimal rounding precision, by default ``2``. Use ``None`` to skip
         rounding.
 
@@ -189,7 +189,7 @@ def translating_mass_full(
     translating_mass_empty_value: Quantity,
     payload_mass_total_value: Quantity,
     unit: str = "kilogram",
-    precision: int = 2,
+    precision: int | None = None,
 ) -> Quantity:
     """Calculate translating mass for loaded conveyor.
 
@@ -201,7 +201,7 @@ def translating_mass_full(
         Total payload mass quantity.
     unit : str, optional
         Output unit, by default ``"kilogram"``.
-    precision : int, optional
+    precision : int | None, optional
         Decimal rounding precision, by default ``2``. Use ``None`` to skip
         rounding.
 
@@ -240,7 +240,7 @@ def translating_mass_full(
 def pulley_radius(
     drive_pulley_diameter: Quantity,
     unit: str = "meter",
-    precision: int = 2,
+    precision: int | None = None,
 ) -> Quantity:
     """Calculate drive pulley radius from drive pulley diameter.
 
@@ -250,7 +250,7 @@ def pulley_radius(
         Drive pulley diameter quantity.
     unit : str, optional
         Output unit, by default ``"meter"``.
-    precision : int, optional
+    precision : int | None, optional
         Decimal rounding precision, by default ``2``. Use ``None`` to skip
         rounding.
 
@@ -285,7 +285,7 @@ def motor_shaft_inertia_total(
     drive_pulley_radius: Quantity,
     gear_ratio_motor_to_pulley: Quantity,
     unit: str = "kilogram * meter**2",
-    precision: int = 2,
+    precision: int | None = None,
 ) -> Quantity:
     """Calculate reflected total inertia at motor shaft.
 
@@ -299,7 +299,7 @@ def motor_shaft_inertia_total(
         Gear ratio quantity defined as ``omega_motor / omega_pulley``.
     unit : str, optional
         Output unit, by default ``"kilogram * meter**2"``.
-    precision : int, optional
+    precision : int | None, optional
         Decimal rounding precision, by default ``2``. Use ``None`` to skip
         rounding.
 
@@ -343,7 +343,7 @@ def inertia_per_drive(
     inertia_total_motor_shaft: Quantity,
     motor_count: int,
     unit: str = "kilogram * meter**2",
-    precision: int = 2,
+    precision: int | None = None,
 ) -> Quantity:
     """Calculate reflected inertia per drive motor.
 
@@ -355,7 +355,7 @@ def inertia_per_drive(
         Number of drives sharing load.
     unit : str, optional
         Output unit, by default ``"kilogram * meter**2"``.
-    precision : int, optional
+    precision : int | None, optional
         Decimal rounding precision, by default ``2``. Use ``None`` to skip
         rounding.
 

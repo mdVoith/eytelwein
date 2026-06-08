@@ -146,11 +146,10 @@ def test_mechanical_power_precision():
 def test_calculates_revolutions_correctly():
     translatory_speed = 10 * u.meter / u.second
     radius = 0.5 * u.meter
-    expected_revolutions = round((10 / (2 * pi * 0.5)), 2) * u.revolution / u.second
-    assert (
-        number_of_revolutions_from_translatory_speed(translatory_speed, radius)
-        == expected_revolutions
-    )
+    expected_revolutions = (10 / (2 * pi * 0.5)) * u.revolution / u.second
+    result = number_of_revolutions_from_translatory_speed(translatory_speed, radius)
+    assert result.magnitude == pytest.approx(expected_revolutions.magnitude)
+    assert result.dimensionality == expected_revolutions.dimensionality
 
 
 def test_calculates_revolutions_correctly_with_precision():
@@ -181,9 +180,11 @@ def test_calculates_revolutions_correctly_and_converts_to_rpm():
     translatory_speed = 10 * u.meter / u.second
     radius = 0.5 * u.meter
     expected_revolutions = (10 / (2 * pi * 0.5)) * u.revolution / u.second
-    assert number_of_revolutions_from_translatory_speed(
+    result = number_of_revolutions_from_translatory_speed(
         translatory_speed, radius, unit="rpm"
-    ) == round(expected_revolutions.to(u.rpm), 2)
+    )
+    assert result.magnitude == pytest.approx(expected_revolutions.to(u.rpm).magnitude)
+    assert result.dimensionality == expected_revolutions.to(u.rpm).dimensionality
 
 
 def test_handles_zero_translatory_speed():
@@ -205,20 +206,19 @@ def test_handles_zero_radius():
 def test_handles_negative_translatory_speed():
     translatory_speed = -10 * u.meter / u.second
     radius = 0.5 * u.meter
-    expected_revolutions = round((-10 / (2 * pi * 0.5)), 2) * u.revolution / u.second
-    assert number_of_revolutions_from_translatory_speed(
-        translatory_speed, radius
-    ) == expected_revolutions.to(u.rps)
+    expected_revolutions = (-10 / (2 * pi * 0.5)) * u.revolution / u.second
+    result = number_of_revolutions_from_translatory_speed(translatory_speed, radius)
+    assert result.magnitude == pytest.approx(expected_revolutions.to(u.rps).magnitude)
+    assert result.dimensionality == expected_revolutions.to(u.rps).dimensionality
 
 
 def test_calculates_pulley_revolutions_correctly():
     belt_speed = 5 * u.meter / u.second
     pulley_diameter = 0.5 * u.meter
-    expected_revolutions = round((5 / (pi * 0.5)), 2) * u.revolution / u.second
-    assert (
-        pulley_revolutions_from_belt_speed(belt_speed, pulley_diameter)
-        == expected_revolutions
-    )
+    expected_revolutions = (5 / (pi * 0.5)) * u.revolution / u.second
+    result = pulley_revolutions_from_belt_speed(belt_speed, pulley_diameter)
+    assert result.magnitude == pytest.approx(expected_revolutions.magnitude)
+    assert result.dimensionality == expected_revolutions.dimensionality
 
 
 def test_handles_zero_belt_speed():
@@ -260,12 +260,10 @@ def test_handles_negative_pulley_diameter():
 def test_calculates_translatory_speed_correctly():
     revolutions = 10 * u.revolution / u.second
     radius = 0.5 * u.meter
-    expected_speed = round((10 * 2 * pi * 0.5), 2) * u.meter / u.second
-    assert (
-        translatory_speed_from_number_of_revolutions(revolutions, radius)
-        .to(u.meter / u.second)
-        .magnitude
-        == expected_speed.magnitude
+    expected_speed = (10 * 2 * pi * 0.5) * u.meter / u.second
+    result = translatory_speed_from_number_of_revolutions(revolutions, radius)
+    assert result.to(u.meter / u.second).magnitude == pytest.approx(
+        expected_speed.magnitude
     )
 
 
@@ -303,12 +301,10 @@ def test_handles_zero_radius2():
 def test_handles_negative_revolutions():
     revolutions = -10 * u.revolution / u.second
     radius = 0.5 * u.meter
-    expected_speed = round((-10 * 2 * pi * 0.5), 2) * u.meter / u.second
-    assert (
-        translatory_speed_from_number_of_revolutions(revolutions, radius)
-        .to(u.meter / u.second)
-        .magnitude
-        == expected_speed.magnitude
+    expected_speed = (-10 * 2 * pi * 0.5) * u.meter / u.second
+    result = translatory_speed_from_number_of_revolutions(revolutions, radius)
+    assert result.to(u.meter / u.second).magnitude == pytest.approx(
+        expected_speed.magnitude
     )
 
 
@@ -323,9 +319,10 @@ def test_calculates_belt_speed_correctly():
     revolutions = 10 * u.revolution / u.second
     pulley_diameter = 0.5 * u.meter
     expected_speed = (10 * pi * 0.5) * u.meter / u.second
-    assert belt_speed_from_pulley_revolutions(revolutions, pulley_diameter).to(
-        u.meter / u.second
-    ).magnitude == round(expected_speed.magnitude, 2)
+    result = belt_speed_from_pulley_revolutions(revolutions, pulley_diameter)
+    assert result.to(u.meter / u.second).magnitude == pytest.approx(
+        expected_speed.magnitude
+    )
 
 
 def test_belt_speed_from_pulley_revolutions_handles_zero_revolutions():
@@ -350,12 +347,10 @@ def test_belt_speed_from_pulley_revolutions_handles_zero_pulley_diameter():
 def test_belt_speed_from_pulley_revolutions_handles_negative_revolutions():
     revolutions = -10 * u.revolution / u.second
     pulley_diameter = 0.5 * u.meter
-    expected_speed = round((-10 * pi * 0.5), 2) * u.meter / u.second
-    assert (
-        belt_speed_from_pulley_revolutions(revolutions, pulley_diameter)
-        .to(u.meter / u.second)
-        .magnitude
-        == expected_speed.magnitude
+    expected_speed = (-10 * pi * 0.5) * u.meter / u.second
+    result = belt_speed_from_pulley_revolutions(revolutions, pulley_diameter)
+    assert result.to(u.meter / u.second).magnitude == pytest.approx(
+        expected_speed.magnitude
     )
 
 
@@ -439,9 +434,9 @@ class TestMechanicalPowerFromTorqueAndRevolutions:
         torque = 50 * u.newton * u.meter
         revolutions = 20 * u.revolution / u.second
         # P = 2π * T * n, expected is in watts, convert to kilowatt in the default function
-        expected_power = round(2 * pi * 50 * 20 / 1000, 2) * u.kilowatt
+        expected_power = (2 * pi * 50 * 20 / 1000) * u.kilowatt
         result = mechanical_power_from_torque_and_revolutions(torque, revolutions)
-        assert result.magnitude == expected_power.magnitude
+        assert result.magnitude == pytest.approx(expected_power.magnitude)
         assert str(result.units) == "kilowatt"
 
     def test_precision_parameter(self):
@@ -457,11 +452,11 @@ class TestMechanicalPowerFromTorqueAndRevolutions:
     def test_different_output_unit(self):
         torque = 50 * u.newton * u.meter
         revolutions = 20 * u.revolution / u.second
-        expected_power = round(2 * pi * 50 * 20, 2) * u.watt
+        expected_power = (2 * pi * 50 * 20) * u.watt
         result = mechanical_power_from_torque_and_revolutions(
             torque, revolutions, unit="watt"
         )
-        assert result.magnitude == expected_power.magnitude
+        assert result.magnitude == pytest.approx(expected_power.magnitude)
         assert str(result.units) == "watt"
 
     def test_zero_torque(self):
@@ -507,9 +502,9 @@ class TestTorqueFromMechanicalPowerAndRevolutions:
         power = 6000 * u.watt
         revolutions = 20 * u.revolution / u.second
         # T = P / (2π * n)
-        expected_torque = round(6000 / (2 * pi * 20), 2) * u.newton * u.meter
+        expected_torque = (6000 / (2 * pi * 20)) * u.newton * u.meter
         result = torque_from_mechanical_power_and_revolutions(power, revolutions)
-        assert result.magnitude == expected_torque.magnitude
+        assert result.magnitude == pytest.approx(expected_torque.magnitude)
         # Allow both "newton * meter" and "meter * newton" as they're dimensionally equivalent
         assert result.dimensionality == expected_torque.dimensionality
 
@@ -527,11 +522,11 @@ class TestTorqueFromMechanicalPowerAndRevolutions:
     def test_different_output_unit(self):
         power = 6000 * u.watt
         revolutions = 20 * u.revolution / u.second
-        expected_torque = round(6000 / (2 * pi * 20) / 1000, 2) * u.kilonewton * u.meter
+        expected_torque = (6000 / (2 * pi * 20) / 1000) * u.kilonewton * u.meter
         result = torque_from_mechanical_power_and_revolutions(
             power, revolutions, unit="kilonewton * meter"
         )
-        assert result.magnitude == expected_torque.magnitude
+        assert result.magnitude == pytest.approx(expected_torque.magnitude)
         assert str(result.units) == "kilonewton * meter"
 
     def test_zero_power(self):
@@ -576,9 +571,9 @@ class TestRevolutionsFromMechanicalPowerAndTorque:
         power = 6000 * u.watt
         torque = 50 * u.newton * u.meter
         # n = P / (2π * T)
-        expected_revolutions = round(6000 / (2 * pi * 50), 2) * u.revolution / u.second
+        expected_revolutions = (6000 / (2 * pi * 50)) * u.revolution / u.second
         result = revolutions_from_mechanical_power_and_torque(power, torque)
-        assert result.magnitude == expected_revolutions.magnitude
+        assert result.magnitude == pytest.approx(expected_revolutions.magnitude)
         # Compare dimensionality instead of exact unit string to handle unit formatting differences
         assert result.dimensionality == expected_revolutions.dimensionality
 
@@ -596,9 +591,9 @@ class TestRevolutionsFromMechanicalPowerAndTorque:
     def test_different_output_unit(self):
         power = 6000 * u.watt
         torque = 50 * u.newton * u.meter
-        expected_revolutions = round(60 * 6000 / (2 * pi * 50), 2) * u.rpm
+        expected_revolutions = (60 * 6000 / (2 * pi * 50)) * u.rpm
         result = revolutions_from_mechanical_power_and_torque(power, torque, unit="rpm")
-        assert result.magnitude == expected_revolutions.magnitude
+        assert result.magnitude == pytest.approx(expected_revolutions.magnitude)
         # Compare dimensionality instead of exact unit string
         assert result.dimensionality == expected_revolutions.dimensionality
 
@@ -644,11 +639,14 @@ class TestPulleyDiameterFromBeltSpeedAndRevolutions:
         belt_speed = 6.7 * u.meter / u.second
         revolutions = 121.867 * u.revolution / u.minute
         # D = v / (π * n)
-        expected_diameter = 1.05 * u.meter
+        expected_diameter = (
+            belt_speed.to(u.meter / u.second).magnitude
+            / (pi * revolutions.to(u.revolution / u.second).magnitude)
+        ) * u.meter
         result = pulley_diameter_from_belt_speed_and_revolutions(
             belt_speed, revolutions
         )
-        assert result.magnitude == expected_diameter.magnitude
+        assert result.magnitude == pytest.approx(expected_diameter.magnitude)
         assert str(result.units) == "meter"
 
     def test_precision_parameter(self):
@@ -666,11 +664,11 @@ class TestPulleyDiameterFromBeltSpeedAndRevolutions:
         belt_speed = 5 * u.meter / u.second
         revolutions = 10 * u.revolution / u.second
         # D = v / (π * n)
-        expected_diameter = round((5) / (pi * 10) * 1000, 2) * u.millimeter
+        expected_diameter = ((5) / (pi * 10) * 1000) * u.millimeter
         result = pulley_diameter_from_belt_speed_and_revolutions(
             belt_speed, revolutions, unit="millimeter"
         )
-        assert result.magnitude == expected_diameter.magnitude
+        assert result.magnitude == pytest.approx(expected_diameter.magnitude)
         assert str(result.units) == "millimeter"
 
     def test_zero_belt_speed(self):
@@ -714,33 +712,33 @@ class TestRadiusFromTranslatorySpeedAndRevolutions:
         translatory_speed = 5 * u.meter / u.second
         revolutions = 10 * u.revolution / u.second
         # r = v / (2π * n)
-        expected_radius = round(5 / (2 * pi * 10), 2) * u.meter
+        expected_radius = (5 / (2 * pi * 10)) * u.meter
         result = radius_from_translatory_speed_and_revolutions(
             translatory_speed, revolutions
         )
-        assert result.magnitude == expected_radius.magnitude
+        assert result.magnitude == pytest.approx(expected_radius.magnitude)
         assert str(result.units) == "meter"
 
     def test_different_units(self):
         translatory_speed = 18 * u.kilometer / u.hour  # 5 m/s
         revolutions = 600 * u.revolution / u.minute  # 10 rev/s
         # r = v / (2π * n)
-        expected_radius = round(5 / (2 * pi * 10), 2) * u.meter
+        expected_radius = (5 / (2 * pi * 10)) * u.meter
         result = radius_from_translatory_speed_and_revolutions(
             translatory_speed, revolutions
         )
-        assert result.magnitude == expected_radius.magnitude
+        assert result.magnitude == pytest.approx(expected_radius.magnitude)
         assert str(result.units) == "meter"
 
     def test_custom_output_unit(self):
         translatory_speed = 5 * u.meter / u.second
         revolutions = 10 * u.revolution / u.second
         # r = v / (2π * n)
-        expected_radius = round(5 / (2 * pi * 10) * 100, 2) * u.centimeter
+        expected_radius = (5 / (2 * pi * 10) * 100) * u.centimeter
         result = radius_from_translatory_speed_and_revolutions(
             translatory_speed, revolutions, unit="centimeter"
         )
-        assert result.magnitude == expected_radius.magnitude
+        assert result.magnitude == pytest.approx(expected_radius.magnitude)
         assert str(result.units) == "centimeter"
 
     def test_zero_translatory_speed(self):
@@ -765,11 +763,11 @@ class TestRadiusFromTranslatorySpeedAndRevolutions:
     def test_negative_translatory_speed(self):
         translatory_speed = -5 * u.meter / u.second
         revolutions = 10 * u.revolution / u.second
-        expected_radius = round(-5 / (2 * pi * 10), 2) * u.meter
+        expected_radius = (-5 / (2 * pi * 10)) * u.meter
         result = radius_from_translatory_speed_and_revolutions(
             translatory_speed, revolutions
         )
-        assert result.magnitude == expected_radius.magnitude
+        assert result.magnitude == pytest.approx(expected_radius.magnitude)
         assert str(result.units) == "meter"
 
     def test_negative_revolutions(self):
