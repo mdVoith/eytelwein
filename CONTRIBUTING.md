@@ -105,21 +105,22 @@ git push origin "HEAD:refs/heads/$branch"
 git push origin "v$version"
 ```
 
-5. Open a pull request back to `main`:
+5. Open a pull request back to `main` in the GitHub web UI:
 
-```powershell
-gh pr create `
-    --base main `
-    --head "$branch" `
-    --title "chore(release): v$version" `
-    --body "Manual release for v$version. Tag pushed and Publish to PyPI is running; merge this PR to land the version bump and changelog on main."
+```text
+https://github.com/<owner>/<repo>/compare/main...release/v$version?expand=1
 ```
+
+Use that compare page to create the PR with:
+- Title: `chore(release): v$version`
+- Body: `Manual release for v$version. Tag pushed and Publish to PyPI is running; merge this PR to land the version bump and changelog on main.`
 
 6. Review and merge the release PR (merge or rebase preferred; avoid squash), then verify both Release/Publish results.
 
 Notes:
 - Do not push the bump commit directly to `main`; keep it on `release/vX.Y.Z` and merge via PR.
 - This manual flow requires permission to push branches/tags and create pull requests.
+- The `gh` CLI is optional; the web UI step above is the default documented path.
 - If `git push origin "HEAD:refs/heads/$branch"` is rejected because `release/vX.Y.Z` already exists remotely, the branch is stale from a previous attempt. Delete the stale remote branch and tag for that version, then push again, or choose a new version if the tag has already been published.
 
 ## Code Conventions
