@@ -140,7 +140,8 @@ def load_factor_determining_idler_roll_load_due_to_conveyor_belt(
     >>> factor = load_factor_determining_idler_roll_load_due_to_conveyor_belt(
     ...     IdlerSets.THREE_TROUGH,
     ...     480 * u.millimeter,
-    ...     1200 * u.millimeter
+    ...     1200 * u.millimeter,
+    ...     precision=3,
     ... )
     >>> print(factor)  # 0.417 (approximately)
     0.417 dimensionless
