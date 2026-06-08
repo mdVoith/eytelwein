@@ -1,3 +1,14 @@
+## v0.1.2 (2026-06-08)
+
+### Fix
+
+- update version to 0.1.1 and remove unused documentation
+- logo path in README
+
+### Refactor
+
+- precision handling in calculations across multiple modules. Use `None` as default.
+
 ## v0.1.1 (2026-06-03)
 
 ## v0.1.0 (2026-06-02)
