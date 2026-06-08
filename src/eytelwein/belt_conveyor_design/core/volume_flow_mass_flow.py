@@ -33,7 +33,7 @@ u = get_unit_registry()
 def usable_belt_width(
     belt_width: Quantity,
     unit: str = "millimeter",
-    precision: int = 2,
+    precision: int | None = None,
 ) -> Quantity:
     """
     Calculate the usable belt width based on the given belt width.
@@ -44,7 +44,7 @@ def usable_belt_width(
     Parameters:
     belt_width (Quantity): The total width of the belt as a `Quantity` with units of millimeters.
     unit (str, optional): The unit for the returned width. Defaults to "millimeter".
-    precision (int, optional): The number of decimal places to round the result to. Defaults to 2.
+    precision (int | None, optional): The number of decimal places to round the result to. Defaults to None. Use None to skip rounding and retain maximum available precision.
 
     Returns:
     Quantity: The usable width of the belt as a `Quantity` with the specified unit.
@@ -83,7 +83,7 @@ def partial_cross_section_above_water_fill(
     troughing_angle: Quantity,
     equivalent_slope_angle: Quantity,
     unit: str = "millimeter**2",
-    precision: int = 5,
+    precision: int | None = None,
 ) -> Quantity:
     try:
         # Convert center_roll_length to millimeters
@@ -140,7 +140,7 @@ def partial_cross_section_at_water_fill(
     usable_belt_width: Quantity,
     troughing_angle: Quantity,
     unit: str = "millimeter**2",
-    precision: int = 5,
+    precision: int | None = None,
 ) -> Quantity:
     """
     Calculate the partial cross-sectional area of the belt at water fill.
@@ -153,7 +153,7 @@ def partial_cross_section_at_water_fill(
     usable_belt_width (Quantity): The usable width of the belt as a `Quantity` with units of millimeters.
     troughing_angle (Quantity): The troughing angle as a `Quantity` with units of degrees.
     unit (str, optional): The unit for the returned area. Defaults to "millimeter**2".
-    precision (int, optional): The number of decimal places to round the result to. Defaults to 5.
+    precision (int | None, optional): The number of decimal places to round the result to. Defaults to None. Use None to skip rounding and retain maximum available precision.
 
     Returns:
     Quantity: The calculated partial cross-sectional area as a `Quantity` with the specified unit.
@@ -214,7 +214,7 @@ def cross_section_of_fill(
     troughing_angle: Quantity,
     equivalent_slope_angle: Quantity,
     unit: str = "millimeter**2",
-    precision: int = 5,
+    precision: int | None = None,
 ) -> Quantity:
     """
     Calculate the total cross-sectional area of the belt fill.
@@ -229,7 +229,7 @@ def cross_section_of_fill(
     troughing_angle (Quantity): The troughing angle as a `Quantity` with units of degrees.
     equivalent_slope_angle (Quantity): The equivalent slope angle as a `Quantity` with units of degrees.
     unit (str, optional): The unit for the returned area. Defaults to "millimeter**2".
-    precision (int, optional): The number of decimal places to round the result to. Defaults to 5.
+    precision (int | None, optional): The number of decimal places to round the result to. Defaults to None. Use None to skip rounding and retain maximum available precision.
 
     Returns:
     Quantity: The calculated total cross-sectional area as a `Quantity` with the specified unit.
@@ -290,7 +290,7 @@ def volume_flow_from_cross_section_speed(
     cross_section_of_fill: Quantity,
     belt_speed: Quantity,
     unit: str = "meter**3/second",
-    precision: int = 5,
+    precision: int | None = None,
 ) -> Quantity:
     try:
         cross_section_of_fill_m2 = cross_section_of_fill.to(u.meter**2)
@@ -325,7 +325,7 @@ def mass_flow_from_volume_flow_density(
     volume_flow: Quantity,
     bulk_density: Quantity,
     unit: str = "kilogram/second",
-    precision: int = 5,
+    precision: int | None = None,
 ) -> Quantity:
     try:
         volume_flow_m3ps = volume_flow.to(u.meter**3 / u.second)
@@ -360,7 +360,7 @@ def volume_flow_from_mass_flow_density(
     m_flow: Quantity,
     bulk_density: Quantity,
     unit: str = "meter**3/second",
-    precision: int = 5,
+    precision: int | None = None,
 ) -> Quantity:
     """
     Calculate the volume flow of material from mass flow and bulk density.
@@ -377,8 +377,8 @@ def volume_flow_from_mass_flow_density(
         The bulk density of the material in kilograms per cubic meter [kg/m³]
     unit : str, optional
         The unit for the returned volume flow. Defaults to "meter**3/second".
-    precision : int, optional
-        The number of decimal places to round the result to. Defaults to 5.
+    precision : int | None, optional
+        The number of decimal places to round the result to. Defaults to None. Use None to skip rounding and retain maximum available precision.
 
     Returns
     -------
@@ -451,7 +451,7 @@ def mass_flow_from_cross_section_speed_density(
     belt_speed: Quantity,
     bulk_density: Quantity,
     unit: str = "kilogram/second",
-    precision: int = 5,
+    precision: int | None = None,
 ) -> Quantity:
     try:
         cross_section_of_fill_m2 = cross_section_of_fill.to(u.meter**2)
@@ -489,7 +489,7 @@ def cross_section_from_volume_flow_speed(
     volume_flow: Quantity,
     belt_speed: Quantity,
     unit: str = "meter**2",
-    precision: int = 5,
+    precision: int | None = None,
 ) -> Quantity:
     try:
         volume_flow_m3ps = volume_flow.to(u.meter**3 / u.second)
@@ -524,7 +524,7 @@ def cross_section_from_mass_flow_speed_density(
     belt_speed: Quantity,
     bulk_density: Quantity,
     unit: str = "meter**2",
-    precision: int = 5,
+    precision: int | None = None,
 ) -> Quantity:
     try:
         mass_flow_kgps = mass_flow.to(u.kilogram / u.second)
@@ -561,7 +561,7 @@ def nominal_volume_flow(
     theoretical_volume_flow: Quantity,
     effective_filling_ratio: float,
     unit: str = "meter**3/second",
-    precision: int = 5,
+    precision: int | None = None,
 ) -> Quantity:
     try:
         theoretical_volume_flow_m3ps = theoretical_volume_flow.to(u.meter**3 / u.second)
@@ -596,7 +596,7 @@ def nominal_mass_flow(
     effective_filling_ratio: float,
     bulk_density: Quantity,
     unit: str = "kilogram/second",
-    precision: int = 5,
+    precision: int | None = None,
 ) -> Quantity:
     try:
         theoretical_volume_flow_m3ps = theoretical_volume_flow.to(u.meter**3 / u.second)
@@ -634,7 +634,7 @@ def line_load_from_nominal_load(
     effective_filling_ratio: float,
     bulk_density: Quantity,
     unit: str = "kilogram/meter",
-    precision: int = 5,
+    precision: int | None = None,
 ) -> Quantity:
     try:
         theoretical_cross_section_m2 = theoretical_cross_section.to(u.meter**2)
@@ -671,7 +671,7 @@ def line_load_from_nominal_mass_flow_speed(
     nominal_mass_flow: Quantity,
     belt_speed: Quantity,
     unit: str = "kilogram/meter",
-    precision: int = 5,
+    precision: int | None = None,
 ) -> Quantity:
     try:
         nominal_mass_flow_kgps = nominal_mass_flow.to(u.kilogram / u.second)
@@ -709,7 +709,7 @@ def solve_for_used_belt_width_from_cross_section(
     equivalent_slope_angle: Quantity,
     initial_guess: Quantity | None = None,
     unit: str = "millimeter",
-    precision: int = 2,
+    precision: int | None = None,
 ) -> Quantity:
     """
     Calculate the used belt width required to achieve a specific cross-section area.
@@ -725,7 +725,7 @@ def solve_for_used_belt_width_from_cross_section(
     equivalent_slope_angle (Quantity): The equivalent slope angle as a `Quantity`.
     initial_guess (Quantity, optional): Initial guess for used belt width.
     unit (str, optional): The unit for the returned width. Defaults to "millimeter".
-    precision (int, optional): The number of decimal places to round the result to. Defaults to 2.
+    precision (int | None, optional): The number of decimal places to round the result to. Defaults to None. Use None to skip rounding and retain maximum available precision.
 
     Returns:
     Quantity: The calculated used belt width as a `Quantity` with the specified unit.
@@ -784,7 +784,7 @@ def belt_edge_distance(
     belt_width: Quantity,
     used_belt_width: Quantity,
     unit: str = "millimeter",
-    precision: int = 2,
+    precision: int | None = None,
 ) -> Quantity:
     """
     Calculate the distance between the edge of the belt and the used belt width on each side.
@@ -796,7 +796,7 @@ def belt_edge_distance(
     belt_width (Quantity): The total width of the belt as a `Quantity`.
     used_belt_width (Quantity): The width of the belt that is actually used or the usable belt width.
     unit (str, optional): The unit for the returned distance. Defaults to "millimeter".
-    precision (int, optional): The number of decimal places to round the result to. Defaults to 2.
+    precision (int | None, optional): The number of decimal places to round the result to. Defaults to None. Use None to skip rounding and retain maximum available precision.
 
     Returns:
     Quantity: The calculated distance from the belt edge to the used belt width on one side.
@@ -837,7 +837,7 @@ def length_of_material_on_side_roll(
     part_of_belt_lying_on_side_idler: Quantity,
     belt_edge_distance: Quantity,
     unit: str = "millimeter",
-    precision: int = 2,
+    precision: int | None = None,
 ) -> Quantity:
     """
     Calculate the length of material on the side roll of a conveyor belt.
@@ -849,7 +849,7 @@ def length_of_material_on_side_roll(
     part_of_belt_lying_on_side_idler (Quantity): The length of the belt segment that lies on the side idler.
     belt_edge_distance (Quantity): The distance from the edge of the belt to the point where the material ends.
     unit (str, optional): The unit for the returned length. Defaults to "millimeter".
-    precision (int, optional): The number of decimal places to round the result to. Defaults to 2.
+    precision (int | None, optional): The number of decimal places to round the result to. Defaults to None. Use None to skip rounding and retain maximum available precision.
 
     Returns:
     Quantity: The calculated effective length of material on the side roll with the specified unit.
@@ -892,7 +892,7 @@ def reduction_factor_inclined_fill_1(
     maximal_inclination_angle: Quantity,
     dynamic_angle_of_slope: Quantity,
     unit: str = "dimensionless",
-    precision: int = 5,
+    precision: int | None = None,
 ) -> Quantity:
     """
     Calculate the reduction factor for inclined fill based on the maximal inclination angle and the dynamic angle of slope.
@@ -908,7 +908,7 @@ def reduction_factor_inclined_fill_1(
     maximal_inclination_angle (Quantity): The maximal inclination angle of the fill as a `Quantity` with units of degrees.
     dynamic_angle_of_slope (Quantity): The dynamic angle of slope as a `Quantity` with units of degrees.
     unit (str, optional): The unit for the returned factor. Defaults to "dimensionless".
-    precision (int, optional): The number of decimal places to round the result to. Defaults to 5.
+    precision (int | None, optional): The number of decimal places to round the result to. Defaults to None. Use None to skip rounding and retain maximum available precision.
 
     Returns:
     Quantity: The calculated reduction factor as a dimensionless `Quantity`.
@@ -961,7 +961,7 @@ def reduction_factor_inclined_fill(
     theoretical_cross_section_of_fill: Quantity,
     reduction_factor_inclined_fill_1: Quantity,
     unit: str = "dimensionless",
-    precision: int = 5,
+    precision: int | None = None,
 ) -> Quantity:
     """
     Calculate the reduction factor for inclined fill on a conveyor belt.
@@ -982,7 +982,7 @@ def reduction_factor_inclined_fill(
     reduction_factor_inclined_fill_1 (Quantity): The first reduction factor for inclined fill
         as a dimensionless `Quantity`.
     unit (str, optional): The unit for the returned factor. Defaults to "dimensionless".
-    precision (int, optional): The number of decimal places to round the result to. Defaults to 5.
+    precision (int | None, optional): The number of decimal places to round the result to. Defaults to None. Use None to skip rounding and retain maximum available precision.
 
     Returns:
     Quantity: The calculated reduction factor as a dimensionless `Quantity`.
@@ -1042,7 +1042,7 @@ def effective_filling_ratio(
     filling_ratio_operations: float,
     reduction_factor_inclined_fill: Quantity,
     unit: str = "dimensionless",
-    precision: int = 5,
+    precision: int | None = None,
 ) -> Quantity:
     """
     Calculate the effective filling ratio of a conveyor belt.
@@ -1062,8 +1062,8 @@ def effective_filling_ratio(
         a dimensionless quantity that accounts for material distribution on inclined belts.
     unit (str, optional): The unit for the returned value. Must be dimensionless.
         Defaults to "dimensionless".
-    precision (int, optional): The number of decimal places to round the result to.
-        Defaults to 5.
+    precision (int | None, optional): The number of decimal places to round the result to.
+        Defaults to None. Use None to skip rounding and retain maximum available precision.
 
     Returns:
     Quantity: The calculated effective filling ratio as a dimensionless `Quantity`.
@@ -1109,7 +1109,7 @@ def effective_filling_ratio_from_areas(
     theoretical_cross_section_of_fill: Quantity,
     actual_cross_section: Quantity,
     unit: str = "dimensionless",
-    precision: int = 5,
+    precision: int | None = None,
 ) -> Quantity:
     """
     Calculate the effective filling ratio based on the areas of the cross-section.
@@ -1127,8 +1127,8 @@ def effective_filling_ratio_from_areas(
         theoretical_cross_section_of_fill.
     unit : str, optional
         The desired output unit, defaults to "dimensionless". Must be a dimensionless unit.
-    precision : int, optional
-        The precision of the result (number of decimal places). Default is 5.
+    precision : int | None, optional
+        The precision of the result (number of decimal places). Default is None. Use None to skip rounding and retain maximum available precision.
 
     Returns
     -------
@@ -1164,8 +1164,9 @@ def effective_filling_ratio_from_areas(
 
     result = (filling_ratio * u.dimensionless).to(pint_unit)
 
-    # Apply precision
-    result = round(result, precision)
+    # Apply precision only when explicitly requested
+    if precision is not None:
+        result = round(result, precision)
 
     return result
 

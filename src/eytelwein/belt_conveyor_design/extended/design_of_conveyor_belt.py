@@ -17,7 +17,7 @@ def belt_weight_per_square_meter(
     bottom_cover_thickness: Quantity,
     rubber_density: Quantity,
     unit: str = "kilogram/meter**2",
-    precision: int = 2,
+    precision: int | None = None,
 ) -> Quantity:
     """
     Calculate the total weight per square meter of a conveyor belt.
@@ -35,7 +35,7 @@ def belt_weight_per_square_meter(
         rubber_density: Density of the rubber material as a `Quantity` with units
             of kg/m³.
         unit: The unit for the returned weight. Defaults to "kilogram/meter**2".
-        precision: The number of decimal places to round the result to. Defaults to 2.
+        precision: The number of decimal places to round the result to. Defaults to None. Use None to skip rounding and retain maximum available precision.
 
     Returns:
         The calculated total weight per square meter of the conveyor belt as a
@@ -95,7 +95,7 @@ def line_load_belt(
     bottom_cover_thickness: Quantity,
     rubber_density: Quantity,
     unit: str = "kilogram/meter",
-    precision: int = 2,
+    precision: int | None = None,
 ) -> Quantity:
     """
     Calculate the line load of a conveyor belt.
@@ -114,7 +114,7 @@ def line_load_belt(
         rubber_density: Density of the rubber material as a `Quantity` with units
             of kg/m³.
         unit: The unit for the returned line load. Defaults to "kilogram/meter".
-        precision: The number of decimal places to round the result to. Defaults to 2.
+        precision: The number of decimal places to round the result to. Defaults to None. Use None to skip rounding and retain maximum available precision.
 
     Returns:
         The calculated line load of the conveyor belt as a `Quantity` with the
@@ -175,7 +175,7 @@ def line_load_belt_from_belt_weight_per_square_meter(
     belt_weight_per_square_meter: Quantity,
     belt_width: Quantity,
     unit: str = "kilogram/meter",
-    precision: int = 2,
+    precision: int | None = None,
 ) -> Quantity:
     """
     Calculate the line load of a conveyor belt from its weight per square meter.
@@ -188,7 +188,7 @@ def line_load_belt_from_belt_weight_per_square_meter(
             with units of kg/m².
         belt_width: Width of the belt as a `Quantity` with units of length (e.g., meters).
         unit: The unit for the returned line load. Defaults to "kilogram/meter".
-        precision: The number of decimal places to round the result to. Defaults to 2.
+        precision: The number of decimal places to round the result to. Defaults to None. Use None to skip rounding and retain maximum available precision.
 
     Returns:
         The calculated line load of the conveyor belt as a `Quantity` with the

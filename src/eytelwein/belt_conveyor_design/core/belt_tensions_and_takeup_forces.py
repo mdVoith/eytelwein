@@ -22,7 +22,7 @@ def minimum_belt_tension_from_sag_carry(
     idler_spacing: Quantity,
     allowable_sag: Quantity,
     unit: str = "kilonewton",
-    precision: int | None = 5,
+    precision: int | None = None,
 ) -> Quantity:
     """
     Calculate minimum belt tension from sag during carry run.

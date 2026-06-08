@@ -77,7 +77,7 @@ def length_of_material_on_side_roll(
     part_of_belt_lying_on_side_idler: Quantity,
     belt_edge_distance: Quantity,
     unit: str = "millimeter",
-    precision: int = 2,
+    precision: int | None = None,
 ) -> Quantity:
     """
     Calculate the length of material on the side roll of a conveyor belt.
@@ -89,7 +89,8 @@ def length_of_material_on_side_roll(
     part_of_belt_lying_on_side_idler (Quantity): The length of the belt segment that lies on the side idler.
     belt_edge_distance (Quantity): The distance from the edge of the belt to the point where the material ends.
     unit (str, optional): The unit for the returned length. Defaults to "millimeter".
-    precision (int, optional): The number of decimal places to round the result to. Defaults to 2.
+    precision (int | None, optional): The number of decimal places to round the result to.
+        Defaults to None. Use None to skip rounding and retain maximum available precision. Use None to skip rounding and retain maximum available precision.
 
     Returns:
     Quantity: The calculated effective length of material on the side roll with the specified unit.
@@ -175,7 +176,7 @@ def calculate_frequency(
     translatory_speed: Quantity,
     radius: Quantity,
     unit: str = "hertz",
-    precision: int = 2,
+    precision: int | None = None,
 ) -> Quantity:
     """
     Calculate rotational frequency from translatory speed and radius.
@@ -188,8 +189,9 @@ def calculate_frequency(
         Radius with length dimensions.
     unit : str, optional
         Output unit. Default is "hertz".
-    precision : int, optional
-        Decimal places. Default is 2.
+    precision : int | None, optional
+        Decimal places. Default is None. Use None to skip rounding and retain maximum available precision. Use None to skip rounding and retain
+        maximum available precision.
 
     Returns
     -------
@@ -330,7 +332,7 @@ def length_of_material_on_side_roll(
     part_of_belt_lying_on_side_idler: Quantity,
     belt_edge_distance: Quantity,
     unit: str = "millimeter",
-    precision: int = 2,
+    precision: int | None = None,
 ) -> Quantity:
     """
     Calculate the length of material on the side roll of a conveyor belt.
@@ -342,7 +344,8 @@ def length_of_material_on_side_roll(
     part_of_belt_lying_on_side_idler (Quantity): The length of the belt segment that lies on the side idler.
     belt_edge_distance (Quantity): The distance from the edge of the belt to the point where the material ends.
     unit (str, optional): The unit for the returned length. Defaults to "millimeter".
-    precision (int, optional): The number of decimal places to round the result to. Defaults to 2.
+    precision (int | None, optional): The number of decimal places to round the result to.
+        Defaults to None. Use None to skip rounding and retain maximum available precision. Use None to skip rounding and retain maximum available precision.
 
     Returns:
     Quantity: The calculated effective length of material on the side roll with the specified unit.

@@ -595,7 +595,7 @@ def test_maximal_allowable_pulley_lift_valid():
 
 def test_maximal_allowable_pulley_lift_valid_with_different_unit():
     result = maximal_allowable_pulley_lift(u.Quantity(500, "millimeter"), unit="meter")
-    assert result.magnitude == pytest.approx(0.17, rel=1e-2)
+    assert result.magnitude == pytest.approx(1 / 6, rel=1e-6)
     assert result.units == u.meter
 
 
