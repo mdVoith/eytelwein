@@ -62,12 +62,55 @@ uv sync
 4. Review and merge the release PR (preferably with a merge or rebase, not squash) to land the version bump and changelog on `main`.
 5. Monitor the Release and Publish runs in GitHub Actions and verify the package on PyPI.
 
-Manual fallback (if needed):
+Manual release (protected `main`):
+
+Use this when you want to perform the release process yourself instead of the Release workflow.
+
+1. Start from up-to-date `main` and create a temporary release branch:
 
 ```powershell
-uv run cz bump
-git push origin vX.Y.Z
+git fetch origin
+git switch main
+git pull --ff-only origin main
+git switch -c release/tmp
 ```
+
+2. Run Commitizen bump on the branch (choose PATCH, MINOR, or MAJOR):
+
+```powershell
+uv run --with commitizen cz bump --yes --increment PATCH
+```
+
+3. Read the bumped version and rename the branch to the canonical release name:
+
+```powershell
+$version = uv run --with commitizen cz version -p
+$branch = "release/v$version"
+git branch -m $branch
+```
+
+4. Push branch and tag (tag push triggers Publish to PyPI):
+
+```powershell
+git push origin "HEAD:refs/heads/$branch"
+git push origin "v$version"
+```
+
+5. Open a pull request back to `main`:
+
+```powershell
+gh pr create `
+    --base main `
+    --head "$branch" `
+    --title "chore(release): v$version" `
+    --body "Manual release for v$version. Tag pushed and Publish to PyPI is running; merge this PR to land the version bump and changelog on main."
+```
+
+6. Review and merge the release PR (merge or rebase preferred; avoid squash), then verify both Release/Publish results.
+
+Notes:
+- Do not push the bump commit directly to `main`; keep it on `release/vX.Y.Z` and merge via PR.
+- This manual flow requires permission to push branches/tags and create pull requests.
 
 ## Code Conventions
 
