@@ -92,6 +92,15 @@ git branch -m $branch
 4. Push branch and tag (tag push triggers Publish to PyPI):
 
 ```powershell
+git ls-remote --heads origin "$branch"
+git ls-remote --tags origin "v$version"
+
+# If this is a retry and the remote refs already exist from the same failed attempt,
+# remove the stale release branch and tag before pushing again.
+# Only do this if you are sure the refs are not needed anymore.
+# git push origin --delete "$branch"
+# git push origin ":refs/tags/v$version"
+
 git push origin "HEAD:refs/heads/$branch"
 git push origin "v$version"
 ```
@@ -111,6 +120,7 @@ gh pr create `
 Notes:
 - Do not push the bump commit directly to `main`; keep it on `release/vX.Y.Z` and merge via PR.
 - This manual flow requires permission to push branches/tags and create pull requests.
+- If `git push origin "HEAD:refs/heads/$branch"` is rejected because `release/vX.Y.Z` already exists remotely, the branch is stale from a previous attempt. Delete the stale remote branch and tag for that version, then push again, or choose a new version if the tag has already been published.
 
 ## Code Conventions
 
