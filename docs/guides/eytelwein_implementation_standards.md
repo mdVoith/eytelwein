@@ -187,7 +187,7 @@ def public_calculation(
     value: Quantity,
     radius: Quantity,
     unit: str = "meter",
-    precision: int = 2,
+    precision: int | None = None,
 ) -> Quantity:
     """Calculate something with unit handling."""
     # Step 1: Convert units
@@ -295,7 +295,7 @@ def force_component_towards_inside_curve_from_belt_tension(
     idler_spacing: Quantity,
     horizontal_curve_radius: Quantity,
     unit: str = "newton",
-    precision: int = 2,
+    precision: int | None = None,
 ) -> Quantity:
     """Calculate force component towards inside of curve."""
     # Convert units
@@ -487,7 +487,7 @@ def calculate_ratio(
     numerator: Quantity,
     denominator: Quantity,
     unit: str = "dimensionless",
-    precision: int = 2,
+    precision: int | None = None,
 ) -> Quantity:
     """Calculate ratio with unit handling."""
     try:
@@ -604,7 +604,7 @@ def friction_resistance_of_skirting_board_from_material_flow(
     # ... other parameters
     skirting_board_length: Quantity,
     unit: str = "newton",
-    precision: Optional[int] = 2,
+    precision: Optional[int] = None,
 ) -> Quantity:
     """
     Calculate friction resistance between material and lateral skirting board.
@@ -629,7 +629,7 @@ def friction_resistance_per_meter_of_skirting_board_from_material_flow(
     # ... other parameters (same as above)
     skirting_board_length: Quantity,
     unit: str = "newton/meter",
-    precision: Optional[int] = 2,
+    precision: Optional[int] = None,
 ) -> Quantity:
     """
     Calculate friction resistance per unit length of skirting board.
@@ -772,7 +772,7 @@ def public_calculation_function(
     param1: Quantity,
     param2: Quantity,
     unit: str = "newton",
-    precision: int = 2,
+    precision: int | None = None,
 ) -> Quantity:
     """
     Calculate [description] using [method].
@@ -785,8 +785,9 @@ def public_calculation_function(
         Description with expected dimensions [unit].
     unit : str, optional
         Output unit. Default is "newton".
-    precision : int, optional
-        Decimal places for results. Default is 2.
+    precision : int | None, optional
+        Decimal places for results. Default is None. Use None to skip rounding and retain maximum available precision. Use None to skip rounding and
+        retain maximum available precision.
 
     Returns
     -------
@@ -840,7 +841,7 @@ def public_calculation_function_sections(
     param1: Union[Quantity, np.ndarray],
     param2: Union[Quantity, np.ndarray],
     unit: str = "newton",
-    precision: int = 2,
+    precision: int | None = None,
     high_performance: bool = False,
 ) -> Quantity:
     """Vectorized version for multiple sections."""

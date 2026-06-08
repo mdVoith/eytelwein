@@ -23,7 +23,7 @@ def maximal_cross_section_skirt_board_known_geometry(
     troughing_angle: Quantity,
     equivalent_slope_angle: Quantity,
     unit: str = "millimeter**2",
-    precision: int = 5,
+    precision: int | None = None,
 ) -> Quantity:
     try:
         # Convert quantities to millimeters and angles to radians
@@ -77,7 +77,7 @@ def required_skirtboard_height_from_cross_section(
     equivalent_slope_angle: Quantity,
     cross_section: Quantity,
     unit: str = "millimeter",
-    precision: int = 5,
+    precision: int | None = None,
 ) -> Quantity:
     try:
         # Convert quantities to millimeters and angles to radians
@@ -126,7 +126,7 @@ def get_usable_belt_width_from_skirt_board_width(
     center_roll_length: Quantity,
     troughing_angle: Quantity,
     unit: str = "millimeter",
-    precision: int = 5,
+    precision: int | None = None,
 ) -> Quantity:
     try:
         # Convert quantities to millimeters and angles to radians
@@ -168,7 +168,7 @@ def get_usable_belt_width_from_skirt_board_width(
 def convert_equivalent_angle_of_slope_to_surcharge_angle(
     equivalent_slope_angle: Quantity,
     unit: str = "degree",
-    precision: int = 5,
+    precision: int | None = None,
 ) -> Quantity:
     try:
         # Convert angle to radians for internal calculations
@@ -205,7 +205,7 @@ def convert_equivalent_angle_of_slope_to_surcharge_angle(
 def convert_surcharge_angle_to_equivalent_angle_of_slope(
     surcharge_angle: Quantity,
     unit: str = "degree",
-    precision: int = 5,
+    precision: int | None = None,
 ) -> Quantity:
     try:
         # Convert angle to radians for internal calculations
@@ -245,7 +245,7 @@ def convert_surcharge_angles(
     slope_angle: Quantity | None = None,
     surcharge_angle: Quantity | None = None,
     unit: str = "degree",
-    precision: int = 5,
+    precision: int | None = None,
 ) -> dict:
     try:
         # Convert angles to radians for internal calculations
@@ -292,7 +292,7 @@ def get_material_bed_depth(
     center_roll_length: Quantity,
     slope_angle: Quantity,
     unit: str = "millimeter",
-    precision: int = 2,
+    precision: int | None = None,
 ) -> Quantity:
     """
     Calculate the material bed depth on a conveyor belt based on the geometry of the belt and material.
@@ -309,7 +309,7 @@ def get_material_bed_depth(
     center_roll_length (Quantity): The length of the center roll.
     slope_angle (Quantity): The slope angle of the material.
     unit (str, optional): The unit for the returned depth. Defaults to "millimeter".
-    precision (int, optional): The number of decimal places to round the result to. Defaults to 2.
+    precision (int | None, optional): The number of decimal places to round the result to. Defaults to None. Use None to skip rounding and retain maximum available precision.
 
     Returns:
     Quantity: The calculated material bed depth with the specified unit.
@@ -358,7 +358,7 @@ def material_bed_width(
     length_of_material_cover_on_wing_roll: Quantity,
     troughing_angle: Quantity,
     unit: str = "millimeter",
-    precision: int = 2,
+    precision: int | None = None,
 ) -> Quantity:
     r"""
     Calculate the material bed width at the wing rollers.
@@ -377,7 +377,7 @@ def material_bed_width(
         The troughing angle [angle unit]
     unit : str, optional
         The output unit for the result (default: "millimeter")
-    precision : int, optional
+    precision : int | None, optional
         The number of decimal places for rounding (default: 2)
 
     Returns

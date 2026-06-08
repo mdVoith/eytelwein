@@ -61,7 +61,7 @@ ERROR_MESSAGES = {
 }
 
 
-def _get_default_load_factor(method: str, factor_type: str) -> Union[float, None]:
+def _get_default_load_factor(method: str, factor_type: str) -> float | None:
     """
     Get appropriate default load factor for improved methods.
 
@@ -93,7 +93,7 @@ def force_component_towards_inside_curve_from_belt_tension(
     idler_spacing: "Quantity",
     horizontal_curve_radius: "Quantity",
     unit: str = "newton",
-    precision: int = 2,
+    precision: int | None = None,
 ) -> "Quantity":
     """
     Calculate the force component towards the inside of the curve from belt tension.
@@ -122,8 +122,8 @@ def force_component_towards_inside_curve_from_belt_tension(
         Radius of the horizontal curve. Must have length dimensions [m].
     unit : str, optional
         The unit for the returned force. Default is "newton".
-    precision : int, optional
-        The number of decimal places for the results. Default is 2.
+    precision : int | None, optional
+        The number of decimal places for the results. Default is None. Use None to skip rounding and retain maximum available precision.
 
     Returns
     -------
@@ -203,7 +203,7 @@ def force_component_towards_inside_curve_from_belt_tension_sections(
     idler_spacings: Union["Quantity", np.ndarray],
     horizontal_curve_radii: Union["Quantity", np.ndarray],
     unit: str = "newton",
-    precision: int = 2,
+    precision: int | None = None,
 ) -> "Quantity":
     """
     Calculate force components towards the inside of curves for multiple conveyor sections.
@@ -235,8 +235,8 @@ def force_component_towards_inside_curve_from_belt_tension_sections(
         Can be a single value applied to all sections or section-specific values.
     unit : str, optional
         The unit for the returned force array. Default is "newton".
-    precision : int, optional
-        The number of decimal places for the results. Default is 2.
+    precision : int | None, optional
+        The number of decimal places for the results. Default is None. Use None to skip rounding and retain maximum available precision.
 
     Returns
     -------
@@ -413,7 +413,7 @@ def weight_force_belt_inside(
     method: str = CONVENTIONAL_METHOD,
     wing_roll_load_factor: Optional["Quantity"] = None,
     unit: str = "newton",
-    precision: int = 2,
+    precision: int | None = None,
 ) -> "Quantity":
     """
     Calculate the weight force component acting on the inside wing roll of a troughed belt.
@@ -449,8 +449,8 @@ def weight_force_belt_inside(
         Ignored for conventional method.
     unit : str, optional
         Output unit for the force. Default is "newton".
-    precision : int, optional
-        Number of decimal places for the result. Default is 2.
+    precision : int | None, optional
+        Number of decimal places for the result. Default is None. Use None to skip rounding and retain maximum available precision.
 
     Returns
     -------
@@ -594,7 +594,7 @@ def weight_force_belt_outside(
     method: str = CONVENTIONAL_METHOD,
     wing_roll_load_factor: Optional["Quantity"] = None,
     unit: str = "newton",
-    precision: int = 2,
+    precision: int | None = None,
 ) -> "Quantity":
     """
     Calculate the weight force component acting on the outside wing roll of a troughed belt.
@@ -624,8 +624,8 @@ def weight_force_belt_outside(
         Default is "conventional".
     unit : str, optional
         Output unit for the force. Default is "newton".
-    precision : int, optional
-        Number of decimal places for the result. Default is 2.
+    precision : int | None, optional
+        Number of decimal places for the result. Default is None. Use None to skip rounding and retain maximum available precision.
 
     Returns
     -------
@@ -769,7 +769,7 @@ def weight_force_belt_center(
     method: str = CONVENTIONAL_METHOD,
     center_roll_load_factor: Optional["Quantity"] = None,
     unit: str = "newton",
-    precision: int = 2,
+    precision: int | None = None,
 ) -> "Quantity":
     """
     Calculate the weight force component acting on the center section of a troughed belt.
@@ -797,8 +797,8 @@ def weight_force_belt_center(
         Default is "conventional".
     unit : str, optional
         Output unit for the force. Default is "newton".
-    precision : int, optional
-        Number of decimal places for the result. Default is 2.
+    precision : int | None, optional
+        Number of decimal places for the result. Default is None. Use None to skip rounding and retain maximum available precision.
 
     Returns
     -------
@@ -931,7 +931,7 @@ def weight_force_of_belt(
     weight_force_belt_outside: "Quantity",
     method: str = CONVENTIONAL_METHOD,
     unit: str = "newton",
-    precision: int = 2,
+    precision: int | None = None,
 ) -> "Quantity":
     """
     Calculate the net lateral weight force acting on the belt in a horizontal curve.
@@ -955,7 +955,7 @@ def weight_force_of_belt(
         Default is "conventional".
     unit : str, optional
         Output unit for the result (default: "newton")
-    precision : int, optional
+    precision : int | None, optional
         Number of decimal places for rounding (default: 2)
 
     Returns
@@ -1044,7 +1044,7 @@ def weight_force_material_inside(
     banking_angle: "Quantity",
     method: str = CONVENTIONAL_METHOD,
     unit: str = "newton",
-    precision: int = 2,
+    precision: int | None = None,
 ) -> "Quantity":
     """
     Calculate the weight force component from material acting on the inside wing roll.
@@ -1068,8 +1068,8 @@ def weight_force_material_inside(
         Default is "conventional".
     unit : str, optional
         Output unit for the force. Default is "newton".
-    precision : int, optional
-        Number of decimal places for the result. Default is 2.
+    precision : int | None, optional
+        Number of decimal places for the result. Default is None. Use None to skip rounding and retain maximum available precision.
 
     Returns
     -------
@@ -1183,7 +1183,7 @@ def weight_force_material_outside(
     banking_angle: "Quantity",
     method: str = CONVENTIONAL_METHOD,
     unit: str = "newton",
-    precision: int = 2,
+    precision: int | None = None,
 ) -> "Quantity":
     """
     Calculate the weight force component from material acting on the outside wing roll.
@@ -1207,8 +1207,8 @@ def weight_force_material_outside(
         Default is "conventional".
     unit : str, optional
         Output unit for the force. Default is "newton".
-    precision : int, optional
-        Number of decimal places for the result. Default is 2.
+    precision : int | None, optional
+        Number of decimal places for the result. Default is None. Use None to skip rounding and retain maximum available precision.
 
     Returns
     -------
@@ -1323,7 +1323,7 @@ def weight_force_material_center(
     banking_angle: "Quantity",
     method: str = CONVENTIONAL_METHOD,
     unit: str = "newton",
-    precision: int = 2,
+    precision: int | None = None,
 ) -> "Quantity":
     """
     Calculate the weight force component from material acting on the center section.
@@ -1345,8 +1345,8 @@ def weight_force_material_center(
         Default is "conventional".
     unit : str, optional
         Output unit for the force. Default is "newton".
-    precision : int, optional
-        Number of decimal places for the result. Default is 2.
+    precision : int | None, optional
+        Number of decimal places for the result. Default is None. Use None to skip rounding and retain maximum available precision.
 
     Returns
     -------
@@ -1456,7 +1456,7 @@ def weight_force_of_material(
     outside_force: "Quantity",
     method: str = CONVENTIONAL_METHOD,
     unit: str = "newton",
-    precision: int = 2,
+    precision: int | None = None,
 ) -> "Quantity":
     """
     Calculate the net lateral weight force acting on conveyed material in horizontal curves.
@@ -1481,8 +1481,8 @@ def weight_force_of_material(
         Default is "conventional".
     unit : str, optional
         Output unit for the force. Default is "newton".
-    precision : int, optional
-        Number of decimal places for the result. Default is 2.
+    precision : int | None, optional
+        Number of decimal places for the result. Default is None. Use None to skip rounding and retain maximum available precision.
 
     Returns
     -------
@@ -1596,7 +1596,7 @@ def restraining_force_from_dead_weights(
     total_force_from_material: "Quantity",
     method: str = CONVENTIONAL_METHOD,
     unit: str = "newton",
-    precision: int = 2,
+    precision: int | None = None,
 ) -> "Quantity":
     """
     Calculate the total restraining force from dead weights acting toward the outside curve.
@@ -1620,8 +1620,8 @@ def restraining_force_from_dead_weights(
         Default is "conventional".
     unit : str, optional
         Output unit for the force. Default is "newton".
-    precision : int, optional
-        Number of decimal places for the result. Default is 2.
+    precision : int | None, optional
+        Number of decimal places for the result. Default is None. Use None to skip rounding and retain maximum available precision.
 
     Returns
     -------
@@ -1754,7 +1754,7 @@ def tilted_idler_friction_force_inside(
     wing_roll_load_factor: Optional["Quantity"] = None,
     method: str = CONVENTIONAL_METHOD,
     unit: str = "newton",
-    precision: int = 2,
+    precision: int | None = None,
 ) -> "Quantity":
     """
     Calculate the friction force from conveyed material acting on tilted idlers at the inside wing roll.
@@ -1785,14 +1785,14 @@ def tilted_idler_friction_force_inside(
         Additional normal force acting on the idler roll
     wing_roll_load_factor : Quantity, optional
         Load factor for enhanced calculation accuracy in improved method.
-        Default is 1.1 if not provided.
+        Default is None. Use None to skip rounding and retain maximum available precision.1 if not provided.
     method : str, optional
         Calculation method to use. Either "conventional" or "improved".
         Default is "conventional".
     unit : str, optional
         Output unit for the force. Default is "newton".
-    precision : int, optional
-        Number of decimal places for the result. Default is 2.
+    precision : int | None, optional
+        Number of decimal places for the result. Default is None. Use None to skip rounding and retain maximum available precision.
 
     Returns
     -------
@@ -1976,7 +1976,7 @@ def tilted_idler_friction_force_outside(
     wing_roll_load_factor: Optional["Quantity"] = None,
     method: str = CONVENTIONAL_METHOD,
     unit: str = "newton",
-    precision: int = 2,
+    precision: int | None = None,
 ) -> "Quantity":
     """
     Calculate the friction force from conveyed material acting on tilted idlers at the outside wing roll.
@@ -2007,14 +2007,14 @@ def tilted_idler_friction_force_outside(
         Additional normal force acting on the idler roll
     wing_roll_load_factor : Quantity, optional
         Load factor for wing roll considering improved load distribution (dimensionless).
-        Default is 1.1. Only used for improved method.
+        Default is None. Use None to skip rounding and retain maximum available precision.1. Only used for improved method.
     method : str, optional
         Calculation method to use. Must be one of ['conventional', 'improved'].
         Default is 'conventional'.
     unit : str, optional
         Output unit for the force. Default is "newton".
-    precision : int, optional
-        Number of decimal places for the result. Default is 2.
+    precision : int | None, optional
+        Number of decimal places for the result. Default is None. Use None to skip rounding and retain maximum available precision.
 
     Returns
     -------
@@ -2188,7 +2188,7 @@ def tilted_idler_friction_force_outside_improved(
     friction_coefficient_tilted_idler: "Quantity",
     normal_force_on_idler_roll: Optional["Quantity"] = None,
     unit: str = "newton",
-    precision: int = 2,
+    precision: int | None = None,
 ) -> "Quantity":
     """
     Calculate the friction force from conveyed material acting on tilted idlers at the outside wing roll - improved method.
@@ -2218,11 +2218,11 @@ def tilted_idler_friction_force_outside_improved(
     friction_coefficient_tilted_idler : Quantity
         Friction coefficient for material-idler interaction (dimensionless)
     normal_force_on_idler_roll : Quantity, optional
-        Additional normal force acting on the idler roll. Default is 0 N.
+        Additional normal force acting on the idler roll. Default is None. Use None to skip rounding and retain maximum available precision. N.
     unit : str, optional
         Output unit for the force. Default is "newton".
-    precision : int, optional
-        Number of decimal places for the result. Default is None.
+    precision : int | None, optional
+        Number of decimal places for the result. Default is None. Use None to skip rounding and retain maximum available precision.
 
     Returns
     -------
@@ -2284,7 +2284,7 @@ def tilted_idler_friction_force_center(
     method: str = CONVENTIONAL_METHOD,
     center_roll_load_factor: Optional["Quantity"] = None,
     unit: str = "newton",
-    precision: int = 2,
+    precision: int | None = None,
 ) -> "Quantity":
     """
     Calculate the friction force from conveyed material acting on tilted idlers at the center section.
@@ -2317,7 +2317,7 @@ def tilted_idler_friction_force_center(
     friction_coefficient_tilted_idler : Quantity
         Friction coefficient for material-idler interaction (dimensionless)
     normal_force_on_idler_roll : Quantity, optional
-        Additional normal force acting on the idler roll. Default is 0.0 * u.newton.
+        Additional normal force acting on the idler roll. Default is None. Use None to skip rounding and retain maximum available precision.0 * u.newton.
     method : str, optional
         Calculation methodology. Currently supports:
         - "conventional": Standard method from Grimmer & Kessler (1987) Teil I
@@ -2328,7 +2328,7 @@ def tilted_idler_friction_force_center(
         Ignored for conventional method.
     unit : str, optional
         The unit for the returned force. Default is "newton".
-    precision : int, optional
+    precision : int | None, optional
         Number of decimal places to round the result to. If None, no rounding is applied.
 
     Returns
@@ -2534,7 +2534,7 @@ def restraining_force_from_tilted_idlers(
     force_component_outside: "Quantity",
     method: str = CONVENTIONAL_METHOD,
     unit: str = "newton",
-    precision: int = 2,
+    precision: int | None = None,
 ) -> "Quantity":
     """
     Calculate the restraining force from tilted idlers towards the outside curve.
@@ -2559,8 +2559,8 @@ def restraining_force_from_tilted_idlers(
         Default is "conventional".
     unit : str, optional
         Output unit for the force. Default is "newton".
-    precision : int, optional
-        Number of decimal places for the result. Default is 2.
+    precision : int | None, optional
+        Number of decimal places for the result. Default is None. Use None to skip rounding and retain maximum available precision.
 
     Returns
     -------

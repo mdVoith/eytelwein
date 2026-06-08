@@ -27,7 +27,7 @@ def mean_belt_tension_related_to_belt_width(
     local_belt_force: Quantity,
     belt_width: Quantity,
     unit: str = "newton / millimeter",
-    precision: int = 2,
+    precision: int | None = None,
 ) -> Quantity:
     """
     Calculate the mean belt tension related to the belt width.
@@ -40,8 +40,8 @@ def mean_belt_tension_related_to_belt_width(
         The width of the belt with units.
     unit : str, optional
         The unit for the output mean belt tension (default is "newton / millimeter").
-    precision : int, optional
-        The precision for rounding the result (default is 2).
+    precision : int | None, optional
+        The precision for rounding the result (default is None; use an integer to round explicitly).
 
     Returns
     -------
@@ -86,7 +86,7 @@ def local_belt_force_related_to_belt_width(
     mean_belt_tension: Quantity,
     belt_width: Quantity,
     unit: str = "kilonewton",
-    precision: int = 2,
+    precision: int | None = None,
 ) -> Quantity:
     """
     Calculate the local belt force related to the belt width.
@@ -99,8 +99,8 @@ def local_belt_force_related_to_belt_width(
         The width of the belt with units.
     unit : str, optional
         The unit for the output local belt force (default is "kilonewton").
-    precision : int, optional
-        The precision for rounding the result (default is 2).
+    precision : int | None, optional
+        The precision for rounding the result (default is None; use an integer to round explicitly).
 
     Returns
     -------
@@ -143,7 +143,7 @@ def local_center_belt_force(
     belt_width: Quantity,
     difference_edge_and_center_belt_tensions: Quantity,
     unit: str = "newton / millimeter",
-    precision: int = 2,
+    precision: int | None = None,
 ) -> Quantity:
     """
     Calculate the center belt force based on various parameters.
@@ -165,9 +165,9 @@ def local_center_belt_force(
             as a Pint Quantity.
         unit (str, optional):
             The desired unit for the output force. Defaults to "kilonewton".
-        precision (int, optional):
+        precision (int | None, optional):
             The number of decimal places to round the result to. If None, no
-            rounding is applied. Defaults to 2.
+            rounding is applied. Defaults to None. Use None to skip rounding and retain maximum available precision.
     Returns:
         Quantity:
             The calculated center belt force as a Pint Quantity in the specified
@@ -231,7 +231,7 @@ def part_of_belt_lying_on_side_idler(
     belt_width: Quantity,
     length_center_roller: Quantity,
     unit: str = "millimeter",
-    precision: int = 2,
+    precision: int | None = None,
 ) -> Quantity:
     """
     Calculate the part of the belt lying on the side idler based on the belt width
@@ -244,8 +244,8 @@ def part_of_belt_lying_on_side_idler(
         belt_width (Quantity): The width of the belt as a Pint Quantity.
         length_center_roller (Quantity): The length of the center roller as a Pint Quantity.
         unit (str, optional): The desired unit for the result. Defaults to "millimeter".
-        precision (int, optional): The number of decimal places to round the result to.
-                                   If None, no rounding is applied. Defaults to 2.
+        precision (int | None, optional): The number of decimal places to round the result to.
+                                   If None, no rounding is applied. Defaults to None. Use None to skip rounding and retain maximum available precision.
     Returns:
         Quantity: The calculated part of the belt lying on the side idler in the specified unit.
                   Returns 0 for flat trough configurations (length_center_roller >= belt_width).
@@ -302,7 +302,7 @@ def local_edge_belt_force(
     local_center_belt_force: Quantity,
     difference_edge_and_center_belt_tensions: Quantity,
     unit: str = "newton / millimeter",
-    precision: int = 2,
+    precision: int | None = None,
 ) -> Quantity:
     """
     Calculate the local edge belt force based on the local center belt force
@@ -314,8 +314,8 @@ def local_edge_belt_force(
             edge and center belt tensions, expected to be a Pint Quantity with units
             convertible to "newton / millimeter".
         unit (str, optional): The desired output unit for the result. Defaults to "newton / millimeter".
-        precision (int, optional): The number of decimal places to round the result to.
-            If None, no rounding is applied. Defaults to 2.
+        precision (int | None, optional): The number of decimal places to round the result to.
+            If None, no rounding is applied. Defaults to None. Use None to skip rounding and retain maximum available precision.
     Returns:
         Quantity: The calculated local edge belt force as a Pint Quantity in the specified unit.
     Raises:
@@ -353,7 +353,7 @@ def minimal_transition_length(
     coefficient_minimum_transition_length: CoefficientMinimumTransitionLength,
     distance_belt_edge_pulley_surface_level: Quantity,
     unit: str = "meter",
-    precision: int = 2,
+    precision: int | None = None,
 ) -> Quantity:
     """
     Calculate the minimal transition length for a belt system.
@@ -368,9 +368,9 @@ def minimal_transition_length(
             provided as a Pint Quantity.
         unit (str, optional):
             The desired unit for the result. Defaults to "meter".
-        precision (int, optional):
+        precision (int | None, optional):
             The number of decimal places to round the result to. If None, no
-            rounding is applied. Defaults to 2.
+            rounding is applied. Defaults to None. Use None to skip rounding and retain maximum available precision.
     Returns:
         Quantity:
             The minimal transition length as a Pint Quantity in the specified unit.
@@ -409,7 +409,7 @@ def distance_belt_edge_to_pulley_surface_level(
     distance_belt_edge_to_deepest_level_of_trough: Quantity,
     pulley_lift: Quantity,
     unit: str = "millimeter",
-    precision: int = 2,
+    precision: int | None = None,
 ) -> Quantity:
     """
     Calculates the distance from the belt edge to the pulley surface level.
@@ -425,9 +425,9 @@ def distance_belt_edge_to_pulley_surface_level(
             The lift of the pulley, expressed as a Pint Quantity.
         unit (str, optional):
             The unit in which the result should be returned. Defaults to "millimeter".
-        precision (int, optional):
+        precision (int | None, optional):
             The number of decimal places to round the result to. If None, no rounding
-            is applied. Defaults to 2.
+            is applied. Defaults to None. Use None to skip rounding and retain maximum available precision.
     Returns:
         Quantity:
             The calculated distance from the belt edge to the pulley surface level,
@@ -468,7 +468,7 @@ def reference_length_of_transition_zone_for_steel_cord_belts(
     minimal_transition_length: Quantity,
     compensation_length: Quantity,
     unit: str = "meter",
-    precision: int = 2,
+    precision: int | None = None,
 ) -> Quantity:
     """
     Calculate the reference length of the transition zone for steel cord belts.
@@ -482,8 +482,8 @@ def reference_length_of_transition_zone_for_steel_cord_belts(
             a Pint Quantity object.
         unit (str, optional): The unit in which the result should be returned.
             Defaults to "meter".
-        precision (int, optional): The number of decimal places to round the
-            result to. If None, no rounding is applied. Defaults to 2.
+        precision (int | None, optional): The number of decimal places to round the
+            result to. If None, no rounding is applied. Defaults to None. Use None to skip rounding and retain maximum available precision.
     Returns:
         Quantity: The reference length of the transition zone as a Pint
         Quantity object in the specified unit.
@@ -522,7 +522,7 @@ def compensation_length_at_transition_zone(
     pulley_lift: Quantity,
     maximal_allowed_pulley_lift: Quantity,
     unit: str = "meter",
-    precision: int = 2,
+    precision: int | None = None,
 ) -> Quantity:
     """
     Calculates the compensation length at the transition zone of a conveyor belt.
@@ -539,8 +539,8 @@ def compensation_length_at_transition_zone(
             The maximum allowed lift of the pulley.
         unit (str, optional):
             The unit in which the result should be returned. Defaults to "meter".
-        precision (int, optional):
-            The number of decimal places to round the result to. Defaults to 2.
+        precision (int | None, optional):
+            The number of decimal places to round the result to. Defaults to None. Use None to skip rounding and retain maximum available precision.
     Returns:
         Quantity: The compensation length at the transition zone in the specified unit.
     Raises:
@@ -582,7 +582,7 @@ def length_of_belt_edge_in_transition_zone(
     part_of_belt_lying_on_side_idler: Quantity,
     troughing_angle: Quantity,
     unit: str = "meter",
-    precision: int = 6,
+    precision: int | None = None,
 ) -> Quantity:
     """
     Calculate the length of the belt edge in the transition zone.
@@ -600,8 +600,8 @@ def length_of_belt_edge_in_transition_zone(
         troughing_angle (Quantity): The troughing angle, provided as a Pint
             Quantity.
         unit (str, optional): The desired unit for the result. Defaults to "meter".
-        precision (int, optional): The number of decimal places to round the
-            result to. If None, no rounding is applied. Defaults to 2.
+        precision (int | None, optional): The number of decimal places to round the
+            result to. If None, no rounding is applied. Defaults to None. Use None to skip rounding and retain maximum available precision.
     Returns:
         Quantity: The length of the belt edge in the transition zone, as a Pint
         Quantity in the specified unit.
@@ -647,7 +647,7 @@ def difference_edge_and_center_belt_tensions_steel_cord_belts(
     reference_length_of_transition_zone_for_steel_cord_belts: Quantity,
     elastic_modulus: Quantity,
     unit: str = "newton / millimeter",
-    precision: int = 2,
+    precision: int | None = None,
 ) -> Quantity:
     """
     Calculate the difference between edge and center belt tensions for steel cord belts.
@@ -663,7 +663,7 @@ def difference_edge_and_center_belt_tensions_steel_cord_belts(
             transition zone for steel cord belts, specified as a Pint Quantity.
         elastic_modulus (Quantity): The elastic modulus of the belt material, specified as a Pint Quantity.
         unit (str, optional): The desired output unit for the result. Defaults to "newton / milimeter".
-        precision (int, optional): The number of decimal places to round the result to. Defaults to 6.
+        precision (int | None, optional): The number of decimal places to round the result to. Defaults to None. Use None to skip rounding and retain maximum available precision.
     Returns:
         Quantity: The difference between edge and center belt tensions, expressed as a Pint Quantity
         in the specified unit.
@@ -714,7 +714,7 @@ def difference_edge_and_center_belt_tensions_textile_belts(
     minimal_transition_length: Quantity,
     elastic_modulus: Quantity,
     unit: str = "newton / millimeter",
-    precision: int = 2,
+    precision: int | None = None,
 ) -> Quantity:
     """
     Calculate the difference between edge and center belt tensions for steel cord belts.
@@ -728,7 +728,7 @@ def difference_edge_and_center_belt_tensions_textile_belts(
         minimal_transition_length (Quantity): The minimal transition length, specified as a Pint Quantity.
         elastic_modulus (Quantity): The elastic modulus of the belt material, specified as a Pint Quantity.
         unit (str, optional): The desired output unit for the result. Defaults to "newton / milimeter".
-        precision (int, optional): The number of decimal places to round the result to. Defaults to 6.
+        precision (int | None, optional): The number of decimal places to round the result to. Defaults to None. Use None to skip rounding and retain maximum available precision.
     Returns:
         Quantity: The difference between edge and center belt tensions, expressed as a Pint Quantity
         in the specified unit.
@@ -773,7 +773,7 @@ def difference_edge_and_center_belt_tensions_textile_belts(
 def maximal_allowable_pulley_lift(
     distance_from_edge_to_deepest_trough_level: Quantity,
     unit: str = "millimeter",
-    precision: int = 2,
+    precision: int | None = None,
 ) -> Quantity:
     """
     Calculate the maximal allowable pulley lift based on the distance from the edge
@@ -784,9 +784,9 @@ def maximal_allowable_pulley_lift(
             Pint Quantity object.
         unit (str, optional):
             The desired output unit for the result. Defaults to "millimeter".
-        precision (int, optional):
+        precision (int | None, optional):
             The number of decimal places to round the result to. If None, no rounding
-            is applied. Defaults to 2.
+            is applied. Defaults to None. Use None to skip rounding and retain maximum available precision.
     Returns:
         Quantity: The maximal allowable pulley lift as a Pint Quantity object,
         converted to the specified unit.

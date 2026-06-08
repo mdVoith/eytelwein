@@ -16,7 +16,7 @@ def gradient_resistance(
     line_load_belt: Quantity,
     line_load_material: Quantity | None = None,
     unit: str = "newton",
-    precision: int = 2,
+    precision: int | None = None,
 ) -> Quantity:
     """
     Calculate the gradient resistance of a belt conveyor.
@@ -47,8 +47,8 @@ def gradient_resistance(
         When None, a value of 0 kg/m is used (representing an empty belt).
     unit : str, optional
         The unit for the returned resistance. Default is "newton".
-    precision : int, optional
-        The number of decimal places for the result. Default is 2.
+    precision : int | None, optional
+        The number of decimal places for the result. Default is None. Use None to skip rounding and retain maximum available precision.
 
     Returns
     -------
@@ -119,7 +119,7 @@ def gradient_resistance_sections(
     line_load_belt: Quantity | np.ndarray,
     line_load_material: Quantity | np.ndarray | None = None,
     unit: str = "newton",
-    precision: int = 2,
+    precision: int | None = None,
 ) -> Quantity:
     """
      Calculate gradient resistance for multiple conveyor sections.
@@ -153,8 +153,8 @@ def gradient_resistance_sections(
          When None, a value of 0 kg/m is used for all sections (representing empty belts).
      unit : str, optional
          The unit for the returned resistance array. Default is "newton".
-     precision : int, optional
-         The number of decimal places for the results. Default is 2.
+     precision : int | None, optional
+         The number of decimal places for the results. Default is None. Use None to skip rounding and retain maximum available precision.
 
      Returns
      -------
@@ -263,7 +263,7 @@ def total_power_at_drive_pulley_due_to_motion_resistances(
     motion_resistance: Quantity,
     belt_speed: Quantity,
     unit: str = "watt",
-    precision: int = 2,
+    precision: int | None = None,
 ) -> Quantity:
     """
     Calculate the total power at the drive pulley due to motion resistances.
@@ -288,8 +288,8 @@ def total_power_at_drive_pulley_due_to_motion_resistances(
         The speed of the belt (typically in meters per second).
     unit : str, optional
         The unit for the returned power. Default is "watt".
-    precision : int, optional
-        The number of decimal places for the result. Default is 2.
+    precision : int | None, optional
+        The number of decimal places for the result. Default is None. Use None to skip rounding and retain maximum available precision.
 
     Returns
     -------
@@ -346,7 +346,7 @@ def friction_resistance_of_skirting_board_from_material_flow(
     troughing_angle: Quantity,
     friction_coefficient_material_skirting: Quantity,
     unit: str = "newton",
-    precision: int | None = 2,
+    precision: int | None = None,
 ) -> Quantity:
     """
     Calculate friction resistance between material and lateral skirting board.
@@ -384,7 +384,7 @@ def friction_resistance_of_skirting_board_from_material_flow(
     unit : str, optional
         The unit for the returned resistance. Default is "newton".
     precision : int or None, optional
-        The number of decimal places for the result. Default is 2.
+        The number of decimal places for the result. Default is None. Use None to skip rounding and retain maximum available precision.
         If None, no rounding is applied.
 
     Returns
@@ -527,7 +527,7 @@ def friction_resistance_per_meter_of_skirting_board_from_material_flow(
     troughing_angle: Quantity,
     friction_coefficient_material_skirting: Quantity,
     unit: str = "newton/meter",
-    precision: int | None = 2,
+    precision: int | None = None,
 ) -> Quantity:
     """
     Calculate friction resistance per unit length between material and lateral skirting board.
@@ -565,7 +565,7 @@ def friction_resistance_per_meter_of_skirting_board_from_material_flow(
     unit : str, optional
         The unit for the returned resistance per unit length. Default is "newton/meter".
     precision : int or None, optional
-        The number of decimal places for the result. Default is 2.
+        The number of decimal places for the result. Default is None. Use None to skip rounding and retain maximum available precision.
         If None, no rounding is applied.
 
     Returns

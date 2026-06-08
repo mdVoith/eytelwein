@@ -14,7 +14,7 @@ def height_difference_from_section_length_and_inclination_angle(
     section_length: Quantity,
     inclination_angle: Quantity,
     unit: str = "meter",
-    precision: int = 3,
+    precision: int | None = None,
 ) -> Quantity:
     """
     Calculate the height difference from the section length and inclination angle.
@@ -37,8 +37,8 @@ def height_difference_from_section_length_and_inclination_angle(
         The angle of inclination of the conveyor (typically in degrees).
     unit : str, optional
         The desired unit for the output height difference. Default is "meter".
-    precision : int, optional
-        The number of decimal places for the result. Default is 3.
+    precision : int | None, optional
+        The number of decimal places for the result. Default is None. Use None to skip rounding and retain maximum available precision.
 
     Returns
     -------
@@ -87,7 +87,7 @@ def angle_of_inclination_from_height_difference_and_section_length(
     height_difference: Quantity,
     section_length: Quantity,
     unit: str = "radian",
-    precision: int = 3,
+    precision: int | None = None,
 ) -> Quantity:
     """
     Calculate the angle of inclination from the height difference and section length.
@@ -110,8 +110,8 @@ def angle_of_inclination_from_height_difference_and_section_length(
         The length of the conveyor section (typically in meters).
     unit : str, optional
         The desired unit for the output angle. Default is "radian". Common alternatives are "degree".
-    precision : int, optional
-        The number of decimal places for the result. Default is 3.
+    precision : int | None, optional
+        The number of decimal places for the result. Default is None. Use None to skip rounding and retain maximum available precision.
 
     Returns
     -------
@@ -166,7 +166,7 @@ def section_length_from_height_difference_and_inclination_angle(
     height_difference: Quantity,
     inclination_angle: Quantity,
     unit: str = "meter",
-    precision: int = 3,
+    precision: int | None = None,
 ) -> Quantity:
     """
     Calculate the section length from the height difference and inclination angle.
@@ -189,8 +189,8 @@ def section_length_from_height_difference_and_inclination_angle(
         The angle of inclination of the conveyor (typically in degrees).
     unit : str, optional
         The desired unit for the output section length. Default is "meter".
-    precision : int, optional
-        The number of decimal places for the result. Default is 3.
+    precision : int | None, optional
+        The number of decimal places for the result. Default is None. Use None to skip rounding and retain maximum available precision.
 
     Returns
     -------

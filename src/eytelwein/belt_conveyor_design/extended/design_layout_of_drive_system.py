@@ -25,7 +25,7 @@ def mechanical_torque_from_belt_force(
     belt_force: Quantity,
     pulley_diameter: Quantity,
     unit: str = "newton * meter",
-    precision: int = 2,
+    precision: int | None = None,
 ) -> Quantity:
     """
     Calculate the mechanical torque from the belt force and pulley diameter.
@@ -38,8 +38,8 @@ def mechanical_torque_from_belt_force(
         The pulley diameter value with units.
     unit : str, optional
         The unit for the output mechanical torque (default is "newton * meter").
-    precision : int, optional
-        The precision for rounding the result (default is 2).
+    precision : int | None, optional
+        The precision for rounding the result (default is None; use an integer to round explicitly).
 
     Returns
     -------
@@ -87,7 +87,7 @@ def mechanical_power_from_torque_and_belt_speed(
     belt_speed: Quantity,
     pulley_diameter: Quantity,
     unit: str = "kilowatt",
-    precision: int = 2,
+    precision: int | None = None,
 ) -> Quantity:
     """
     Calculate the mechanical power from the torque, belt speed, and pulley diameter.
@@ -102,8 +102,8 @@ def mechanical_power_from_torque_and_belt_speed(
         The pulley diameter value with units.
     unit : str, optional
         The unit for the output mechanical power (default is "kilowatt").
-    precision : int, optional
-        The precision for rounding the result (default is 2).
+    precision : int | None, optional
+        The precision for rounding the result (default is None; use an integer to round explicitly).
 
     Returns
     -------
@@ -149,7 +149,7 @@ def number_of_revolutions_from_translatory_speed(
     translatory_speed: Quantity,
     radius: Quantity,
     unit: str = "rps",
-    precision: int = 2,
+    precision: int | None = None,
 ) -> Quantity:
     """
     Calculate the number of revolutions from the translatory speed.
@@ -162,8 +162,8 @@ def number_of_revolutions_from_translatory_speed(
         The radius value with units.
     unit : str, optional
         The unit for the output number of revolutions (default is "revolution").
-    precision : int, optional
-        The precision for rounding the result (default is 2).
+    precision : int | None, optional
+        The precision for rounding the result (default is None; use an integer to round explicitly).
 
     Returns
     -------
@@ -208,7 +208,7 @@ def pulley_revolutions_from_belt_speed(
     belt_speed: Quantity,
     pulley_diameter: Quantity,
     unit: str = "rps",
-    precision: int = 2,
+    precision: int | None = None,
 ) -> Quantity:
     """
     Calculate the pulley revolutions from the belt speed.
@@ -221,8 +221,8 @@ def pulley_revolutions_from_belt_speed(
         The pulley diameter value with units.
     unit : str, optional
         The unit for the output pulley revolutions (default is "revolution").
-    precision : int, optional
-        The precision for rounding the result (default is 2).
+    precision : int | None, optional
+        The precision for rounding the result (default is None; use an integer to round explicitly).
 
     Returns
     -------
@@ -270,7 +270,7 @@ def translatory_speed_from_number_of_revolutions(
     revolutions: Quantity,
     radius: Quantity,
     unit: str = "meter/second",
-    precision: int = 2,
+    precision: int | None = None,
 ) -> Quantity:
     """
     Calculate the translatory speed from the number of revolutions.
@@ -283,8 +283,8 @@ def translatory_speed_from_number_of_revolutions(
         The radius value with units.
     unit : str, optional
         The unit for the output translatory speed (default is "meter/second").
-    precision : int, optional
-        The precision for rounding the result (default is 2).
+    precision : int | None, optional
+        The precision for rounding the result (default is None; use an integer to round explicitly).
 
     Returns
     -------
@@ -332,7 +332,7 @@ def belt_speed_from_pulley_revolutions(
     revolutions: Quantity,
     pulley_diameter: Quantity,
     unit: str = "meter/second",
-    precision: int = 2,
+    precision: int | None = None,
 ) -> Quantity:
     """
     Calculate the belt speed from the pulley revolutions.
@@ -345,8 +345,8 @@ def belt_speed_from_pulley_revolutions(
         The pulley diameter value with units.
     unit : str, optional
         The unit for the output belt speed (default is "meter/second").
-    precision : int, optional
-        The precision for rounding the result (default is 2).
+    precision : int | None, optional
+        The precision for rounding the result (default is None; use an integer to round explicitly).
 
     Returns
     -------
@@ -394,7 +394,7 @@ def angle_of_inclination_from_horizontal_length_and_lift(
     horizontal_length: Quantity,
     lift: Quantity,
     unit: str = "degree",
-    precision: int = 5,
+    precision: int | None = None,
 ) -> Quantity:
     """
     Calculate the angle of inclination from horizontal length and lift.
@@ -411,8 +411,8 @@ def angle_of_inclination_from_horizontal_length_and_lift(
         The vertical lift of the conveyor belt. Can be in any length unit.
     unit : str, optional
         The unit for the returned angle. Defaults to "degree".
-    precision : int, optional
-        The number of decimal places to round the result to. Defaults to 5.
+    precision : int | None, optional
+        The number of decimal places to round the result to. Defaults to None. Use None to skip rounding and retain maximum available precision.
 
     Returns
     -------
@@ -456,7 +456,7 @@ def mechanical_power_from_torque_and_revolutions(
     torque: Quantity,
     revolutions: Quantity,
     unit: str = "kilowatt",
-    precision: int = 2,
+    precision: int | None = None,
 ) -> Quantity:
     """
     Calculate the mechanical power from the torque and revolutions.
@@ -469,8 +469,8 @@ def mechanical_power_from_torque_and_revolutions(
         The number of revolutions value with units.
     unit : str, optional
         The unit for the output mechanical power (default is "kilowatt").
-    precision : int, optional
-        The precision for rounding the result (default is 2).
+    precision : int | None, optional
+        The precision for rounding the result (default is None; use an integer to round explicitly).
 
     Returns
     -------
@@ -525,7 +525,7 @@ def torque_from_mechanical_power_and_revolutions(
     power: Quantity,
     revolutions: Quantity,
     unit: str = "newton * meter",
-    precision: int = 2,
+    precision: int | None = None,
 ) -> Quantity:
     """
     Calculate the torque from the mechanical power and revolutions.
@@ -538,8 +538,8 @@ def torque_from_mechanical_power_and_revolutions(
         The number of revolutions value with units.
     unit : str, optional
         The unit for the output torque (default is "newton * meter").
-    precision : int, optional
-        The precision for rounding the result (default is 2).
+    precision : int | None, optional
+        The precision for rounding the result (default is None; use an integer to round explicitly).
 
     Returns
     -------
@@ -599,7 +599,7 @@ def revolutions_from_mechanical_power_and_torque(
     power: Quantity,
     torque: Quantity,
     unit: str = "revolution / second",
-    precision: int = 2,
+    precision: int | None = None,
 ) -> Quantity:
     """
     Calculate the revolutions from the mechanical power and torque.
@@ -612,8 +612,8 @@ def revolutions_from_mechanical_power_and_torque(
         The torque value with units.
     unit : str, optional
         The unit for the output revolutions (default is "revolution / second").
-    precision : int, optional
-        The precision for rounding the result (default is 2).
+    precision : int | None, optional
+        The precision for rounding the result (default is None; use an integer to round explicitly).
 
     Returns
     -------
@@ -686,7 +686,7 @@ def pulley_diameter_from_belt_speed_and_revolutions(
     belt_speed: Quantity,
     revolutions: Quantity,
     unit: str = "meter",
-    precision: int = 2,
+    precision: int | None = None,
 ) -> Quantity:
     """
     Calculate the pulley diameter from the belt speed and revolutions.
@@ -699,8 +699,8 @@ def pulley_diameter_from_belt_speed_and_revolutions(
         The number of revolutions value with units.
     unit : str, optional
         The unit for the output pulley diameter (default is "meter").
-    precision : int, optional
-        The precision for rounding the result (default is 2).
+    precision : int | None, optional
+        The precision for rounding the result (default is None; use an integer to round explicitly).
 
     Returns
     -------
@@ -757,7 +757,7 @@ def radius_from_translatory_speed_and_revolutions(
     translatory_speed: Quantity,
     revolutions: Quantity,
     unit: str = "meter",
-    precision: int = 2,
+    precision: int | None = None,
 ) -> Quantity:
     """
     Calculate the radius from the translatory speed and revolutions.
@@ -770,8 +770,8 @@ def radius_from_translatory_speed_and_revolutions(
         The number of revolutions value with units.
     unit : str, optional
         The unit for the output radius (default is "meter").
-    precision : int, optional
-        The precision for rounding the result (default is 2).
+    precision : int | None, optional
+        The precision for rounding the result (default is None; use an integer to round explicitly).
 
     Returns
     -------

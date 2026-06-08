@@ -3841,8 +3841,8 @@ class TestTiltedIdlerFrictionForceUnifiedOutsideImproved:
             unit="newton",
         )
 
-        # All should convert to same result as publication data - use actual calculated value
-        assert result.magnitude == pytest.approx(5.23, rel=1e-6)
+        # Default precision now preserves the unrounded calculation result.
+        assert result.magnitude == pytest.approx(5.23, rel=1e-3)
         assert result.dimensionality == u.ureg.newton.dimensionality
 
 

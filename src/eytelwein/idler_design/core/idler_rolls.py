@@ -14,7 +14,7 @@ def load_factor_determining_idler_roll_load_due_to_material(
     idler_roll_arrangement: IdlerSets,
     troughing_angle: Quantity,
     unit: str = "dimensionless",
-    precision: int = 5,
+    precision: int | None = None,
 ) -> Quantity:
     """
     Calculate the load factor determining idler roll load due to material.
@@ -30,8 +30,8 @@ def load_factor_determining_idler_roll_load_due_to_material(
         The troughing angle of the idlers, typically in degrees.
     unit : str, optional
         The unit of the output. Must be dimensionless. Default is "dimensionless".
-    precision : int, optional
-        The number of decimal places for the result. Default is 5.
+    precision : int | None, optional
+        The number of decimal places for the result. Default is None. Use None to skip rounding and retain maximum available precision.
 
     Returns
     -------
@@ -66,15 +66,19 @@ def load_factor_determining_idler_roll_load_due_to_material(
     if unit == "percent":
         result = result * 100
 
-    # Round to specified precision and attach requested unit
-    return round(result, precision) * u(unit)
+    # Round only when explicitly requested and attach requested unit
+    result_with_unit = result * u(unit)
+    if precision is not None:
+        result_with_unit = round(result_with_unit, precision)
+
+    return result_with_unit
 
 
 def load_factor_determining_idler_roll_load_due_to_conveyor_belt(
     idler_roll_arrangement: IdlerSets,
     idler_roll_length_center: Quantity,
     belt_width: Quantity,
-    precision: int = 3,
+    precision: int | None = None,
 ) -> float:
     """
     Calculate the load factor determining idler roll load due to conveyor belt.
@@ -102,8 +106,8 @@ def load_factor_determining_idler_roll_load_due_to_conveyor_belt(
         Length of the center idler roll (typically in millimeters)
     belt_width : Quantity
         Width of the belt (typically in millimeters)
-    precision : int, optional
-        Number of decimal places for the result. Default is 3.
+    precision : int | None, optional
+        Number of decimal places for the result. Default is None. Use None to skip rounding and retain maximum available precision.
 
     Returns
     -------

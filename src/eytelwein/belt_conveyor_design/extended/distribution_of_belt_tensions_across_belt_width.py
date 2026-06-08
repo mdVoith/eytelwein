@@ -13,7 +13,7 @@ def distance_belt_edge_deepest_level_of_trough(
     part_of_belt_lying_on_side_idler: Quantity,
     troughing_angle: Quantity,
     unit: str = "millimeter",
-    precision: int = 2,
+    precision: int | None = None,
 ) -> Quantity:
     """
     Calculates the distance from the belt edge to the deepest level of the trough.
@@ -25,8 +25,8 @@ def distance_belt_edge_deepest_level_of_trough(
             on the side idler, provided as a Pint Quantity.
         troughing_angle (Quantity): The troughing angle, provided as a Pint Quantity.
         unit (str, optional): The desired unit for the result. Defaults to "millimeter".
-        precision (int, optional): The number of decimal places to round the result to.
-            If None, no rounding is applied. Defaults to 2.
+        precision (int | None, optional): The number of decimal places to round the result to.
+            If None, no rounding is applied. Defaults to None. Use None to skip rounding and retain maximum available precision.
     Returns:
         Quantity: The calculated distance from the belt edge to the deepest level
         of the trough, in the specified unit.
