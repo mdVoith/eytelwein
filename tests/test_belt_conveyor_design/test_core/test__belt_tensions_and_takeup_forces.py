@@ -113,6 +113,12 @@ class TestTakeupWeightForceFromTakeupWeight:
         result = _takeup_weight_force_from_takeup_weight(takeup_weight_kg=100.0)
         assert result == pytest.approx(980.665, rel=1e-5)
 
+    def test_takeup_weight_force_from_takeup_weight_three_thousand_kg(self):
+        """Convert 3000 kg takeup weight to force using standard gravity."""
+        # 3000 kg -> 3000 * 9.80665 N = 29419.95 N = 29.41995 kN
+        result = _takeup_weight_force_from_takeup_weight(takeup_weight_kg=3000.0)
+        assert result == pytest.approx(29419.95, rel=1e-5)
+
     def test_takeup_weight_force_from_takeup_weight_zero_value(self):
         """Convert zero takeup weight to zero force."""
         result = _takeup_weight_force_from_takeup_weight(takeup_weight_kg=0.0)
