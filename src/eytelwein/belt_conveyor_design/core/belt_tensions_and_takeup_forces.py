@@ -9,6 +9,8 @@ output formatting.
 from pint import Quantity
 from eytelwein.belt_conveyor_design.core._belt_tensions_and_takeup_forces import (
     _minimum_belt_tension_from_sag_carry,
+    _takeup_weight_force_from_takeup_weight,
+    _takeup_weight_from_takeup_weight_force,
 )
 from eytelwein.main.units import get_unit_registry
 
@@ -47,7 +49,7 @@ def minimum_belt_tension_from_sag_carry(
         Common values: "newton", "kilonewton".
         Must be a force unit.
     precision : int or None, optional
-        Decimal places to round the result to (default: 5).
+        Decimal places to round the result to (default: None).
         If None, no rounding is applied.
 
     Returns
@@ -123,6 +125,180 @@ def minimum_belt_tension_from_sag_carry(
 
     # Attach units to result (newtons)
     result = tension_newtons * u.newton
+
+    # Convert to requested output unit
+    try:
+        result = result.to(pint_unit)
+    except Exception as e:
+        raise ValueError(f"Error in attaching unit '{unit}': {e}")
+
+    # Apply precision rounding if specified
+    if precision is not None:
+        result = round(result, precision)
+
+    return result
+
+
+def takeup_weight_force_from_takeup_weight(
+    takeup_weight: Quantity,
+    unit: str = "kilonewton",
+    precision: int | None = None,
+) -> Quantity:
+    """
+    Calculate takeup weight force from takeup weight.
+
+    This function converts a mass-based takeup weight to a force quantity
+    using the standard gravitational acceleration constant.
+    All inputs must be strict Quantity objects with explicit units.
+
+    Parameters
+    ----------
+    takeup_weight : Quantity
+        Takeup weight in kg or equivalent mass units.
+    unit : str, optional
+        Output unit for force result (default: "kilonewton").
+        Common values: "newton", "kilonewton".
+        Must be a force unit.
+    precision : int or None, optional
+        Decimal places to round the result to (default: None).
+        If None, no rounding is applied.
+
+    Returns
+    -------
+    Quantity
+        Takeup weight force in the specified output unit.
+
+    Raises
+    ------
+    ValueError
+        If unit conversion fails due to incompatible input units.
+    ValueError
+        If takeup_weight is negative.
+    ValueError
+        If unit is invalid or incompatible with force.
+
+    Examples
+    --------
+    >>> from pint import Quantity
+    >>> from eytelwein.main.units import get_unit_registry
+    >>> u = get_unit_registry()
+    >>> result = takeup_weight_force_from_takeup_weight(
+    ...     takeup_weight=Quantity(3000.0, u.kilogram)
+    ... )
+    >>> result  # doctest: +SKIP
+    29.41995... kilonewton
+    """
+    try:
+        # Convert input to standard working units (kg)
+        takeup_weight_kg = takeup_weight.to(u.kilogram)
+    except Exception as e:
+        raise ValueError(f"Error in unit conversion: {e}")
+
+    # Validate physical constraints after unit conversion
+    if takeup_weight_kg.magnitude < 0:
+        raise ValueError(f"takeup_weight cannot be negative, got {takeup_weight_kg}")
+
+    # Ensure the output unit is valid
+    try:
+        pint_unit = u.parse_units(unit)
+    except Exception as e:
+        raise ValueError(f"Invalid unit: {unit}. Error: {e}")
+
+    # Call private implementation with magnitude value
+    force_newtons = _takeup_weight_force_from_takeup_weight(
+        takeup_weight_kg=takeup_weight_kg.magnitude
+    )
+
+    # Attach units to result (newtons)
+    result = force_newtons * u.newton
+
+    # Convert to requested output unit
+    try:
+        result = result.to(pint_unit)
+    except Exception as e:
+        raise ValueError(f"Error in attaching unit '{unit}': {e}")
+
+    # Apply precision rounding if specified
+    if precision is not None:
+        result = round(result, precision)
+
+    return result
+
+
+def takeup_weight_from_takeup_weight_force(
+    takeup_weight_force: Quantity,
+    unit: str = "kilogram",
+    precision: int | None = None,
+) -> Quantity:
+    """
+    Calculate takeup weight from takeup weight force.
+
+    This function converts a force-based takeup weight force to a mass quantity
+    using the standard gravitational acceleration constant.
+    All inputs must be strict Quantity objects with explicit units.
+
+    Parameters
+    ----------
+    takeup_weight_force : Quantity
+        Takeup weight force in newtons or equivalent force units.
+    unit : str, optional
+        Output unit for mass result (default: "kilogram").
+        Common values: "kilogram", "gram".
+        Must be a mass unit.
+    precision : int or None, optional
+        Decimal places to round the result to (default: None).
+        If None, no rounding is applied.
+
+    Returns
+    -------
+    Quantity
+        Takeup weight in the specified output unit.
+
+    Raises
+    ------
+    ValueError
+        If unit conversion fails due to incompatible input units.
+    ValueError
+        If takeup_weight_force is negative.
+    ValueError
+        If unit is invalid or incompatible with mass.
+
+    Examples
+    --------
+    >>> from pint import Quantity
+    >>> from eytelwein.main.units import get_unit_registry
+    >>> u = get_unit_registry()
+    >>> result = takeup_weight_from_takeup_weight_force(
+    ...     takeup_weight_force=Quantity(29419.95, u.newton)
+    ... )
+    >>> result  # doctest: +SKIP
+    3000.0... kilogram
+    """
+    try:
+        # Convert input to standard working units (newtons)
+        takeup_weight_force_n = takeup_weight_force.to(u.newton)
+    except Exception as e:
+        raise ValueError(f"Error in unit conversion: {e}")
+
+    # Validate physical constraints after unit conversion
+    if takeup_weight_force_n.magnitude < 0:
+        raise ValueError(
+            f"takeup_weight_force cannot be negative, got {takeup_weight_force_n}"
+        )
+
+    # Ensure the output unit is valid
+    try:
+        pint_unit = u.parse_units(unit)
+    except Exception as e:
+        raise ValueError(f"Invalid unit: {unit}. Error: {e}")
+
+    # Call private implementation with magnitude value
+    weight_kg = _takeup_weight_from_takeup_weight_force(
+        takeup_weight_force_n=takeup_weight_force_n.magnitude
+    )
+
+    # Attach units to result (kg)
+    result = weight_kg * u.kilogram
 
     # Convert to requested output unit
     try:
