@@ -3,6 +3,8 @@ import pytest
 
 from eytelwein.belt_conveyor_design.core._belt_tensions_and_takeup_forces import (
     _minimum_belt_tension_from_sag_carry,
+    _takeup_weight_force_from_takeup_weight,
+    _takeup_weight_from_takeup_weight_force,
 )
 
 
@@ -100,3 +102,33 @@ class TestMinimumBeltTensionFromSagCarry:
         )
         # Longer spacing requires higher tension
         assert result_long_spacing > result_short_spacing
+
+
+class TestTakeupWeightForceFromTakeupWeight:
+    """Test suite for the private _takeup_weight_force_from_takeup_weight function."""
+
+    def test_takeup_weight_force_from_takeup_weight_happy_path(self):
+        """Convert takeup weight to takeup weight force with typical value."""
+        # 100 kg → 100 * 9.80665 N = 980.665 N
+        result = _takeup_weight_force_from_takeup_weight(takeup_weight_kg=100.0)
+        assert result == pytest.approx(980.665, rel=1e-5)
+
+    def test_takeup_weight_force_from_takeup_weight_zero_value(self):
+        """Convert zero takeup weight to zero force."""
+        result = _takeup_weight_force_from_takeup_weight(takeup_weight_kg=0.0)
+        assert result == pytest.approx(0.0, abs=1e-9)
+
+
+class TestTakeupWeightFromTakeupWeightForce:
+    """Test suite for the private _takeup_weight_from_takeup_weight_force function."""
+
+    def test_takeup_weight_from_takeup_weight_force_happy_path(self):
+        """Convert takeup weight force to takeup weight with typical value."""
+        # 980.665 N → 980.665 / 9.80665 kg = 100 kg
+        result = _takeup_weight_from_takeup_weight_force(takeup_weight_force_n=980.665)
+        assert result == pytest.approx(100.0, rel=1e-5)
+
+    def test_takeup_weight_from_takeup_weight_force_zero_value(self):
+        """Convert zero force to zero takeup weight."""
+        result = _takeup_weight_from_takeup_weight_force(takeup_weight_force_n=0.0)
+        assert result == pytest.approx(0.0, abs=1e-9)

@@ -59,3 +59,53 @@ def _minimum_belt_tension_from_sag_carry(
     )
 
     return tension
+
+
+def _takeup_weight_force_from_takeup_weight(takeup_weight_kg: float) -> float:
+    """
+    Calculate takeup weight force from takeup weight (private implementation).
+
+    Parameters
+    ----------
+    takeup_weight_kg : float
+        Takeup weight in kilograms.
+
+    Returns
+    -------
+    float
+        Takeup weight force in Newtons.
+
+    Notes
+    -----
+    Converts mass to force using the formula:
+    F [N] = m [kg] * g [m/s²]
+
+    where g is STANDARD_GRAVITY_VALUE (9.80665 m/s²).
+    """
+    force = takeup_weight_kg * STANDARD_GRAVITY_VALUE
+    return force
+
+
+def _takeup_weight_from_takeup_weight_force(takeup_weight_force_n: float) -> float:
+    """
+    Calculate takeup weight from takeup weight force (private implementation).
+
+    Parameters
+    ----------
+    takeup_weight_force_n : float
+        Takeup weight force in Newtons.
+
+    Returns
+    -------
+    float
+        Takeup weight in kilograms.
+
+    Notes
+    -----
+    Converts force to mass using the formula:
+    m [kg] = F [N] / g [m/s²]
+
+    where g is STANDARD_GRAVITY_VALUE (9.80665 m/s²).
+    """
+    weight = takeup_weight_force_n / STANDARD_GRAVITY_VALUE
+    return weight
