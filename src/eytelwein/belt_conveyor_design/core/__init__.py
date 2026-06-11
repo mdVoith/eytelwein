@@ -62,6 +62,8 @@ from eytelwein.belt_conveyor_design.core.minimum_pulley_diameter import (
 # Public functions from belt_tensions_and_takeup_forces
 from eytelwein.belt_conveyor_design.core.belt_tensions_and_takeup_forces import (
     minimum_belt_tension_from_sag_carry,
+    takeup_weight_force_from_takeup_weight,
+    takeup_weight_from_takeup_weight_force,
 )
 
 # Private functions from _volume_flow_mass_flow
@@ -121,6 +123,8 @@ from eytelwein.belt_conveyor_design.core._minimum_pulley_diameter import (
 # Private functions from _belt_tensions_and_takeup_forces
 from eytelwein.belt_conveyor_design.core._belt_tensions_and_takeup_forces import (
     _minimum_belt_tension_from_sag_carry,
+    _takeup_weight_force_from_takeup_weight,
+    _takeup_weight_from_takeup_weight_force,
 )
 
 __all__ = [
@@ -174,6 +178,8 @@ __all__ = [
     "get_max_width_related_tension_at_group_A_pulleys",
     # Public belt_tensions_and_takeup_forces
     "minimum_belt_tension_from_sag_carry",
+    "takeup_weight_force_from_takeup_weight",
+    "takeup_weight_from_takeup_weight_force",
     # Private _volume_flow_mass_flow
     "_usable_belt_width",
     "_partial_cross_section_at_water_fill",
@@ -219,4 +225,6 @@ __all__ = [
     "_get_max_width_related_tension_at_group_A_pulleys",
     # Private _belt_tensions_and_takeup_forces
     "_minimum_belt_tension_from_sag_carry",
+    "_takeup_weight_force_from_takeup_weight",
+    "_takeup_weight_from_takeup_weight_force",
 ]

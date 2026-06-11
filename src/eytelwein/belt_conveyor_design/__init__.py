@@ -68,6 +68,8 @@ from eytelwein.belt_conveyor_design.core.design_layout_of_drive_system import (
 # Core Module - Belt tensions and takeup forces
 from eytelwein.belt_conveyor_design.core.belt_tensions_and_takeup_forces import (
     minimum_belt_tension_from_sag_carry,
+    takeup_weight_force_from_takeup_weight,
+    takeup_weight_from_takeup_weight_force,
 )
 
 # Extended Module - Volume flow and mass flow functions
@@ -173,6 +175,8 @@ __all__ = [
     "get_max_width_related_tension_at_group_A_pulleys",
     # Core - Belt tensions and takeup forces
     "minimum_belt_tension_from_sag_carry",
+    "takeup_weight_force_from_takeup_weight",
+    "takeup_weight_from_takeup_weight_force",
     # Extended - Volume flow and mass flow functions
     "maximal_cross_section_skirt_board_known_geometry",
     "required_skirtboard_height_from_cross_section",
