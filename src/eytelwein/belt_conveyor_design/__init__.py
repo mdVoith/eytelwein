@@ -88,6 +88,11 @@ from eytelwein.belt_conveyor_design.extended.resistance_and_power_for_steady_ope
     motion_resistance_from_torque,
 )
 
+# Extended Module - Minimum pulley diameter functions
+from eytelwein.belt_conveyor_design.extended.minimum_pulley_diameter import (
+    resulting_force_from_belt_tensions_and_wrap_angle,
+)
+
 # Extended Module - Belt tension distribution functions
 from eytelwein.belt_conveyor_design.extended.distribution_of_belt_tensions_across_belt_width import (
     distance_belt_edge_deepest_level_of_trough,
@@ -187,6 +192,8 @@ __all__ = [
     "get_material_bed_depth",
     # Extended - Resistance and power for steady operations
     "motion_resistance_from_torque",
+    # Extended - Minimum pulley diameter functions
+    "resulting_force_from_belt_tensions_and_wrap_angle",
     # Extended - Belt tension distribution functions
     "distance_belt_edge_deepest_level_of_trough",
     # Extended - Design layout of drive system

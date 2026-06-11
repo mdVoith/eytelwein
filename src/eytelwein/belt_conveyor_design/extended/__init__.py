@@ -14,6 +14,11 @@ from eytelwein.belt_conveyor_design.extended.resistance_and_power_for_steady_ope
     motion_resistance_from_torque,
 )
 
+# Public functions from minimum_pulley_diameter
+from eytelwein.belt_conveyor_design.extended.minimum_pulley_diameter import (
+    resulting_force_from_belt_tensions_and_wrap_angle,
+)
+
 # Public functions from distribution_of_belt_tensions_across_belt_width
 from eytelwein.belt_conveyor_design.extended.distribution_of_belt_tensions_across_belt_width import (
     distance_belt_edge_deepest_level_of_trough,
@@ -51,6 +56,11 @@ from eytelwein.belt_conveyor_design.extended._resistance_and_power_for_steady_op
     _motion_resistance_from_torque,
 )
 
+# Private functions from _minimum_pulley_diameter
+from eytelwein.belt_conveyor_design.extended._minimum_pulley_diameter import (
+    _resulting_force_from_belt_tensions_and_wrap_angle,
+)
+
 # Private functions from _distribution_of_belt_tensions_across_belt_width
 from eytelwein.belt_conveyor_design.extended._distribution_of_belt_tensions_across_belt_width import (
     _distance_belt_edge_deepest_level_of_trough,
@@ -82,6 +92,8 @@ __all__ = [
     "get_material_bed_depth",
     # Public resistance_and_power_for_steady_operations
     "motion_resistance_from_torque",
+    # Public minimum_pulley_diameter
+    "resulting_force_from_belt_tensions_and_wrap_angle",
     # Public distribution_of_belt_tensions_across_belt_width
     "distance_belt_edge_deepest_level_of_trough",  # Public design_layout_of_drive_system
     "mechanical_torque_from_belt_force",
@@ -106,6 +118,8 @@ __all__ = [
     "_get_material_bed_depth",
     # Private _resistance_and_power_for_steady_operations
     "_motion_resistance_from_torque",
+    # Private _minimum_pulley_diameter
+    "_resulting_force_from_belt_tensions_and_wrap_angle",
     # Private _distribution_of_belt_tensions_across_belt_width
     "_distance_belt_edge_deepest_level_of_trough",
     # Private _design_layout_of_drive_system    "_mechanical_torque_from_belt_force",
