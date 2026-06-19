@@ -56,7 +56,7 @@ version_files = [
     "src/eytelwein/__init__.py:__version__"
 ]
 version_scheme = "pep440"
-bump_message = "chore(release): $new_version"
+bump_message = "chore: release $new_version"
 
 [tool.pytest.ini_options]
 pythonpath = ["src"]
