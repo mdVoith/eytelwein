@@ -1,3 +1,17 @@
+## v0.1.3 (2026-06-19)
+
+### Feat
+
+- add public resulting force wrapper
+- export takeup weight conversions
+- add public takeup weight conversions
+- add test for converting 3000 kg takeup weight to force
+- add private takeup weight conversions
+
+### Refactor
+
+- remove local commit type enforcement hook and update bump message format
+
 ## v0.1.2 (2026-06-08)
 
 ### Fix
