@@ -33,6 +33,8 @@ Use this skill when adding or modifying code in the Eytelwein library. It packag
 11. Standard input validation is `.to()` inside `try/except` → `ValueError`. Do not add `isinstance(param, Quantity)` checks or upfront output-unit dimensionality pre-checks — both are non-standard, inconsistent with the rest of the codebase, and produce `TypeError` instead of `ValueError`.
 12. When calling an eytelwein public function and you need the result in a specific unit, pass `unit="target_unit"` to the function call. Never call with the default unit then `.to(target)` afterward — `precision` rounds in the **output unit**, so rounding in the wrong unit (e.g. m³/s) then converting (to m³/h, ×3600) amplifies rounding error catastrophically.
 13. **No early rounding in calculation code.** When a wrapper function calls another eytelwein public function as an intermediate step, avoid low-precision rounding on that intermediate result. Omit `precision=` when the default behavior is acceptable, or use enough precision for the downstream calculation. Display rounding belongs at the final public return layer, not in intermediate calculation steps.
+14. **Documentation**: Include parameter descriptions with units, return values with units, valid input ranges, and references
+
 
 ## Procedure
 

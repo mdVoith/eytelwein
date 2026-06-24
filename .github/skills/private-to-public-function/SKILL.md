@@ -159,6 +159,7 @@ Do not consider the task complete until all relevant items pass.
 - [ ] Private and public functions are exported through the correct `__init__.py` files
 - [ ] Private tests verify mathematical correctness directly
 - [ ] Public tests verify unit handling, precision, and error behavior
+- [ ] Documentation includes parameter descriptions with units, return values with units, valid input ranges, and references
 - [ ] Import-chain validation succeeds
 - [ ] Smoke test with realistic values succeeds under `uv run`
 
