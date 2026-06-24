@@ -1,3 +1,10 @@
+## v0.1.4 (2026-06-24)
+
+### Feat
+
+- update function names for belt safety factor calculations for consistency
+- add design functions for conveyor belt safety factor and tension calculations, with unit tests
+
 ## v0.1.3 (2026-06-19)
 
 ### Feat
