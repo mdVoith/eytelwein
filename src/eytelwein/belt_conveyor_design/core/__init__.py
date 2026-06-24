@@ -68,9 +68,9 @@ from eytelwein.belt_conveyor_design.core.belt_tensions_and_takeup_forces import 
 
 # Public functions from design_of_conveyor_belt
 from eytelwein.belt_conveyor_design.core.design_of_conveyor_belt import (
-    belt_safety_factor_fromsplice_strength_and_belt_tension,
-    splice_strength_from_belt_safety_factor_and_belt_tension,
-    belt_tension_fromsplice_strength_and_belt_safety_factor,
+    belt_safety_factor_from_splice_strength_and_belt_tension,
+    rating_tension_from_belt_safety_factor_and_belt_tension,
+    belt_tension_from_splice_strength_and_belt_safety_factor,
 )
 
 # Private functions from _volume_flow_mass_flow
@@ -136,8 +136,8 @@ from eytelwein.belt_conveyor_design.core._belt_tensions_and_takeup_forces import
 
 # Private functions from _design_of_conveyor_belt
 from eytelwein.belt_conveyor_design.core._design_of_conveyor_belt import (
-    _belt_safety_factor_fromsplice_strength_and_belt_tension,
-    _splice_strength_from_belt_safety_factor_and_belt_tension,
+    _belt_safety_factor_from_splice_strength_and_belt_tension,
+    _rating_tension_from_belt_safety_factor_and_belt_tension,
     _belt_tension_fromsplice_strength_and_belt_safety_factor,
 )
 
@@ -195,9 +195,9 @@ __all__ = [
     "takeup_weight_force_from_takeup_weight",
     "takeup_weight_from_takeup_weight_force",
     # Public design_of_conveyor_belt
-    "belt_safety_factor_fromsplice_strength_and_belt_tension",
-    "splice_strength_from_belt_safety_factor_and_belt_tension",
-    "belt_tension_fromsplice_strength_and_belt_safety_factor",
+    "belt_safety_factor_from_splice_strength_and_belt_tension",
+    "rating_tension_from_belt_safety_factor_and_belt_tension",
+    "belt_tension_from_splice_strength_and_belt_safety_factor",
     # Private _volume_flow_mass_flow
     "_usable_belt_width",
     "_partial_cross_section_at_water_fill",
@@ -246,7 +246,7 @@ __all__ = [
     "_takeup_weight_force_from_takeup_weight",
     "_takeup_weight_from_takeup_weight_force",
     # Private _design_of_conveyor_belt
-    "_belt_safety_factor_fromsplice_strength_and_belt_tension",
-    "_splice_strength_from_belt_safety_factor_and_belt_tension",
+    "_belt_safety_factor_from_splice_strength_and_belt_tension",
+    "_rating_tension_from_belt_safety_factor_and_belt_tension",
     "_belt_tension_fromsplice_strength_and_belt_safety_factor",
 ]
