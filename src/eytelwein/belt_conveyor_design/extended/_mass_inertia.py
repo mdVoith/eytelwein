@@ -260,12 +260,12 @@ def _reflected_translating_mass_inertia_at_motor_shaft(
         translating_mass_kg, drive_pulley_radius_m
     )
     return _component_inertia_referred_to_motor_shaft(
-        pulley_inertia, 1.0 / gear_ratio_motor_to_pulley
+        pulley_inertia, gear_ratio_motor_to_pulley
     )
 
 
 def _component_inertia_referred_to_motor_shaft(
-    component_inertia_kg_m2: float, speed_ratio_component_to_motor: float
+    component_inertia_kg_m2: float, gear_ratio_motor_to_component: float
 ) -> float:
     """Convert native component inertia to motor-shaft-equivalent inertia.
 
@@ -273,8 +273,8 @@ def _component_inertia_referred_to_motor_shaft(
     ----------
     component_inertia_kg_m2 : float
         Native component inertia in kilogram meter squared.
-    speed_ratio_component_to_motor : float
-        Ratio ``omega_component / omega_motor``.
+    gear_ratio_motor_to_component : float
+        Gear ratio ``omega_motor / omega_component``.
 
     Returns
     -------
@@ -284,16 +284,14 @@ def _component_inertia_referred_to_motor_shaft(
     Raises
     ------
     ValueError
-        If inertia is negative or speed ratio is not positive.
+        If inertia is negative or gear ratio is not positive.
     """
     if component_inertia_kg_m2 < 0:
         raise ValueError("component_inertia_kg_m2 must be non-negative")
-    if speed_ratio_component_to_motor <= 0:
-        raise ValueError("speed_ratio_component_to_motor must be positive")
-    return (
-        component_inertia_kg_m2
-        * speed_ratio_component_to_motor
-        * speed_ratio_component_to_motor
+    if gear_ratio_motor_to_component <= 0:
+        raise ValueError("gear_ratio_motor_to_component must be positive")
+    return component_inertia_kg_m2 / (
+        gear_ratio_motor_to_component * gear_ratio_motor_to_component
     )
 
 
@@ -351,11 +349,11 @@ def _total_motor_shaft_rotational_inertia_from_equivalent_component_inertias(
 def _total_motor_shaft_rotational_inertia_from_native_component_inertias(
     reflected_translating_mass_inertia_kg_m2: float,
     gearbox_inertia_native_kg_m2: float,
-    gearbox_speed_ratio_component_to_motor: float,
+    gearbox_gear_ratio_motor_to_component: float,
     coupling_inertia_native_kg_m2: float,
-    coupling_speed_ratio_component_to_motor: float,
+    coupling_gear_ratio_motor_to_component: float,
     brake_inertia_native_kg_m2: float,
-    brake_speed_ratio_component_to_motor: float,
+    brake_gear_ratio_motor_to_component: float,
 ) -> float:
     """Sum translating inertia and native component inertias at motor shaft.
 
@@ -366,16 +364,16 @@ def _total_motor_shaft_rotational_inertia_from_native_component_inertias(
         squared.
     gearbox_inertia_native_kg_m2 : float
         Native gearbox inertia in kilogram meter squared.
-    gearbox_speed_ratio_component_to_motor : float
-        Ratio ``omega_gearbox / omega_motor``.
+    gearbox_gear_ratio_motor_to_component : float
+        Gear ratio ``omega_motor / omega_gearbox``.
     coupling_inertia_native_kg_m2 : float
         Native coupling inertia in kilogram meter squared.
-    coupling_speed_ratio_component_to_motor : float
-        Ratio ``omega_coupling / omega_motor``.
+    coupling_gear_ratio_motor_to_component : float
+        Gear ratio ``omega_motor / omega_coupling``.
     brake_inertia_native_kg_m2 : float
         Native brake inertia in kilogram meter squared.
-    brake_speed_ratio_component_to_motor : float
-        Ratio ``omega_brake / omega_motor``.
+    brake_gear_ratio_motor_to_component : float
+        Gear ratio ``omega_motor / omega_brake``.
 
     Returns
     -------
@@ -385,13 +383,13 @@ def _total_motor_shaft_rotational_inertia_from_native_component_inertias(
     return _total_motor_shaft_rotational_inertia_from_equivalent_component_inertias(
         reflected_translating_mass_inertia_kg_m2,
         _component_inertia_referred_to_motor_shaft(
-            gearbox_inertia_native_kg_m2, gearbox_speed_ratio_component_to_motor
+            gearbox_inertia_native_kg_m2, gearbox_gear_ratio_motor_to_component
         ),
         _component_inertia_referred_to_motor_shaft(
-            coupling_inertia_native_kg_m2, coupling_speed_ratio_component_to_motor
+            coupling_inertia_native_kg_m2, coupling_gear_ratio_motor_to_component
         ),
         _component_inertia_referred_to_motor_shaft(
-            brake_inertia_native_kg_m2, brake_speed_ratio_component_to_motor
+            brake_inertia_native_kg_m2, brake_gear_ratio_motor_to_component
         ),
     )
 

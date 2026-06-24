@@ -113,7 +113,7 @@ def test_reflected_translating_mass_inertia_at_motor_shaft_full_belt_case() -> N
 def test_component_inertia_referred_to_motor_shaft_basic() -> None:
     result = component_inertia_referred_to_motor_shaft(
         Quantity(1.2, u.kilogram * u.meter**2),
-        Quantity(0.5, u.dimensionless),
+        Quantity(2.0, u.dimensionless),
     )
     assert result.magnitude == pytest.approx(0.3)
 
@@ -132,11 +132,11 @@ def test_total_motor_shaft_rotational_inertia_from_native_component_inertias() -
     result = total_motor_shaft_rotational_inertia_from_native_component_inertias(
         Quantity(486.227552, u.kilogram * u.meter**2),
         Quantity(40.0, u.kilogram * u.meter**2),
-        Quantity(0.5, u.dimensionless),
+        Quantity(2.0, u.dimensionless),
         Quantity(20.0, u.kilogram * u.meter**2),
-        Quantity(0.5, u.dimensionless),
+        Quantity(2.0, u.dimensionless),
         Quantity(8.0, u.kilogram * u.meter**2),
-        Quantity(0.5, u.dimensionless),
+        Quantity(2.0, u.dimensionless),
     )
     assert result.magnitude == pytest.approx(503.227552)
 
