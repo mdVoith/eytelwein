@@ -129,6 +129,12 @@ from eytelwein.belt_conveyor_design.extended.mass_inertia import (
     component_inertia_referred_to_motor_shaft,
     total_motor_shaft_rotational_inertia_from_equivalent_component_inertias,
     total_motor_shaft_rotational_inertia_from_native_component_inertias,
+    low_speed_native_component_inertia_at_motor_shaft,
+    high_speed_native_component_inertia_at_motor_shaft,
+    fluid_coupling_inertia_referred_to_motor_shaft,
+    total_rotational_inertia_at_motor_shaft,
+    total_rotational_inertia_at_fluid_coupling_shaft,
+    rotational_inertia_breakdown_at_motor_shaft,
     motor_shaft_rotational_inertia_per_drive,
 )
 
@@ -233,6 +239,12 @@ __all__ = [
     "component_inertia_referred_to_motor_shaft",
     "total_motor_shaft_rotational_inertia_from_equivalent_component_inertias",
     "total_motor_shaft_rotational_inertia_from_native_component_inertias",
+    "low_speed_native_component_inertia_at_motor_shaft",
+    "high_speed_native_component_inertia_at_motor_shaft",
+    "fluid_coupling_inertia_referred_to_motor_shaft",
+    "total_rotational_inertia_at_motor_shaft",
+    "total_rotational_inertia_at_fluid_coupling_shaft",
+    "rotational_inertia_breakdown_at_motor_shaft",
     "motor_shaft_rotational_inertia_per_drive",
     # Extended - Design of conveyor belt functions
     "belt_weight_per_square_meter",
