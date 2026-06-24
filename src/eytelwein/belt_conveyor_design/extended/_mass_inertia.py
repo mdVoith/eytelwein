@@ -186,10 +186,10 @@ def _drive_pulley_radius_from_drive_pulley_diameter(
     return drive_pulley_diameter_m / 2.0
 
 
-def _translating_mass_inertia_at_pulley_shaft(
+def _translating_mass_inertia_at_pulley_circumference(
     translating_mass_kg: float, drive_pulley_radius_m: float
 ) -> float:
-    """Calculate translating-mass inertia contribution at pulley shaft.
+    """Calculate translating-mass inertia contribution at pulley circumference.
 
     Parameters
     ----------
@@ -201,7 +201,7 @@ def _translating_mass_inertia_at_pulley_shaft(
     Returns
     -------
     float
-        Translating-mass inertia contribution at pulley shaft (low-speed side)
+        Translating-mass inertia contribution at pulley circumference (low-speed side)
         in kilogram meter squared.
 
     Raises
@@ -256,7 +256,7 @@ def _reflected_translating_mass_inertia_at_motor_shaft(
     if gear_ratio_motor_to_pulley <= 0:
         raise ValueError("gear_ratio_motor_to_pulley must be positive")
 
-    pulley_inertia = _translating_mass_inertia_at_pulley_shaft(
+    pulley_inertia = _translating_mass_inertia_at_pulley_circumference(
         translating_mass_kg, drive_pulley_radius_m
     )
     return _component_inertia_referred_to_motor_shaft(
@@ -387,6 +387,323 @@ def _total_motor_shaft_rotational_inertia_from_native_component_inertias(
             brake_inertia_native_kg_m2, drive_gear_ratio_motor_to_low_speed_side
         ),
     )
+
+
+def _optional_component_inertia_referred_to_motor_shaft(
+    component_inertia_kg_m2: float,
+    gear_ratio_motor_to_component: float | None,
+    *,
+    component_name: str,
+    default_ratio_if_missing: float | None = None,
+) -> float:
+    """Convert optional native component inertia to motor-shaft-equivalent inertia.
+
+    Parameters
+    ----------
+    component_inertia_kg_m2 : float
+        Native component inertia in kilogram meter squared.
+    gear_ratio_motor_to_component : float | None
+        Gear ratio ``omega_motor / omega_component``.
+    component_name : str
+        Component name used in error messages.
+    default_ratio_if_missing : float | None, optional
+        Default ratio used when inertia is positive and ratio is missing.
+
+    Returns
+    -------
+    float
+        Component inertia referred to motor shaft in kilogram meter squared.
+
+    Raises
+    ------
+    ValueError
+        If inertia is negative, or ratio is required but missing/invalid.
+    """
+    if component_inertia_kg_m2 < 0:
+        raise ValueError(f"{component_name}_inertia_native_kg_m2 must be non-negative")
+    if component_inertia_kg_m2 == 0:
+        return 0.0
+
+    ratio = gear_ratio_motor_to_component
+    if ratio is None:
+        if default_ratio_if_missing is None:
+            raise ValueError(
+                f"{component_name}_gear_ratio_motor_to_component is required when "
+                f"{component_name}_inertia_native_kg_m2 > 0"
+            )
+        ratio = default_ratio_if_missing
+
+    return _component_inertia_referred_to_motor_shaft(component_inertia_kg_m2, ratio)
+
+
+def _low_speed_native_component_inertia_at_motor_shaft(
+    *,
+    pulley_inertia_native_kg_m2: float = 0.0,
+    pulley_gear_ratio_motor_to_component: float | None = None,
+    low_speed_coupling_inertia_native_kg_m2: float = 0.0,
+    low_speed_coupling_gear_ratio_motor_to_component: float | None = None,
+    low_speed_brake_inertia_native_kg_m2: float = 0.0,
+    low_speed_brake_gear_ratio_motor_to_component: float | None = None,
+) -> float:
+    """Sum low-speed native component inertias referred to motor shaft.
+
+    Parameters
+    ----------
+    pulley_inertia_native_kg_m2 : float, optional
+        Native pulley inertia in kilogram meter squared.
+    pulley_gear_ratio_motor_to_component : float | None, optional
+        Gear ratio ``omega_motor / omega_pulley``.
+    low_speed_coupling_inertia_native_kg_m2 : float, optional
+        Native low-speed coupling or flange inertia in kilogram meter squared.
+    low_speed_coupling_gear_ratio_motor_to_component : float | None, optional
+        Gear ratio ``omega_motor / omega_low_speed_coupling``.
+    low_speed_brake_inertia_native_kg_m2 : float, optional
+        Native low-speed brake inertia in kilogram meter squared.
+    low_speed_brake_gear_ratio_motor_to_component : float | None, optional
+        Gear ratio ``omega_motor / omega_low_speed_brake``.
+
+    Returns
+    -------
+    float
+        Low-speed native component inertia referred to motor shaft in kilogram
+        meter squared.
+
+    Raises
+    ------
+    ValueError
+        If any inertia is negative, or positive inertia is provided without a
+        corresponding gear ratio.
+    """
+    return (
+        _optional_component_inertia_referred_to_motor_shaft(
+            pulley_inertia_native_kg_m2,
+            pulley_gear_ratio_motor_to_component,
+            component_name="pulley",
+        )
+        + _optional_component_inertia_referred_to_motor_shaft(
+            low_speed_coupling_inertia_native_kg_m2,
+            low_speed_coupling_gear_ratio_motor_to_component,
+            component_name="low_speed_coupling",
+        )
+        + _optional_component_inertia_referred_to_motor_shaft(
+            low_speed_brake_inertia_native_kg_m2,
+            low_speed_brake_gear_ratio_motor_to_component,
+            component_name="low_speed_brake",
+        )
+    )
+
+
+def _high_speed_native_component_inertia_at_motor_shaft(
+    *,
+    high_speed_coupling_inertia_native_kg_m2: float = 0.0,
+    high_speed_coupling_gear_ratio_motor_to_component: float | None = 1.0,
+    high_speed_brake_inertia_native_kg_m2: float = 0.0,
+    high_speed_brake_gear_ratio_motor_to_component: float | None = 1.0,
+    fluid_coupling_inertia_native_kg_m2: float = 0.0,
+    fluid_coupling_gear_ratio_motor_to_component: float | None = 1.0,
+) -> float:
+    """Sum high-speed native component inertias referred to motor shaft.
+
+    Parameters
+    ----------
+    high_speed_coupling_inertia_native_kg_m2 : float, optional
+        Native high-speed coupling inertia in kilogram meter squared.
+    high_speed_coupling_gear_ratio_motor_to_component : float | None, optional
+        Gear ratio ``omega_motor / omega_high_speed_coupling``.
+    high_speed_brake_inertia_native_kg_m2 : float, optional
+        Native high-speed brake inertia in kilogram meter squared.
+    high_speed_brake_gear_ratio_motor_to_component : float | None, optional
+        Gear ratio ``omega_motor / omega_high_speed_brake``.
+    fluid_coupling_inertia_native_kg_m2 : float, optional
+        Native fluid-coupling inertia in kilogram meter squared.
+    fluid_coupling_gear_ratio_motor_to_component : float | None, optional
+        Gear ratio ``omega_motor / omega_fluid_coupling``.
+
+    Returns
+    -------
+    float
+        High-speed native component inertia referred to motor shaft in kilogram
+        meter squared.
+
+    Raises
+    ------
+    ValueError
+        If any inertia is negative or provided ratio is invalid.
+    """
+    return (
+        _optional_component_inertia_referred_to_motor_shaft(
+            high_speed_coupling_inertia_native_kg_m2,
+            high_speed_coupling_gear_ratio_motor_to_component,
+            component_name="high_speed_coupling",
+            default_ratio_if_missing=1.0,
+        )
+        + _optional_component_inertia_referred_to_motor_shaft(
+            high_speed_brake_inertia_native_kg_m2,
+            high_speed_brake_gear_ratio_motor_to_component,
+            component_name="high_speed_brake",
+            default_ratio_if_missing=1.0,
+        )
+        + _optional_component_inertia_referred_to_motor_shaft(
+            fluid_coupling_inertia_native_kg_m2,
+            fluid_coupling_gear_ratio_motor_to_component,
+            component_name="fluid_coupling",
+            default_ratio_if_missing=1.0,
+        )
+    )
+
+
+def _fluid_coupling_inertia_referred_to_motor_shaft(
+    fluid_coupling_inertia_native_kg_m2: float,
+    gear_ratio_motor_to_fluid_coupling: float,
+) -> float:
+    """Convert native fluid-coupling inertia to motor-shaft-equivalent inertia.
+
+    Parameters
+    ----------
+    fluid_coupling_inertia_native_kg_m2 : float
+        Native fluid-coupling inertia in kilogram meter squared.
+    gear_ratio_motor_to_fluid_coupling : float
+        Gear ratio ``omega_motor / omega_fluid_coupling``.
+
+    Returns
+    -------
+    float
+        Fluid-coupling inertia referred to motor shaft in kilogram meter squared.
+    """
+    return _component_inertia_referred_to_motor_shaft(
+        fluid_coupling_inertia_native_kg_m2,
+        gear_ratio_motor_to_fluid_coupling,
+    )
+
+
+def _total_rotational_inertia_at_motor_shaft(
+    *,
+    reflected_translating_mass_inertia_kg_m2: float = 0.0,
+    gearbox_inertia_at_motor_shaft_kg_m2: float = 0.0,
+    low_speed_native_component_inertia_at_motor_shaft_kg_m2: float = 0.0,
+    high_speed_native_component_inertia_at_motor_shaft_kg_m2: float = 0.0,
+) -> float:
+    """Calculate total rotational inertia at motor shaft from layer totals.
+
+    Parameters
+    ----------
+    reflected_translating_mass_inertia_kg_m2 : float, optional
+        Reflected translating-mass inertia at motor shaft in kilogram meter
+        squared.
+    gearbox_inertia_at_motor_shaft_kg_m2 : float, optional
+        Gearbox inertia at motor shaft in kilogram meter squared.
+    low_speed_native_component_inertia_at_motor_shaft_kg_m2 : float, optional
+        Aggregate low-speed native component inertia referred to motor shaft.
+    high_speed_native_component_inertia_at_motor_shaft_kg_m2 : float, optional
+        Aggregate high-speed native component inertia referred to motor shaft.
+
+    Returns
+    -------
+    float
+        Total rotational inertia at motor shaft in kilogram meter squared.
+
+    Raises
+    ------
+    ValueError
+        If any input contribution is negative.
+    """
+    contributions = (
+        reflected_translating_mass_inertia_kg_m2,
+        gearbox_inertia_at_motor_shaft_kg_m2,
+        low_speed_native_component_inertia_at_motor_shaft_kg_m2,
+        high_speed_native_component_inertia_at_motor_shaft_kg_m2,
+    )
+    if any(value < 0 for value in contributions):
+        raise ValueError("all inertia contributions must be non-negative")
+    return sum(contributions)
+
+
+def _total_rotational_inertia_at_fluid_coupling_shaft(
+    total_rotational_inertia_at_motor_shaft_kg_m2: float,
+    gear_ratio_motor_to_fluid_coupling: float,
+) -> float:
+    """Convert total rotational inertia at motor shaft to fluid-coupling shaft.
+
+    Parameters
+    ----------
+    total_rotational_inertia_at_motor_shaft_kg_m2 : float
+        Total rotational inertia at motor shaft in kilogram meter squared.
+    gear_ratio_motor_to_fluid_coupling : float
+        Gear ratio ``omega_motor / omega_fluid_coupling``.
+
+    Returns
+    -------
+    float
+        Total rotational inertia at fluid-coupling shaft in kilogram meter
+        squared.
+    """
+    if total_rotational_inertia_at_motor_shaft_kg_m2 < 0:
+        raise ValueError(
+            "total_rotational_inertia_at_motor_shaft_kg_m2 must be non-negative"
+        )
+    if gear_ratio_motor_to_fluid_coupling <= 0:
+        raise ValueError("gear_ratio_motor_to_fluid_coupling must be positive")
+    return (
+        total_rotational_inertia_at_motor_shaft_kg_m2
+        * gear_ratio_motor_to_fluid_coupling
+        * gear_ratio_motor_to_fluid_coupling
+    )
+
+
+def _rotational_inertia_breakdown_at_motor_shaft(
+    *,
+    reflected_translating_mass_inertia_kg_m2: float = 0.0,
+    gearbox_inertia_at_motor_shaft_kg_m2: float = 0.0,
+    pulley_inertia_native_kg_m2: float = 0.0,
+    pulley_gear_ratio_motor_to_component: float | None = None,
+    low_speed_coupling_inertia_native_kg_m2: float = 0.0,
+    low_speed_coupling_gear_ratio_motor_to_component: float | None = None,
+    low_speed_brake_inertia_native_kg_m2: float = 0.0,
+    low_speed_brake_gear_ratio_motor_to_component: float | None = None,
+    high_speed_coupling_inertia_native_kg_m2: float = 0.0,
+    high_speed_coupling_gear_ratio_motor_to_component: float | None = 1.0,
+    high_speed_brake_inertia_native_kg_m2: float = 0.0,
+    high_speed_brake_gear_ratio_motor_to_component: float | None = 1.0,
+    fluid_coupling_inertia_native_kg_m2: float = 0.0,
+    fluid_coupling_gear_ratio_motor_to_component: float | None = 1.0,
+) -> dict[str, float]:
+    """Return layered rotational inertia breakdown at motor shaft.
+
+    Returns
+    -------
+    dict[str, float]
+        Dictionary with layer totals and final total, all in kilogram meter
+        squared.
+    """
+    low_speed = _low_speed_native_component_inertia_at_motor_shaft(
+        pulley_inertia_native_kg_m2=pulley_inertia_native_kg_m2,
+        pulley_gear_ratio_motor_to_component=pulley_gear_ratio_motor_to_component,
+        low_speed_coupling_inertia_native_kg_m2=low_speed_coupling_inertia_native_kg_m2,
+        low_speed_coupling_gear_ratio_motor_to_component=low_speed_coupling_gear_ratio_motor_to_component,
+        low_speed_brake_inertia_native_kg_m2=low_speed_brake_inertia_native_kg_m2,
+        low_speed_brake_gear_ratio_motor_to_component=low_speed_brake_gear_ratio_motor_to_component,
+    )
+    high_speed = _high_speed_native_component_inertia_at_motor_shaft(
+        high_speed_coupling_inertia_native_kg_m2=high_speed_coupling_inertia_native_kg_m2,
+        high_speed_coupling_gear_ratio_motor_to_component=high_speed_coupling_gear_ratio_motor_to_component,
+        high_speed_brake_inertia_native_kg_m2=high_speed_brake_inertia_native_kg_m2,
+        high_speed_brake_gear_ratio_motor_to_component=high_speed_brake_gear_ratio_motor_to_component,
+        fluid_coupling_inertia_native_kg_m2=fluid_coupling_inertia_native_kg_m2,
+        fluid_coupling_gear_ratio_motor_to_component=fluid_coupling_gear_ratio_motor_to_component,
+    )
+    total = _total_rotational_inertia_at_motor_shaft(
+        reflected_translating_mass_inertia_kg_m2=reflected_translating_mass_inertia_kg_m2,
+        gearbox_inertia_at_motor_shaft_kg_m2=gearbox_inertia_at_motor_shaft_kg_m2,
+        low_speed_native_component_inertia_at_motor_shaft_kg_m2=low_speed,
+        high_speed_native_component_inertia_at_motor_shaft_kg_m2=high_speed,
+    )
+    return {
+        "reflected_translating_mass_inertia_at_motor_shaft_kg_m2": reflected_translating_mass_inertia_kg_m2,
+        "gearbox_inertia_at_motor_shaft_kg_m2": gearbox_inertia_at_motor_shaft_kg_m2,
+        "low_speed_native_component_inertia_at_motor_shaft_kg_m2": low_speed,
+        "high_speed_native_component_inertia_at_motor_shaft_kg_m2": high_speed,
+        "total_rotational_inertia_at_motor_shaft_kg_m2": total,
+    }
 
 
 def _motor_shaft_rotational_inertia_per_drive(

@@ -11,11 +11,17 @@ from eytelwein.belt_conveyor_design.extended._mass_inertia import (
     _total_translating_mass_empty,
     _total_translating_mass,
     _drive_pulley_radius_from_drive_pulley_diameter,
-    _translating_mass_inertia_at_pulley_shaft,
+    _translating_mass_inertia_at_pulley_circumference,
     _reflected_translating_mass_inertia_at_motor_shaft,
     _component_inertia_referred_to_motor_shaft,
     _total_motor_shaft_rotational_inertia_from_equivalent_component_inertias,
     _total_motor_shaft_rotational_inertia_from_native_component_inertias,
+    _low_speed_native_component_inertia_at_motor_shaft,
+    _high_speed_native_component_inertia_at_motor_shaft,
+    _fluid_coupling_inertia_referred_to_motor_shaft,
+    _total_rotational_inertia_at_motor_shaft,
+    _total_rotational_inertia_at_fluid_coupling_shaft,
+    _rotational_inertia_breakdown_at_motor_shaft,
     _motor_shaft_rotational_inertia_per_drive,
 )
 from eytelwein.main.units import get_unit_registry
@@ -466,13 +472,13 @@ def drive_pulley_radius_from_drive_pulley_diameter(
     return converted
 
 
-def translating_mass_inertia_at_pulley_shaft(
+def translating_mass_inertia_at_pulley_circumference(
     translating_mass: Quantity,
     drive_pulley_radius: Quantity,
     unit: str = "kilogram * meter**2",
     precision: int | None = None,
 ) -> Quantity:
-    """Calculate translating-mass inertia contribution at pulley shaft.
+    """Calculate translating-mass inertia contribution at pulley circumference.
 
     Parameters
     ----------
@@ -488,7 +494,7 @@ def translating_mass_inertia_at_pulley_shaft(
     Returns
     -------
     Quantity
-        Translating-mass inertia contribution at pulley shaft (low-speed side)
+        Translating-mass inertia contribution at pulley circumference (low-speed side)
         in the requested output unit.
 
     Raises
@@ -509,7 +515,9 @@ def translating_mass_inertia_at_pulley_shaft(
         raise ValueError("drive_pulley_radius must be positive")
 
     result = (
-        _translating_mass_inertia_at_pulley_shaft(mass.magnitude, radius.magnitude)
+        _translating_mass_inertia_at_pulley_circumference(
+            mass.magnitude, radius.magnitude
+        )
         * u.kilogram
         * u.meter**2
     )
@@ -762,6 +770,398 @@ def total_motor_shaft_rotational_inertia_from_native_component_inertias(
     if precision is not None:
         converted = round(converted, precision)
     return converted
+
+
+def low_speed_native_component_inertia_at_motor_shaft(
+    *,
+    pulley_inertia_native: Quantity | None = None,
+    pulley_gear_ratio_motor_to_component: Quantity | None = None,
+    low_speed_coupling_inertia_native: Quantity | None = None,
+    low_speed_coupling_gear_ratio_motor_to_component: Quantity | None = None,
+    low_speed_brake_inertia_native: Quantity | None = None,
+    low_speed_brake_gear_ratio_motor_to_component: Quantity | None = None,
+    unit: str = "kilogram * meter**2",
+    precision: int | None = None,
+) -> Quantity:
+    """Sum low-speed native component inertias referred to motor shaft.
+
+    All component inputs are optional. When a low-speed inertia input is
+    positive, the corresponding gear ratio must be provided.
+    """
+    try:
+        pulley_inertia = (
+            0.0
+            if pulley_inertia_native is None
+            else pulley_inertia_native.to(u.kilogram * u.meter**2).magnitude
+        )
+        pulley_ratio = (
+            None
+            if pulley_gear_ratio_motor_to_component is None
+            else pulley_gear_ratio_motor_to_component.to(u.dimensionless).magnitude
+        )
+
+        coupling_inertia = (
+            0.0
+            if low_speed_coupling_inertia_native is None
+            else low_speed_coupling_inertia_native.to(u.kilogram * u.meter**2).magnitude
+        )
+        coupling_ratio = (
+            None
+            if low_speed_coupling_gear_ratio_motor_to_component is None
+            else low_speed_coupling_gear_ratio_motor_to_component.to(
+                u.dimensionless
+            ).magnitude
+        )
+
+        brake_inertia = (
+            0.0
+            if low_speed_brake_inertia_native is None
+            else low_speed_brake_inertia_native.to(u.kilogram * u.meter**2).magnitude
+        )
+        brake_ratio = (
+            None
+            if low_speed_brake_gear_ratio_motor_to_component is None
+            else low_speed_brake_gear_ratio_motor_to_component.to(
+                u.dimensionless
+            ).magnitude
+        )
+    except Exception as exc:
+        raise ValueError(f"Error in converting units: {exc}") from exc
+
+    result = (
+        _low_speed_native_component_inertia_at_motor_shaft(
+            pulley_inertia_native_kg_m2=pulley_inertia,
+            pulley_gear_ratio_motor_to_component=pulley_ratio,
+            low_speed_coupling_inertia_native_kg_m2=coupling_inertia,
+            low_speed_coupling_gear_ratio_motor_to_component=coupling_ratio,
+            low_speed_brake_inertia_native_kg_m2=brake_inertia,
+            low_speed_brake_gear_ratio_motor_to_component=brake_ratio,
+        )
+        * u.kilogram
+        * u.meter**2
+    )
+    converted = result.to(_parse_unit(unit))
+    if precision is not None:
+        converted = round(converted, precision)
+    return converted
+
+
+def high_speed_native_component_inertia_at_motor_shaft(
+    *,
+    high_speed_coupling_inertia_native: Quantity | None = None,
+    high_speed_coupling_gear_ratio_motor_to_component: Quantity | None = None,
+    high_speed_brake_inertia_native: Quantity | None = None,
+    high_speed_brake_gear_ratio_motor_to_component: Quantity | None = None,
+    fluid_coupling_inertia_native: Quantity | None = None,
+    fluid_coupling_gear_ratio_motor_to_component: Quantity | None = None,
+    unit: str = "kilogram * meter**2",
+    precision: int | None = None,
+) -> Quantity:
+    """Sum high-speed native component inertias referred to motor shaft.
+
+    All component inputs are optional. High-speed gear ratios default to
+    ``1.0`` when omitted.
+    """
+    try:
+        hs_coupling_inertia = (
+            0.0
+            if high_speed_coupling_inertia_native is None
+            else high_speed_coupling_inertia_native.to(
+                u.kilogram * u.meter**2
+            ).magnitude
+        )
+        hs_coupling_ratio = (
+            None
+            if high_speed_coupling_gear_ratio_motor_to_component is None
+            else high_speed_coupling_gear_ratio_motor_to_component.to(
+                u.dimensionless
+            ).magnitude
+        )
+
+        hs_brake_inertia = (
+            0.0
+            if high_speed_brake_inertia_native is None
+            else high_speed_brake_inertia_native.to(u.kilogram * u.meter**2).magnitude
+        )
+        hs_brake_ratio = (
+            None
+            if high_speed_brake_gear_ratio_motor_to_component is None
+            else high_speed_brake_gear_ratio_motor_to_component.to(
+                u.dimensionless
+            ).magnitude
+        )
+
+        fluid_inertia = (
+            0.0
+            if fluid_coupling_inertia_native is None
+            else fluid_coupling_inertia_native.to(u.kilogram * u.meter**2).magnitude
+        )
+        fluid_ratio = (
+            None
+            if fluid_coupling_gear_ratio_motor_to_component is None
+            else fluid_coupling_gear_ratio_motor_to_component.to(
+                u.dimensionless
+            ).magnitude
+        )
+    except Exception as exc:
+        raise ValueError(f"Error in converting units: {exc}") from exc
+
+    result = (
+        _high_speed_native_component_inertia_at_motor_shaft(
+            high_speed_coupling_inertia_native_kg_m2=hs_coupling_inertia,
+            high_speed_coupling_gear_ratio_motor_to_component=hs_coupling_ratio,
+            high_speed_brake_inertia_native_kg_m2=hs_brake_inertia,
+            high_speed_brake_gear_ratio_motor_to_component=hs_brake_ratio,
+            fluid_coupling_inertia_native_kg_m2=fluid_inertia,
+            fluid_coupling_gear_ratio_motor_to_component=fluid_ratio,
+        )
+        * u.kilogram
+        * u.meter**2
+    )
+    converted = result.to(_parse_unit(unit))
+    if precision is not None:
+        converted = round(converted, precision)
+    return converted
+
+
+def fluid_coupling_inertia_referred_to_motor_shaft(
+    fluid_coupling_inertia_native: Quantity,
+    gear_ratio_motor_to_fluid_coupling: Quantity,
+    unit: str = "kilogram * meter**2",
+    precision: int | None = None,
+) -> Quantity:
+    """Convert native fluid-coupling inertia to motor-shaft-equivalent inertia."""
+    try:
+        fluid_inertia = fluid_coupling_inertia_native.to(u.kilogram * u.meter**2)
+        ratio = gear_ratio_motor_to_fluid_coupling.to(u.dimensionless)
+    except Exception as exc:
+        raise ValueError(f"Error in converting units: {exc}") from exc
+
+    result = (
+        _fluid_coupling_inertia_referred_to_motor_shaft(
+            fluid_inertia.magnitude,
+            ratio.magnitude,
+        )
+        * u.kilogram
+        * u.meter**2
+    )
+    converted = result.to(_parse_unit(unit))
+    if precision is not None:
+        converted = round(converted, precision)
+    return converted
+
+
+def total_rotational_inertia_at_motor_shaft(
+    *,
+    reflected_translating_mass_inertia: Quantity | None = None,
+    gearbox_inertia_at_motor_shaft: Quantity | None = None,
+    low_speed_native_component_inertia_at_motor_shaft: Quantity | None = None,
+    high_speed_native_component_inertia_at_motor_shaft: Quantity | None = None,
+    unit: str = "kilogram * meter**2",
+    precision: int | None = None,
+) -> Quantity:
+    """Calculate total rotational inertia at motor shaft from layer totals.
+
+    All layer inputs are optional and default to zero.
+    """
+    try:
+        reflected = (
+            0.0
+            if reflected_translating_mass_inertia is None
+            else reflected_translating_mass_inertia.to(
+                u.kilogram * u.meter**2
+            ).magnitude
+        )
+        gearbox = (
+            0.0
+            if gearbox_inertia_at_motor_shaft is None
+            else gearbox_inertia_at_motor_shaft.to(u.kilogram * u.meter**2).magnitude
+        )
+        low_speed = (
+            0.0
+            if low_speed_native_component_inertia_at_motor_shaft is None
+            else low_speed_native_component_inertia_at_motor_shaft.to(
+                u.kilogram * u.meter**2
+            ).magnitude
+        )
+        high_speed = (
+            0.0
+            if high_speed_native_component_inertia_at_motor_shaft is None
+            else high_speed_native_component_inertia_at_motor_shaft.to(
+                u.kilogram * u.meter**2
+            ).magnitude
+        )
+    except Exception as exc:
+        raise ValueError(f"Error in converting units: {exc}") from exc
+
+    result = (
+        _total_rotational_inertia_at_motor_shaft(
+            reflected_translating_mass_inertia_kg_m2=reflected,
+            gearbox_inertia_at_motor_shaft_kg_m2=gearbox,
+            low_speed_native_component_inertia_at_motor_shaft_kg_m2=low_speed,
+            high_speed_native_component_inertia_at_motor_shaft_kg_m2=high_speed,
+        )
+        * u.kilogram
+        * u.meter**2
+    )
+    converted = result.to(_parse_unit(unit))
+    if precision is not None:
+        converted = round(converted, precision)
+    return converted
+
+
+def total_rotational_inertia_at_fluid_coupling_shaft(
+    total_rotational_inertia_at_motor_shaft_value: Quantity,
+    gear_ratio_motor_to_fluid_coupling: Quantity,
+    unit: str = "kilogram * meter**2",
+    precision: int | None = None,
+) -> Quantity:
+    """Convert total rotational inertia at motor shaft to fluid-coupling shaft."""
+    try:
+        total_motor = total_rotational_inertia_at_motor_shaft_value.to(
+            u.kilogram * u.meter**2
+        )
+        ratio = gear_ratio_motor_to_fluid_coupling.to(u.dimensionless)
+    except Exception as exc:
+        raise ValueError(f"Error in converting units: {exc}") from exc
+
+    result = (
+        _total_rotational_inertia_at_fluid_coupling_shaft(
+            total_motor.magnitude,
+            ratio.magnitude,
+        )
+        * u.kilogram
+        * u.meter**2
+    )
+    converted = result.to(_parse_unit(unit))
+    if precision is not None:
+        converted = round(converted, precision)
+    return converted
+
+
+def rotational_inertia_breakdown_at_motor_shaft(
+    *,
+    reflected_translating_mass_inertia: Quantity | None = None,
+    gearbox_inertia_at_motor_shaft: Quantity | None = None,
+    pulley_inertia_native: Quantity | None = None,
+    pulley_gear_ratio_motor_to_component: Quantity | None = None,
+    low_speed_coupling_inertia_native: Quantity | None = None,
+    low_speed_coupling_gear_ratio_motor_to_component: Quantity | None = None,
+    low_speed_brake_inertia_native: Quantity | None = None,
+    low_speed_brake_gear_ratio_motor_to_component: Quantity | None = None,
+    high_speed_coupling_inertia_native: Quantity | None = None,
+    high_speed_coupling_gear_ratio_motor_to_component: Quantity | None = None,
+    high_speed_brake_inertia_native: Quantity | None = None,
+    high_speed_brake_gear_ratio_motor_to_component: Quantity | None = None,
+    fluid_coupling_inertia_native: Quantity | None = None,
+    fluid_coupling_gear_ratio_motor_to_component: Quantity | None = None,
+) -> dict[str, Quantity]:
+    """Return layered rotational inertia breakdown at motor shaft."""
+    try:
+        reflected = (
+            0.0
+            if reflected_translating_mass_inertia is None
+            else reflected_translating_mass_inertia.to(
+                u.kilogram * u.meter**2
+            ).magnitude
+        )
+        gearbox = (
+            0.0
+            if gearbox_inertia_at_motor_shaft is None
+            else gearbox_inertia_at_motor_shaft.to(u.kilogram * u.meter**2).magnitude
+        )
+        pulley = (
+            0.0
+            if pulley_inertia_native is None
+            else pulley_inertia_native.to(u.kilogram * u.meter**2).magnitude
+        )
+        pulley_ratio = (
+            None
+            if pulley_gear_ratio_motor_to_component is None
+            else pulley_gear_ratio_motor_to_component.to(u.dimensionless).magnitude
+        )
+        ls_coupling = (
+            0.0
+            if low_speed_coupling_inertia_native is None
+            else low_speed_coupling_inertia_native.to(u.kilogram * u.meter**2).magnitude
+        )
+        ls_coupling_ratio = (
+            None
+            if low_speed_coupling_gear_ratio_motor_to_component is None
+            else low_speed_coupling_gear_ratio_motor_to_component.to(
+                u.dimensionless
+            ).magnitude
+        )
+        ls_brake = (
+            0.0
+            if low_speed_brake_inertia_native is None
+            else low_speed_brake_inertia_native.to(u.kilogram * u.meter**2).magnitude
+        )
+        ls_brake_ratio = (
+            None
+            if low_speed_brake_gear_ratio_motor_to_component is None
+            else low_speed_brake_gear_ratio_motor_to_component.to(
+                u.dimensionless
+            ).magnitude
+        )
+        hs_coupling = (
+            0.0
+            if high_speed_coupling_inertia_native is None
+            else high_speed_coupling_inertia_native.to(
+                u.kilogram * u.meter**2
+            ).magnitude
+        )
+        hs_coupling_ratio = (
+            None
+            if high_speed_coupling_gear_ratio_motor_to_component is None
+            else high_speed_coupling_gear_ratio_motor_to_component.to(
+                u.dimensionless
+            ).magnitude
+        )
+        hs_brake = (
+            0.0
+            if high_speed_brake_inertia_native is None
+            else high_speed_brake_inertia_native.to(u.kilogram * u.meter**2).magnitude
+        )
+        hs_brake_ratio = (
+            None
+            if high_speed_brake_gear_ratio_motor_to_component is None
+            else high_speed_brake_gear_ratio_motor_to_component.to(
+                u.dimensionless
+            ).magnitude
+        )
+        fluid = (
+            0.0
+            if fluid_coupling_inertia_native is None
+            else fluid_coupling_inertia_native.to(u.kilogram * u.meter**2).magnitude
+        )
+        fluid_ratio = (
+            None
+            if fluid_coupling_gear_ratio_motor_to_component is None
+            else fluid_coupling_gear_ratio_motor_to_component.to(
+                u.dimensionless
+            ).magnitude
+        )
+    except Exception as exc:
+        raise ValueError(f"Error in converting units: {exc}") from exc
+
+    raw = _rotational_inertia_breakdown_at_motor_shaft(
+        reflected_translating_mass_inertia_kg_m2=reflected,
+        gearbox_inertia_at_motor_shaft_kg_m2=gearbox,
+        pulley_inertia_native_kg_m2=pulley,
+        pulley_gear_ratio_motor_to_component=pulley_ratio,
+        low_speed_coupling_inertia_native_kg_m2=ls_coupling,
+        low_speed_coupling_gear_ratio_motor_to_component=ls_coupling_ratio,
+        low_speed_brake_inertia_native_kg_m2=ls_brake,
+        low_speed_brake_gear_ratio_motor_to_component=ls_brake_ratio,
+        high_speed_coupling_inertia_native_kg_m2=hs_coupling,
+        high_speed_coupling_gear_ratio_motor_to_component=hs_coupling_ratio,
+        high_speed_brake_inertia_native_kg_m2=hs_brake,
+        high_speed_brake_gear_ratio_motor_to_component=hs_brake_ratio,
+        fluid_coupling_inertia_native_kg_m2=fluid,
+        fluid_coupling_gear_ratio_motor_to_component=fluid_ratio,
+    )
+    return {key: value * u.kilogram * u.meter**2 for key, value in raw.items()}
 
 
 def motor_shaft_rotational_inertia_per_drive(
