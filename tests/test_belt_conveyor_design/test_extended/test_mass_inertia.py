@@ -13,6 +13,7 @@ from eytelwein.belt_conveyor_design.extended.mass_inertia import (
     total_translating_mass,
     drive_pulley_radius_from_drive_pulley_diameter,
     translating_mass_inertia_at_pulley_circumference,
+    mass_inertia_at_pulley_shaft,
     reflected_translating_mass_inertia_at_motor_shaft,
     component_inertia_referred_to_motor_shaft,
     total_motor_shaft_rotational_inertia_from_equivalent_component_inertias,
@@ -88,6 +89,37 @@ def test_translating_mass_inertia_at_pulley_circumference_basic() -> None:
     assert result.magnitude == pytest.approx(25.0)
 
 
+def test_mass_inertia_at_pulley_shaft_zero_native_inertia() -> None:
+    """With zero native pulley inertia, should equal translating-only."""
+    result = mass_inertia_at_pulley_shaft(
+        Quantity(100.0, u.kilogram),
+        Quantity(0.5, u.meter),
+        pulley_inertia_native=None,
+    )
+    assert result.units == u.kilogram * u.meter**2
+    assert result.magnitude == pytest.approx(25.0)
+
+
+def test_mass_inertia_at_pulley_shaft_nonzero_native_inertia() -> None:
+    """With nonzero native pulley inertia, should sum correctly."""
+    result = mass_inertia_at_pulley_shaft(
+        Quantity(100.0, u.kilogram),
+        Quantity(0.5, u.meter),
+        pulley_inertia_native=Quantity(5.0, u.kilogram * u.meter**2),
+    )
+    assert result.units == u.kilogram * u.meter**2
+    assert result.magnitude == pytest.approx(30.0)
+
+
+def test_mass_inertia_at_pulley_shaft_negative_native_inertia_raises() -> None:
+    with pytest.raises(ValueError, match="pulley_inertia_native"):
+        mass_inertia_at_pulley_shaft(
+            Quantity(100.0, u.kilogram),
+            Quantity(0.5, u.meter),
+            pulley_inertia_native=Quantity(-1.0, u.kilogram * u.meter**2),
+        )
+
+
 def test_translating_mass_inertia_at_pulley_circumference_spec_case() -> None:
     """Inertia at pulley shaft, before reflection to motor shaft."""
     result = translating_mass_inertia_at_pulley_circumference(
@@ -124,7 +156,9 @@ def test_component_inertia_referred_to_motor_shaft_basic() -> None:
     assert result.magnitude == pytest.approx(0.3)
 
 
-def test_total_motor_shaft_rotational_inertia_from_equivalent_component_inertias() -> None:
+def test_total_motor_shaft_rotational_inertia_from_equivalent_component_inertias() -> (
+    None
+):
     result = total_motor_shaft_rotational_inertia_from_equivalent_component_inertias(
         Quantity(486.227552, u.kilogram * u.meter**2),
         Quantity(10.0, u.kilogram * u.meter**2),
@@ -175,7 +209,9 @@ def test_layered_total_rotational_inertia_at_motor_shaft_mixed_components() -> N
         fluid_coupling_inertia_native=Quantity(4.0, u.kilogram * u.meter**2),
     )
     total = total_rotational_inertia_at_motor_shaft(
-        reflected_translating_mass_inertia=Quantity(486.227552, u.kilogram * u.meter**2),
+        reflected_translating_mass_inertia=Quantity(
+            486.227552, u.kilogram * u.meter**2
+        ),
         gearbox_inertia_at_motor_shaft=Quantity(10.0, u.kilogram * u.meter**2),
         low_speed_native_component_inertia_at_motor_shaft=low_speed,
         high_speed_native_component_inertia_at_motor_shaft=high_speed,
@@ -206,6 +242,6 @@ def test_rotational_inertia_breakdown_at_motor_shaft() -> None:
         high_speed_coupling_inertia_native=Quantity(3.0, u.kilogram * u.meter**2),
     )
     assert "total_rotational_inertia_at_motor_shaft_kg_m2" in breakdown
-    assert breakdown["total_rotational_inertia_at_motor_shaft_kg_m2"].magnitude == pytest.approx(
-        123.0
-    )
+    assert breakdown[
+        "total_rotational_inertia_at_motor_shaft_kg_m2"
+    ].magnitude == pytest.approx(123.0)
