@@ -186,12 +186,47 @@ def _drive_pulley_radius_from_drive_pulley_diameter(
     return drive_pulley_diameter_m / 2.0
 
 
+def _translating_mass_inertia_at_pulley_shaft(
+    translating_mass_kg: float, drive_pulley_radius_m: float
+) -> float:
+    """Calculate translating-mass inertia contribution at pulley shaft.
+
+    Parameters
+    ----------
+    translating_mass_kg : float
+        Total translating mass in kilograms.
+    drive_pulley_radius_m : float
+        Drive pulley radius in meters.
+
+    Returns
+    -------
+    float
+        Translating-mass inertia contribution at pulley shaft (low-speed side)
+        in kilogram meter squared.
+
+    Raises
+    ------
+    ValueError
+        If mass is negative or radius is not positive.
+    """
+    if translating_mass_kg < 0:
+        raise ValueError("translating_mass_kg must be non-negative")
+    if drive_pulley_radius_m <= 0:
+        raise ValueError("drive_pulley_radius_m must be positive")
+    return translating_mass_kg * drive_pulley_radius_m * drive_pulley_radius_m
+
+
 def _reflected_translating_mass_inertia_at_motor_shaft(
     translating_mass_kg: float,
     drive_pulley_radius_m: float,
     gear_ratio_motor_to_pulley: float,
 ) -> float:
     """Calculate reflected translating-mass inertia contribution at motor shaft.
+
+    This function converts pulley-shaft inertia to motor-shaft-equivalent inertia
+    by applying the squared speed ratio. It composes two primitives:
+    (1) translating mass → pulley-shaft inertia
+    (2) pulley-shaft inertia → motor-shaft inertia via speed reduction
 
     Parameters
     ----------
@@ -220,11 +255,12 @@ def _reflected_translating_mass_inertia_at_motor_shaft(
         raise ValueError("drive_pulley_radius_m must be positive")
     if gear_ratio_motor_to_pulley <= 0:
         raise ValueError("gear_ratio_motor_to_pulley must be positive")
-    return (
-        translating_mass_kg
-        * drive_pulley_radius_m
-        * drive_pulley_radius_m
-        / (gear_ratio_motor_to_pulley * gear_ratio_motor_to_pulley)
+
+    pulley_inertia = _translating_mass_inertia_at_pulley_shaft(
+        translating_mass_kg, drive_pulley_radius_m
+    )
+    return _component_inertia_referred_to_motor_shaft(
+        pulley_inertia, 1.0 / gear_ratio_motor_to_pulley
     )
 
 

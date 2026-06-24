@@ -12,6 +12,7 @@ from eytelwein.belt_conveyor_design.extended.mass_inertia import (
     total_translating_mass_empty,
     total_translating_mass,
     drive_pulley_radius_from_drive_pulley_diameter,
+    translating_mass_inertia_at_pulley_shaft,
     reflected_translating_mass_inertia_at_motor_shaft,
     component_inertia_referred_to_motor_shaft,
     total_motor_shaft_rotational_inertia_from_equivalent_component_inertias,
@@ -72,6 +73,24 @@ def test_drive_pulley_radius_from_drive_pulley_diameter_basic() -> None:
     assert result.magnitude == pytest.approx(0.52)
 
 
+def test_translating_mass_inertia_at_pulley_shaft_basic() -> None:
+    result = translating_mass_inertia_at_pulley_shaft(
+        Quantity(100.0, u.kilogram),
+        Quantity(0.5, u.meter),
+    )
+    assert result.units == u.kilogram * u.meter**2
+    assert result.magnitude == pytest.approx(25.0)
+
+
+def test_translating_mass_inertia_at_pulley_shaft_spec_case() -> None:
+    """Inertia at pulley shaft, before reflection to motor shaft."""
+    result = translating_mass_inertia_at_pulley_shaft(
+        Quantity(247458.825, u.kilogram),
+        Quantity(0.52, u.meter),
+    )
+    assert result.magnitude == pytest.approx(67116.766245, rel=0.005)
+
+
 def test_reflected_translating_mass_inertia_at_motor_shaft_spec_case() -> None:
     result = reflected_translating_mass_inertia_at_motor_shaft(
         Quantity(247458.825, u.kilogram),
@@ -79,6 +98,16 @@ def test_reflected_translating_mass_inertia_at_motor_shaft_spec_case() -> None:
         Quantity(11.731, u.dimensionless),
     )
     assert result.magnitude == pytest.approx(486.227552, rel=0.005)
+
+
+def test_reflected_translating_mass_inertia_at_motor_shaft_full_belt_case() -> None:
+    """Full belt case with large mass and high speed reduction."""
+    result = reflected_translating_mass_inertia_at_motor_shaft(
+        Quantity(234511, u.kilogram),
+        Quantity(0.4, u.meter),  # radius = 0.8 m diameter / 2
+        Quantity(20.153, u.dimensionless),
+    )
+    assert result.magnitude == pytest.approx(92.4, rel=0.005)
 
 
 def test_component_inertia_referred_to_motor_shaft_basic() -> None:
