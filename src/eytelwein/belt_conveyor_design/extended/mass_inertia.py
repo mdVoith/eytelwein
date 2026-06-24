@@ -840,18 +840,18 @@ def total_motor_shaft_rotational_inertia_from_native_component_inertias(
 def low_speed_native_component_inertia_at_motor_shaft(
     *,
     pulley_inertia_native: Quantity | None = None,
-    pulley_gear_ratio_motor_to_component: Quantity | None = None,
     low_speed_coupling_inertia_native: Quantity | None = None,
-    low_speed_coupling_gear_ratio_motor_to_component: Quantity | None = None,
     low_speed_brake_inertia_native: Quantity | None = None,
-    low_speed_brake_gear_ratio_motor_to_component: Quantity | None = None,
+    gearbox_ratio_motor_to_low_speed_side: Quantity | None = None,
     unit: str = "kilogram * meter**2",
     precision: int | None = None,
 ) -> Quantity:
     """Sum low-speed native component inertias referred to motor shaft.
 
-    All component inputs are optional. When a low-speed inertia input is
-    positive, the corresponding gear ratio must be provided.
+    Uses a single gearbox ratio for all low-speed components.
+
+    All component inputs are optional. When any low-speed inertia input is
+    positive, the gearbox ratio must be provided.
     """
     try:
         pulley_inertia = (
@@ -859,23 +859,11 @@ def low_speed_native_component_inertia_at_motor_shaft(
             if pulley_inertia_native is None
             else pulley_inertia_native.to(u.kilogram * u.meter**2).magnitude
         )
-        pulley_ratio = (
-            None
-            if pulley_gear_ratio_motor_to_component is None
-            else pulley_gear_ratio_motor_to_component.to(u.dimensionless).magnitude
-        )
 
         coupling_inertia = (
             0.0
             if low_speed_coupling_inertia_native is None
             else low_speed_coupling_inertia_native.to(u.kilogram * u.meter**2).magnitude
-        )
-        coupling_ratio = (
-            None
-            if low_speed_coupling_gear_ratio_motor_to_component is None
-            else low_speed_coupling_gear_ratio_motor_to_component.to(
-                u.dimensionless
-            ).magnitude
         )
 
         brake_inertia = (
@@ -883,12 +871,11 @@ def low_speed_native_component_inertia_at_motor_shaft(
             if low_speed_brake_inertia_native is None
             else low_speed_brake_inertia_native.to(u.kilogram * u.meter**2).magnitude
         )
-        brake_ratio = (
+
+        gearbox_ratio = (
             None
-            if low_speed_brake_gear_ratio_motor_to_component is None
-            else low_speed_brake_gear_ratio_motor_to_component.to(
-                u.dimensionless
-            ).magnitude
+            if gearbox_ratio_motor_to_low_speed_side is None
+            else gearbox_ratio_motor_to_low_speed_side.to(u.dimensionless).magnitude
         )
     except Exception as exc:
         raise ValueError(f"Error in converting units: {exc}") from exc
@@ -896,11 +883,9 @@ def low_speed_native_component_inertia_at_motor_shaft(
     result = (
         _low_speed_native_component_inertia_at_motor_shaft(
             pulley_inertia_native_kg_m2=pulley_inertia,
-            pulley_gear_ratio_motor_to_component=pulley_ratio,
             low_speed_coupling_inertia_native_kg_m2=coupling_inertia,
-            low_speed_coupling_gear_ratio_motor_to_component=coupling_ratio,
             low_speed_brake_inertia_native_kg_m2=brake_inertia,
-            low_speed_brake_gear_ratio_motor_to_component=brake_ratio,
+            gearbox_ratio_motor_to_low_speed_side=gearbox_ratio,
         )
         * u.kilogram
         * u.meter**2
@@ -1109,11 +1094,9 @@ def rotational_inertia_breakdown_at_motor_shaft(
     reflected_translating_mass_inertia: Quantity | None = None,
     gearbox_inertia_at_motor_shaft: Quantity | None = None,
     pulley_inertia_native: Quantity | None = None,
-    pulley_gear_ratio_motor_to_component: Quantity | None = None,
     low_speed_coupling_inertia_native: Quantity | None = None,
-    low_speed_coupling_gear_ratio_motor_to_component: Quantity | None = None,
     low_speed_brake_inertia_native: Quantity | None = None,
-    low_speed_brake_gear_ratio_motor_to_component: Quantity | None = None,
+    gearbox_ratio_motor_to_low_speed_side: Quantity | None = None,
     high_speed_coupling_inertia_native: Quantity | None = None,
     high_speed_coupling_gear_ratio_motor_to_component: Quantity | None = None,
     high_speed_brake_inertia_native: Quantity | None = None,
@@ -1121,7 +1104,10 @@ def rotational_inertia_breakdown_at_motor_shaft(
     fluid_coupling_inertia_native: Quantity | None = None,
     fluid_coupling_gear_ratio_motor_to_component: Quantity | None = None,
 ) -> dict[str, Quantity]:
-    """Return layered rotational inertia breakdown at motor shaft."""
+    """Return layered rotational inertia breakdown at motor shaft.
+
+    Uses single gearbox ratio for all low-speed components.
+    """
     try:
         reflected = (
             0.0
@@ -1140,34 +1126,20 @@ def rotational_inertia_breakdown_at_motor_shaft(
             if pulley_inertia_native is None
             else pulley_inertia_native.to(u.kilogram * u.meter**2).magnitude
         )
-        pulley_ratio = (
-            None
-            if pulley_gear_ratio_motor_to_component is None
-            else pulley_gear_ratio_motor_to_component.to(u.dimensionless).magnitude
-        )
         ls_coupling = (
             0.0
             if low_speed_coupling_inertia_native is None
             else low_speed_coupling_inertia_native.to(u.kilogram * u.meter**2).magnitude
-        )
-        ls_coupling_ratio = (
-            None
-            if low_speed_coupling_gear_ratio_motor_to_component is None
-            else low_speed_coupling_gear_ratio_motor_to_component.to(
-                u.dimensionless
-            ).magnitude
         )
         ls_brake = (
             0.0
             if low_speed_brake_inertia_native is None
             else low_speed_brake_inertia_native.to(u.kilogram * u.meter**2).magnitude
         )
-        ls_brake_ratio = (
+        gearbox_ratio = (
             None
-            if low_speed_brake_gear_ratio_motor_to_component is None
-            else low_speed_brake_gear_ratio_motor_to_component.to(
-                u.dimensionless
-            ).magnitude
+            if gearbox_ratio_motor_to_low_speed_side is None
+            else gearbox_ratio_motor_to_low_speed_side.to(u.dimensionless).magnitude
         )
         hs_coupling = (
             0.0
@@ -1214,11 +1186,9 @@ def rotational_inertia_breakdown_at_motor_shaft(
         reflected_translating_mass_inertia_kg_m2=reflected,
         gearbox_inertia_at_motor_shaft_kg_m2=gearbox,
         pulley_inertia_native_kg_m2=pulley,
-        pulley_gear_ratio_motor_to_component=pulley_ratio,
         low_speed_coupling_inertia_native_kg_m2=ls_coupling,
-        low_speed_coupling_gear_ratio_motor_to_component=ls_coupling_ratio,
         low_speed_brake_inertia_native_kg_m2=ls_brake,
-        low_speed_brake_gear_ratio_motor_to_component=ls_brake_ratio,
+        gearbox_ratio_motor_to_low_speed_side=gearbox_ratio,
         high_speed_coupling_inertia_native_kg_m2=hs_coupling,
         high_speed_coupling_gear_ratio_motor_to_component=hs_coupling_ratio,
         high_speed_brake_inertia_native_kg_m2=hs_brake,
