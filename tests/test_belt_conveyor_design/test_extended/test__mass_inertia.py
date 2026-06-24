@@ -63,7 +63,7 @@ def test_reflected_translating_mass_inertia_at_motor_shaft_basic() -> None:
 
 
 def test_component_inertia_referred_to_motor_shaft_basic() -> None:
-    result = _component_inertia_referred_to_motor_shaft(1.2, 0.5)
+    result = _component_inertia_referred_to_motor_shaft(1.2, 2.0)
     assert result == pytest.approx(0.3)
 
 
@@ -81,11 +81,11 @@ def test_total_motor_shaft_rotational_inertia_from_native_component_inertias() -
     result = _total_motor_shaft_rotational_inertia_from_native_component_inertias(
         486.227552,
         40.0,
-        0.5,
+        2.0,
         20.0,
-        0.5,
+        2.0,
         8.0,
-        0.5,
+        2.0,
     )
     assert result == pytest.approx(503.227552)
 
