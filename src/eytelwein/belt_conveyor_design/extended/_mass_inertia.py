@@ -349,11 +349,9 @@ def _total_motor_shaft_rotational_inertia_from_equivalent_component_inertias(
 def _total_motor_shaft_rotational_inertia_from_native_component_inertias(
     reflected_translating_mass_inertia_kg_m2: float,
     gearbox_inertia_native_kg_m2: float,
-    gearbox_gear_ratio_motor_to_component: float,
+    drive_gear_ratio_motor_to_low_speed_side: float,
     coupling_inertia_native_kg_m2: float,
-    coupling_gear_ratio_motor_to_component: float,
     brake_inertia_native_kg_m2: float,
-    brake_gear_ratio_motor_to_component: float,
 ) -> float:
     """Sum translating inertia and native component inertias at motor shaft.
 
@@ -364,16 +362,13 @@ def _total_motor_shaft_rotational_inertia_from_native_component_inertias(
         squared.
     gearbox_inertia_native_kg_m2 : float
         Native gearbox inertia in kilogram meter squared.
-    gearbox_gear_ratio_motor_to_component : float
-        Gear ratio ``omega_motor / omega_gearbox``.
+    drive_gear_ratio_motor_to_low_speed_side : float
+        Single drive gear ratio ``omega_motor / omega_low_speed_side`` used to
+        refer low-speed-side native inertias to the motor shaft.
     coupling_inertia_native_kg_m2 : float
         Native coupling inertia in kilogram meter squared.
-    coupling_gear_ratio_motor_to_component : float
-        Gear ratio ``omega_motor / omega_coupling``.
     brake_inertia_native_kg_m2 : float
         Native brake inertia in kilogram meter squared.
-    brake_gear_ratio_motor_to_component : float
-        Gear ratio ``omega_motor / omega_brake``.
 
     Returns
     -------
@@ -383,13 +378,13 @@ def _total_motor_shaft_rotational_inertia_from_native_component_inertias(
     return _total_motor_shaft_rotational_inertia_from_equivalent_component_inertias(
         reflected_translating_mass_inertia_kg_m2,
         _component_inertia_referred_to_motor_shaft(
-            gearbox_inertia_native_kg_m2, gearbox_gear_ratio_motor_to_component
+            gearbox_inertia_native_kg_m2, drive_gear_ratio_motor_to_low_speed_side
         ),
         _component_inertia_referred_to_motor_shaft(
-            coupling_inertia_native_kg_m2, coupling_gear_ratio_motor_to_component
+            coupling_inertia_native_kg_m2, drive_gear_ratio_motor_to_low_speed_side
         ),
         _component_inertia_referred_to_motor_shaft(
-            brake_inertia_native_kg_m2, brake_gear_ratio_motor_to_component
+            brake_inertia_native_kg_m2, drive_gear_ratio_motor_to_low_speed_side
         ),
     )
 

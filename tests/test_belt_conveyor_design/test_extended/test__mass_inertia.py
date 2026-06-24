@@ -83,9 +83,7 @@ def test_total_motor_shaft_rotational_inertia_from_native_component_inertias() -
         40.0,
         2.0,
         20.0,
-        2.0,
         8.0,
-        2.0,
     )
     assert result == pytest.approx(503.227552)
 
