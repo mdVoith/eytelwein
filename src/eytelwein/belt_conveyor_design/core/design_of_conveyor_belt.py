@@ -2,8 +2,8 @@ from eytelwein.belt_conveyor_design.constants import BeltCoverCharacteristicsAss
 from pint import Quantity
 
 from eytelwein.belt_conveyor_design.core._design_of_conveyor_belt import (
-    _belt_safety_factor_fromsplice_strength_and_belt_tension,
-    _splice_strength_from_belt_safety_factor_and_belt_tension,
+    _belt_safety_factor_from_splice_strength_and_belt_tension,
+    _rating_tension_from_belt_safety_factor_and_belt_tension,
     _belt_tension_fromsplice_strength_and_belt_safety_factor,
 )
 from eytelwein.main.units import get_unit_registry
@@ -48,7 +48,7 @@ def addition_to_minimum_cover_thickness(
         return (11, 15)
 
 
-def belt_safety_factor_fromsplice_strength_and_belt_tension(
+def belt_safety_factor_from_splice_strength_and_belt_tension(
     splice_strength: Quantity,
     belt_tension: Quantity,
     unit: str = "dimensionless",
@@ -57,7 +57,7 @@ def belt_safety_factor_fromsplice_strength_and_belt_tension(
     """Calculate belt safety factor from splice strength and belt tension.
 
     Formula:
-        S = k_N / k
+        S = T_N / T
     """
     try:
         splice_strength_n_per_mm = splice_strength.to(u.newton / u.millimeter)
@@ -77,7 +77,7 @@ def belt_safety_factor_fromsplice_strength_and_belt_tension(
     except Exception as e:
         raise ValueError(f"Invalid unit: {unit}. Error: {e}")
 
-    safety_factor = _belt_safety_factor_fromsplice_strength_and_belt_tension(
+    safety_factor = _belt_safety_factor_from_splice_strength_and_belt_tension(
         splice_strength_n_per_mm=splice_strength_n_per_mm.magnitude,
         belt_tension_n_per_mm=belt_tension_n_per_mm.magnitude,
     )
@@ -95,16 +95,16 @@ def belt_safety_factor_fromsplice_strength_and_belt_tension(
     return result
 
 
-def splice_strength_from_belt_safety_factor_and_belt_tension(
+def rating_tension_from_belt_safety_factor_and_belt_tension(
     belt_safety_factor: Quantity,
     belt_tension: Quantity,
     unit: str = "newton / millimeter",
     precision: int | None = None,
 ) -> Quantity:
-    """Calculate splice strength from belt safety factor and belt tension.
+    """Calculate rating tension from belt safety factor and belt tension.
 
     Formula:
-        k_N = S * k
+        T_N = S * T
     """
     try:
         belt_safety_factor_dimensionless = belt_safety_factor.to(u.dimensionless)
@@ -125,11 +125,9 @@ def splice_strength_from_belt_safety_factor_and_belt_tension(
     except Exception as e:
         raise ValueError(f"Invalid unit: {unit}. Error: {e}")
 
-    splice_strength_n_per_mm = (
-        _splice_strength_from_belt_safety_factor_and_belt_tension(
-            belt_safety_factor=belt_safety_factor_dimensionless.magnitude,
-            belt_tension_n_per_mm=belt_tension_n_per_mm.magnitude,
-        )
+    splice_strength_n_per_mm = _rating_tension_from_belt_safety_factor_and_belt_tension(
+        belt_safety_factor=belt_safety_factor_dimensionless.magnitude,
+        belt_tension_n_per_mm=belt_tension_n_per_mm.magnitude,
     )
 
     result = splice_strength_n_per_mm * (u.newton / u.millimeter)
@@ -145,7 +143,7 @@ def splice_strength_from_belt_safety_factor_and_belt_tension(
     return result
 
 
-def belt_tension_fromsplice_strength_and_belt_safety_factor(
+def belt_tension_from_splice_strength_and_belt_safety_factor(
     splice_strength: Quantity,
     belt_safety_factor: Quantity,
     unit: str = "newton / millimeter",
@@ -154,7 +152,7 @@ def belt_tension_fromsplice_strength_and_belt_safety_factor(
     """Calculate belt tension from splice strength and belt safety factor.
 
     Formula:
-        k = k_N / S
+        T = T_N / S
     """
     try:
         splice_strength_n_per_mm = splice_strength.to(u.newton / u.millimeter)

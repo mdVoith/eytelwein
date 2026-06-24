@@ -1,11 +1,11 @@
-def _belt_safety_factor_fromsplice_strength_and_belt_tension(
+def _belt_safety_factor_from_splice_strength_and_belt_tension(
     splice_strength_n_per_mm: float,
     belt_tension_n_per_mm: float,
 ) -> float:
     """Calculate belt safety factor from splice strength and belt tension.
 
     Formula:
-            S = k_N / k
+        S = T_N / T
     """
     if belt_tension_n_per_mm <= 0:
         raise ValueError(
@@ -15,14 +15,14 @@ def _belt_safety_factor_fromsplice_strength_and_belt_tension(
     return splice_strength_n_per_mm / belt_tension_n_per_mm
 
 
-def _splice_strength_from_belt_safety_factor_and_belt_tension(
+def _rating_tension_from_belt_safety_factor_and_belt_tension(
     belt_safety_factor: float,
     belt_tension_n_per_mm: float,
 ) -> float:
-    """Calculate splice strength from belt safety factor and belt tension.
+    """Calculate rating tension from belt safety factor and belt tension.
 
     Formula:
-            k_N = S * k
+        T_N = S * T
     """
     return belt_safety_factor * belt_tension_n_per_mm
 
@@ -34,7 +34,7 @@ def _belt_tension_fromsplice_strength_and_belt_safety_factor(
     """Calculate belt tension from splice strength and belt safety factor.
 
     Formula:
-            k = k_N / S
+        T = T_N / S
     """
     if belt_safety_factor <= 0:
         raise ValueError(

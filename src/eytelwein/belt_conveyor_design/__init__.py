@@ -74,9 +74,9 @@ from eytelwein.belt_conveyor_design.core.belt_tensions_and_takeup_forces import 
 
 # Core Module - Design of conveyor belt
 from eytelwein.belt_conveyor_design.core.design_of_conveyor_belt import (
-    belt_safety_factor_fromsplice_strength_and_belt_tension,
-    splice_strength_from_belt_safety_factor_and_belt_tension,
-    belt_tension_fromsplice_strength_and_belt_safety_factor,
+    belt_safety_factor_from_splice_strength_and_belt_tension,
+    rating_tension_from_belt_safety_factor_and_belt_tension,
+    belt_tension_from_splice_strength_and_belt_safety_factor,
 )
 
 # Extended Module - Volume flow and mass flow functions
@@ -190,9 +190,9 @@ __all__ = [
     "takeup_weight_force_from_takeup_weight",
     "takeup_weight_from_takeup_weight_force",
     # Core - Design of conveyor belt
-    "belt_safety_factor_fromsplice_strength_and_belt_tension",
-    "splice_strength_from_belt_safety_factor_and_belt_tension",
-    "belt_tension_fromsplice_strength_and_belt_safety_factor",
+    "belt_safety_factor_from_splice_strength_and_belt_tension",
+    "rating_tension_from_belt_safety_factor_and_belt_tension",
+    "belt_tension_from_splice_strength_and_belt_safety_factor",
     # Extended - Volume flow and mass flow functions
     "maximal_cross_section_skirt_board_known_geometry",
     "required_skirtboard_height_from_cross_section",
