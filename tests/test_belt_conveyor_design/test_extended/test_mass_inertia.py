@@ -134,9 +134,7 @@ def test_total_motor_shaft_rotational_inertia_from_native_component_inertias() -
         Quantity(40.0, u.kilogram * u.meter**2),
         Quantity(2.0, u.dimensionless),
         Quantity(20.0, u.kilogram * u.meter**2),
-        Quantity(2.0, u.dimensionless),
         Quantity(8.0, u.kilogram * u.meter**2),
-        Quantity(2.0, u.dimensionless),
     )
     assert result.magnitude == pytest.approx(503.227552)
 

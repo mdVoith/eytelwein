@@ -702,11 +702,9 @@ def total_motor_shaft_rotational_inertia_from_equivalent_component_inertias(
 def total_motor_shaft_rotational_inertia_from_native_component_inertias(
     reflected_translating_mass_inertia: Quantity,
     gearbox_inertia_native: Quantity,
-    gearbox_gear_ratio_motor_to_component: Quantity,
+    drive_gear_ratio_motor_to_low_speed_side: Quantity,
     coupling_inertia_native: Quantity,
-    coupling_gear_ratio_motor_to_component: Quantity,
     brake_inertia_native: Quantity,
-    brake_gear_ratio_motor_to_component: Quantity,
     unit: str = "kilogram * meter**2",
     precision: int | None = None,
 ) -> Quantity:
@@ -718,16 +716,13 @@ def total_motor_shaft_rotational_inertia_from_native_component_inertias(
         Reflected translating-mass inertia contribution at motor shaft.
     gearbox_inertia_native : Quantity
         Native gearbox inertia quantity.
-    gearbox_gear_ratio_motor_to_component : Quantity
-        Dimensionless gear ratio ``omega_motor / omega_gearbox``.
+    drive_gear_ratio_motor_to_low_speed_side : Quantity
+        Dimensionless drive gear ratio ``omega_motor / omega_low_speed_side``
+        used for all low-speed-side native inertias.
     coupling_inertia_native : Quantity
         Native coupling inertia quantity.
-    coupling_gear_ratio_motor_to_component : Quantity
-        Dimensionless gear ratio ``omega_motor / omega_coupling``.
     brake_inertia_native : Quantity
         Native brake inertia quantity.
-    brake_gear_ratio_motor_to_component : Quantity
-        Dimensionless gear ratio ``omega_motor / omega_brake``.
     unit : str, optional
         Output unit, by default ``"kilogram * meter**2"``.
     precision : int | None, optional
@@ -746,11 +741,9 @@ def total_motor_shaft_rotational_inertia_from_native_component_inertias(
     try:
         translating = reflected_translating_mass_inertia.to(u.kilogram * u.meter**2)
         gearbox_inertia = gearbox_inertia_native.to(u.kilogram * u.meter**2)
-        gearbox_ratio = gearbox_gear_ratio_motor_to_component.to(u.dimensionless)
+        drive_ratio = drive_gear_ratio_motor_to_low_speed_side.to(u.dimensionless)
         coupling_inertia = coupling_inertia_native.to(u.kilogram * u.meter**2)
-        coupling_ratio = coupling_gear_ratio_motor_to_component.to(u.dimensionless)
         brake_inertia = brake_inertia_native.to(u.kilogram * u.meter**2)
-        brake_ratio = brake_gear_ratio_motor_to_component.to(u.dimensionless)
     except Exception as exc:
         raise ValueError(f"Error in converting units: {exc}") from exc
 
@@ -758,11 +751,9 @@ def total_motor_shaft_rotational_inertia_from_native_component_inertias(
         _total_motor_shaft_rotational_inertia_from_native_component_inertias(
             translating.magnitude,
             gearbox_inertia.magnitude,
-            gearbox_ratio.magnitude,
+            drive_ratio.magnitude,
             coupling_inertia.magnitude,
-            coupling_ratio.magnitude,
             brake_inertia.magnitude,
-            brake_ratio.magnitude,
         )
         * u.kilogram
         * u.meter**2
