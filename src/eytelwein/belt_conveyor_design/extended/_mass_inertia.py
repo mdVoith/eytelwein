@@ -390,20 +390,23 @@ def _total_motor_shaft_rotational_inertia_from_native_component_inertias(
 ) -> float:
     """Sum translating inertia and native component inertias at motor shaft.
 
+    Gearbox inertia is treated as high-speed (added directly, not reflected).
+    Only low-speed coupling and brake are reflected through the gearbox ratio.
+
     Parameters
     ----------
     reflected_translating_mass_inertia_kg_m2 : float
         Reflected translating-mass inertia at motor shaft in kilogram meter
         squared.
     gearbox_inertia_native_kg_m2 : float
-        Native gearbox inertia in kilogram meter squared.
+        Native gearbox inertia in kilogram meter squared (high-speed, added directly).
     drive_gear_ratio_motor_to_low_speed_side : float
         Single drive gear ratio ``omega_motor / omega_low_speed_side`` used to
         refer low-speed-side native inertias to the motor shaft.
     coupling_inertia_native_kg_m2 : float
-        Native coupling inertia in kilogram meter squared.
+        Native coupling inertia in kilogram meter squared (low-speed, reflected).
     brake_inertia_native_kg_m2 : float
-        Native brake inertia in kilogram meter squared.
+        Native brake inertia in kilogram meter squared (low-speed, reflected).
 
     Returns
     -------
@@ -412,9 +415,7 @@ def _total_motor_shaft_rotational_inertia_from_native_component_inertias(
     """
     return _total_motor_shaft_rotational_inertia_from_equivalent_component_inertias(
         reflected_translating_mass_inertia_kg_m2,
-        _component_inertia_referred_to_motor_shaft(
-            gearbox_inertia_native_kg_m2, drive_gear_ratio_motor_to_low_speed_side
-        ),
+        gearbox_inertia_native_kg_m2,  # added directly as high-speed
         _component_inertia_referred_to_motor_shaft(
             coupling_inertia_native_kg_m2, drive_gear_ratio_motor_to_low_speed_side
         ),
@@ -474,28 +475,25 @@ def _optional_component_inertia_referred_to_motor_shaft(
 def _low_speed_native_component_inertia_at_motor_shaft(
     *,
     pulley_inertia_native_kg_m2: float = 0.0,
-    pulley_gear_ratio_motor_to_component: float | None = None,
     low_speed_coupling_inertia_native_kg_m2: float = 0.0,
-    low_speed_coupling_gear_ratio_motor_to_component: float | None = None,
     low_speed_brake_inertia_native_kg_m2: float = 0.0,
-    low_speed_brake_gear_ratio_motor_to_component: float | None = None,
+    gearbox_ratio_motor_to_low_speed_side: float | None = None,
 ) -> float:
     """Sum low-speed native component inertias referred to motor shaft.
+
+    Uses a single gearbox ratio for all low-speed components.
 
     Parameters
     ----------
     pulley_inertia_native_kg_m2 : float, optional
         Native pulley inertia in kilogram meter squared.
-    pulley_gear_ratio_motor_to_component : float | None, optional
-        Gear ratio ``omega_motor / omega_pulley``.
     low_speed_coupling_inertia_native_kg_m2 : float, optional
         Native low-speed coupling or flange inertia in kilogram meter squared.
-    low_speed_coupling_gear_ratio_motor_to_component : float | None, optional
-        Gear ratio ``omega_motor / omega_low_speed_coupling``.
     low_speed_brake_inertia_native_kg_m2 : float, optional
         Native low-speed brake inertia in kilogram meter squared.
-    low_speed_brake_gear_ratio_motor_to_component : float | None, optional
-        Gear ratio ``omega_motor / omega_low_speed_brake``.
+    gearbox_ratio_motor_to_low_speed_side : float | None, optional
+        Single gearbox ratio ``omega_motor / omega_low_speed_side`` used to
+        refer all low-speed-side native inertias to the motor shaft.
 
     Returns
     -------
@@ -506,24 +504,46 @@ def _low_speed_native_component_inertia_at_motor_shaft(
     Raises
     ------
     ValueError
-        If any inertia is negative, or positive inertia is provided without a
-        corresponding gear ratio.
+        If any inertia is negative, or any positive inertia is provided without
+        the required gearbox ratio.
     """
+    # Check if any low-speed inertia is positive
+    has_inertia = (
+        pulley_inertia_native_kg_m2 > 0
+        or low_speed_coupling_inertia_native_kg_m2 > 0
+        or low_speed_brake_inertia_native_kg_m2 > 0
+    )
+
+    # Validate non-negativity
+    if pulley_inertia_native_kg_m2 < 0:
+        raise ValueError("pulley_inertia_native_kg_m2 must be non-negative")
+    if low_speed_coupling_inertia_native_kg_m2 < 0:
+        raise ValueError("low_speed_coupling_inertia_native_kg_m2 must be non-negative")
+    if low_speed_brake_inertia_native_kg_m2 < 0:
+        raise ValueError("low_speed_brake_inertia_native_kg_m2 must be non-negative")
+
+    # If any inertia is positive, require the gearbox ratio
+    if has_inertia and gearbox_ratio_motor_to_low_speed_side is None:
+        raise ValueError(
+            "gearbox_ratio_motor_to_low_speed_side is required when any "
+            "low-speed inertia is > 0"
+        )
+
+    # If no inertia, return 0
+    if not has_inertia:
+        return 0.0
+
+    # All three components use the same ratio
+    # After the check above, ratio is guaranteed to be non-None
+    ratio = gearbox_ratio_motor_to_low_speed_side
+    assert ratio is not None  # type: ignore[assert-never]
     return (
-        _optional_component_inertia_referred_to_motor_shaft(
-            pulley_inertia_native_kg_m2,
-            pulley_gear_ratio_motor_to_component,
-            component_name="pulley",
+        _component_inertia_referred_to_motor_shaft(pulley_inertia_native_kg_m2, ratio)
+        + _component_inertia_referred_to_motor_shaft(
+            low_speed_coupling_inertia_native_kg_m2, ratio
         )
-        + _optional_component_inertia_referred_to_motor_shaft(
-            low_speed_coupling_inertia_native_kg_m2,
-            low_speed_coupling_gear_ratio_motor_to_component,
-            component_name="low_speed_coupling",
-        )
-        + _optional_component_inertia_referred_to_motor_shaft(
-            low_speed_brake_inertia_native_kg_m2,
-            low_speed_brake_gear_ratio_motor_to_component,
-            component_name="low_speed_brake",
+        + _component_inertia_referred_to_motor_shaft(
+            low_speed_brake_inertia_native_kg_m2, ratio
         )
     )
 
@@ -690,11 +710,9 @@ def _rotational_inertia_breakdown_at_motor_shaft(
     reflected_translating_mass_inertia_kg_m2: float = 0.0,
     gearbox_inertia_at_motor_shaft_kg_m2: float = 0.0,
     pulley_inertia_native_kg_m2: float = 0.0,
-    pulley_gear_ratio_motor_to_component: float | None = None,
     low_speed_coupling_inertia_native_kg_m2: float = 0.0,
-    low_speed_coupling_gear_ratio_motor_to_component: float | None = None,
     low_speed_brake_inertia_native_kg_m2: float = 0.0,
-    low_speed_brake_gear_ratio_motor_to_component: float | None = None,
+    gearbox_ratio_motor_to_low_speed_side: float | None = None,
     high_speed_coupling_inertia_native_kg_m2: float = 0.0,
     high_speed_coupling_gear_ratio_motor_to_component: float | None = 1.0,
     high_speed_brake_inertia_native_kg_m2: float = 0.0,
@@ -704,6 +722,8 @@ def _rotational_inertia_breakdown_at_motor_shaft(
 ) -> dict[str, float]:
     """Return layered rotational inertia breakdown at motor shaft.
 
+    Uses single gearbox ratio for all low-speed components.
+
     Returns
     -------
     dict[str, float]
@@ -712,11 +732,9 @@ def _rotational_inertia_breakdown_at_motor_shaft(
     """
     low_speed = _low_speed_native_component_inertia_at_motor_shaft(
         pulley_inertia_native_kg_m2=pulley_inertia_native_kg_m2,
-        pulley_gear_ratio_motor_to_component=pulley_gear_ratio_motor_to_component,
         low_speed_coupling_inertia_native_kg_m2=low_speed_coupling_inertia_native_kg_m2,
-        low_speed_coupling_gear_ratio_motor_to_component=low_speed_coupling_gear_ratio_motor_to_component,
         low_speed_brake_inertia_native_kg_m2=low_speed_brake_inertia_native_kg_m2,
-        low_speed_brake_gear_ratio_motor_to_component=low_speed_brake_gear_ratio_motor_to_component,
+        gearbox_ratio_motor_to_low_speed_side=gearbox_ratio_motor_to_low_speed_side,
     )
     high_speed = _high_speed_native_component_inertia_at_motor_shaft(
         high_speed_coupling_inertia_native_kg_m2=high_speed_coupling_inertia_native_kg_m2,

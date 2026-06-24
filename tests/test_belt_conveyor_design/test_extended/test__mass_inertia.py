@@ -110,15 +110,20 @@ def test_total_motor_shaft_rotational_inertia_from_equivalent_component_inertias
     assert result == pytest.approx(503.227552)
 
 
-def test_total_motor_shaft_rotational_inertia_from_native_component_inertias() -> None:
+def test_total_motor_shaft_rotational_inertia_from_native_component_inertias_phase3() -> None:
+    """Phase 3: Gearbox is high-speed (not reflected). Coupling/brake are low-speed (reflected)."""
     result = _total_motor_shaft_rotational_inertia_from_native_component_inertias(
-        486.227552,
-        40.0,
-        2.0,
-        20.0,
-        8.0,
+        486.227552,  # reflected_translating_mass_inertia
+        40.0,        # gearbox_inertia_native (high-speed, added directly)
+        2.0,         # drive_gear_ratio_motor_to_low_speed_side
+        20.0,        # coupling_inertia_native (low-speed, reflected)
+        8.0,         # brake_inertia_native (low-speed, reflected)
     )
-    assert result == pytest.approx(503.227552)
+    # gearbox = 40 (high-speed, not reflected)
+    # coupling = 20 / 4 = 5 (low-speed, reflected)
+    # brake = 8 / 4 = 2 (low-speed, reflected)
+    # total = 486.227552 + 40 + 5 + 2 = 533.227552
+    assert result == pytest.approx(533.227552)
 
 
 def test_motor_shaft_rotational_inertia_per_drive_basic() -> None:
@@ -126,33 +131,61 @@ def test_motor_shaft_rotational_inertia_per_drive_basic() -> None:
     assert result == pytest.approx(251.613776)
 
 
-def test_low_speed_native_component_inertia_requires_ratio_when_positive() -> None:
-    with pytest.raises(ValueError, match="pulley_gear_ratio_motor_to_component"):
+def test_low_speed_native_component_inertia_phase3_single_ratio() -> None:
+    """Phase 3: Single gearbox ratio for all low-speed components."""
+    result = _low_speed_native_component_inertia_at_motor_shaft(
+        pulley_inertia_native_kg_m2=40.0,
+        low_speed_coupling_inertia_native_kg_m2=20.0,
+        low_speed_brake_inertia_native_kg_m2=8.0,
+        gearbox_ratio_motor_to_low_speed_side=2.0,
+    )
+    # Each component divided by 2^2 = 4: 40/4 + 20/4 + 8/4 = 10 + 5 + 2 = 17
+    assert result == pytest.approx(17.0)
+
+
+def test_low_speed_native_component_inertia_phase3_zero_components() -> None:
+    """Phase 3: All optional components zero."""
+    result = _low_speed_native_component_inertia_at_motor_shaft(
+        gearbox_ratio_motor_to_low_speed_side=2.0,
+    )
+    assert result == pytest.approx(0.0)
+
+
+def test_low_speed_native_component_inertia_phase3_requires_ratio_when_positive() -> None:
+    """Phase 3: Ratio required when any low-speed inertia > 0."""
+    with pytest.raises(ValueError, match="gearbox_ratio_motor_to_low_speed_side"):
         _low_speed_native_component_inertia_at_motor_shaft(
             pulley_inertia_native_kg_m2=10.0,
         )
 
 
-def test_layered_total_rotational_inertia_at_motor_shaft_mixed_components() -> None:
+def test_layered_total_rotational_inertia_at_motor_shaft_mixed_components_phase3() -> None:
+    """Phase 3: Low-speed with single ratio. Gearbox inertia as high-speed (not reflected)."""
     low_speed = _low_speed_native_component_inertia_at_motor_shaft(
         pulley_inertia_native_kg_m2=40.0,
-        pulley_gear_ratio_motor_to_component=2.0,
         low_speed_coupling_inertia_native_kg_m2=20.0,
-        low_speed_coupling_gear_ratio_motor_to_component=2.0,
         low_speed_brake_inertia_native_kg_m2=8.0,
-        low_speed_brake_gear_ratio_motor_to_component=2.0,
+        gearbox_ratio_motor_to_low_speed_side=2.0,
     )
+    # low_speed = 40/4 + 20/4 + 8/4 = 17
+    assert low_speed == pytest.approx(17.0)
+
     high_speed = _high_speed_native_component_inertia_at_motor_shaft(
         high_speed_coupling_inertia_native_kg_m2=3.0,
         high_speed_brake_inertia_native_kg_m2=2.0,
         fluid_coupling_inertia_native_kg_m2=4.0,
     )
+    # high_speed = 3 + 2 + 4 = 9 (all at 1.0 ratio)
+    assert high_speed == pytest.approx(9.0)
+
+    # Phase 3: gearbox_inertia is high-speed (10.0 added directly, not divided)
     total = _total_rotational_inertia_at_motor_shaft(
         reflected_translating_mass_inertia_kg_m2=486.227552,
         gearbox_inertia_at_motor_shaft_kg_m2=10.0,
         low_speed_native_component_inertia_at_motor_shaft_kg_m2=low_speed,
         high_speed_native_component_inertia_at_motor_shaft_kg_m2=high_speed,
     )
+    # total = 486.227552 + 10.0 + 17.0 + 9.0 = 522.227552
     assert total == pytest.approx(522.227552)
 
 
@@ -164,16 +197,22 @@ def test_fluid_coupling_reference_functions() -> None:
     assert total_at_fluid == pytest.approx(40000.0)
 
 
-def test_rotational_inertia_breakdown_at_motor_shaft_keys_and_total() -> None:
+def test_rotational_inertia_breakdown_at_motor_shaft_phase3_single_ratio() -> None:
+    """Phase 3: Breakdown uses single gearbox ratio for low-speed components."""
     breakdown = _rotational_inertia_breakdown_at_motor_shaft(
         reflected_translating_mass_inertia_kg_m2=100.0,
         gearbox_inertia_at_motor_shaft_kg_m2=10.0,
         pulley_inertia_native_kg_m2=40.0,
-        pulley_gear_ratio_motor_to_component=2.0,
+        low_speed_coupling_inertia_native_kg_m2=0.0,
+        low_speed_brake_inertia_native_kg_m2=0.0,
+        gearbox_ratio_motor_to_low_speed_side=2.0,
         high_speed_coupling_inertia_native_kg_m2=3.0,
     )
     assert "low_speed_native_component_inertia_at_motor_shaft_kg_m2" in breakdown
     assert "high_speed_native_component_inertia_at_motor_shaft_kg_m2" in breakdown
+    # pulley (low-speed): 40 / 4 = 10
+    # high_speed_coupling: 3 / 1 = 3
+    # total = 100 + 10 + 10 + 3 = 123
     assert breakdown["total_rotational_inertia_at_motor_shaft_kg_m2"] == pytest.approx(
         123.0
     )
