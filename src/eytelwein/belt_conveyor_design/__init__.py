@@ -117,13 +117,19 @@ from eytelwein.belt_conveyor_design.extended.design_layout_of_drive_system impor
 
 # Extended Module - Mass inertia functions
 from eytelwein.belt_conveyor_design.extended.mass_inertia import (
-    belt_mass_per_strand,
-    payload_mass_total,
-    translating_mass_empty,
-    translating_mass_full,
-    pulley_radius,
-    motor_shaft_inertia_total,
-    inertia_per_drive,
+    translating_mass_from_line_load_and_segment_length,
+    translating_mass_idler_carry,
+    translating_mass_idler_return,
+    translating_mass_belt,
+    translating_mass_material,
+    total_translating_mass_empty,
+    total_translating_mass,
+    drive_pulley_radius_from_drive_pulley_diameter,
+    reflected_translating_mass_inertia_at_motor_shaft,
+    component_inertia_referred_to_motor_shaft,
+    total_motor_shaft_rotational_inertia_from_equivalent_component_inertias,
+    total_motor_shaft_rotational_inertia_from_native_component_inertias,
+    motor_shaft_rotational_inertia_per_drive,
 )
 
 # Extended Module - Design of conveyor belt functions
@@ -215,13 +221,19 @@ __all__ = [
     "translatory_speed_from_number_of_revolutions",
     "belt_speed_from_pulley_revolutions",
     # Extended - Mass inertia functions
-    "belt_mass_per_strand",
-    "payload_mass_total",
-    "translating_mass_empty",
-    "translating_mass_full",
-    "pulley_radius",
-    "motor_shaft_inertia_total",
-    "inertia_per_drive",
+    "translating_mass_from_line_load_and_segment_length",
+    "translating_mass_idler_carry",
+    "translating_mass_idler_return",
+    "translating_mass_belt",
+    "translating_mass_material",
+    "total_translating_mass_empty",
+    "total_translating_mass",
+    "drive_pulley_radius_from_drive_pulley_diameter",
+    "reflected_translating_mass_inertia_at_motor_shaft",
+    "component_inertia_referred_to_motor_shaft",
+    "total_motor_shaft_rotational_inertia_from_equivalent_component_inertias",
+    "total_motor_shaft_rotational_inertia_from_native_component_inertias",
+    "motor_shaft_rotational_inertia_per_drive",
     # Extended - Design of conveyor belt functions
     "belt_weight_per_square_meter",
     "line_load_belt",
