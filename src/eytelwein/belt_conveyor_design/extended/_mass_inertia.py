@@ -216,6 +216,41 @@ def _translating_mass_inertia_at_pulley_circumference(
     return translating_mass_kg * drive_pulley_radius_m * drive_pulley_radius_m
 
 
+def _mass_inertia_at_pulley_shaft(
+    translating_mass_kg: float,
+    drive_pulley_radius_m: float,
+    pulley_inertia_native_kg_m2: float = 0.0,
+) -> float:
+    """Calculate total inertia at pulley shaft from translating mass and native pulley inertia.
+
+    Parameters
+    ----------
+    translating_mass_kg : float
+        Total translating mass in kilograms.
+    drive_pulley_radius_m : float
+        Drive pulley radius in meters.
+    pulley_inertia_native_kg_m2 : float, optional
+        Native (inherent) pulley inertia in kilogram meter squared, by default 0.0.
+
+    Returns
+    -------
+    float
+        Total inertia at pulley shaft in kilogram meter squared.
+
+    Raises
+    ------
+    ValueError
+        If mass is negative, radius is not positive, or native pulley inertia is negative.
+    """
+    if pulley_inertia_native_kg_m2 < 0:
+        raise ValueError("pulley_inertia_native_kg_m2 must be non-negative")
+
+    translating_inertia = _translating_mass_inertia_at_pulley_circumference(
+        translating_mass_kg, drive_pulley_radius_m
+    )
+    return translating_inertia + pulley_inertia_native_kg_m2
+
+
 def _reflected_translating_mass_inertia_at_motor_shaft(
     translating_mass_kg: float,
     drive_pulley_radius_m: float,

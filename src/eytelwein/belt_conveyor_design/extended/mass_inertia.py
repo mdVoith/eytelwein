@@ -12,6 +12,7 @@ from eytelwein.belt_conveyor_design.extended._mass_inertia import (
     _total_translating_mass,
     _drive_pulley_radius_from_drive_pulley_diameter,
     _translating_mass_inertia_at_pulley_circumference,
+    _mass_inertia_at_pulley_shaft,
     _reflected_translating_mass_inertia_at_motor_shaft,
     _component_inertia_referred_to_motor_shaft,
     _total_motor_shaft_rotational_inertia_from_equivalent_component_inertias,
@@ -517,6 +518,70 @@ def translating_mass_inertia_at_pulley_circumference(
     result = (
         _translating_mass_inertia_at_pulley_circumference(
             mass.magnitude, radius.magnitude
+        )
+        * u.kilogram
+        * u.meter**2
+    )
+    converted = result.to(_parse_unit(unit))
+    if precision is not None:
+        converted = round(converted, precision)
+    return converted
+
+
+def mass_inertia_at_pulley_shaft(
+    translating_mass: Quantity,
+    drive_pulley_radius: Quantity,
+    pulley_inertia_native: Quantity | None = None,
+    unit: str = "kilogram * meter**2",
+    precision: int | None = None,
+) -> Quantity:
+    """Calculate total inertia at pulley shaft from translating mass and native pulley inertia.
+
+    Parameters
+    ----------
+    translating_mass : Quantity
+        Total translating mass quantity.
+    drive_pulley_radius : Quantity
+        Drive pulley radius quantity.
+    pulley_inertia_native : Quantity | None, optional
+        Native (inherent) pulley inertia quantity, by default None (treated as zero).
+    unit : str, optional
+        Output unit, by default ``"kilogram * meter**2"``.
+    precision : int | None, optional
+        Decimal rounding precision. Use ``None`` to skip rounding.
+
+    Returns
+    -------
+    Quantity
+        Total inertia at pulley shaft in the requested output unit.
+
+    Raises
+    ------
+    ValueError
+        If unit conversion fails, physical constraints are violated, or the
+        requested output unit is invalid.
+    """
+    try:
+        mass = translating_mass.to(u.kilogram)
+        radius = drive_pulley_radius.to(u.meter)
+        native_inertia_kg_m2 = (
+            pulley_inertia_native.to(u.kilogram * u.meter**2).magnitude
+            if pulley_inertia_native is not None
+            else 0.0
+        )
+    except Exception as exc:
+        raise ValueError(f"Error in converting units: {exc}") from exc
+
+    if mass.magnitude < 0:
+        raise ValueError("translating_mass must be non-negative")
+    if radius.magnitude <= 0:
+        raise ValueError("drive_pulley_radius must be positive")
+    if native_inertia_kg_m2 < 0:
+        raise ValueError("pulley_inertia_native must be non-negative")
+
+    result = (
+        _mass_inertia_at_pulley_shaft(
+            mass.magnitude, radius.magnitude, native_inertia_kg_m2
         )
         * u.kilogram
         * u.meter**2
