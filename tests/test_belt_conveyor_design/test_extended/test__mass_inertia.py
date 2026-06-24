@@ -11,6 +11,7 @@ from eytelwein.belt_conveyor_design.extended._mass_inertia import (
     _total_translating_mass_empty,
     _total_translating_mass,
     _drive_pulley_radius_from_drive_pulley_diameter,
+    _translating_mass_inertia_at_pulley_shaft,
     _reflected_translating_mass_inertia_at_motor_shaft,
     _component_inertia_referred_to_motor_shaft,
     _total_motor_shaft_rotational_inertia_from_equivalent_component_inertias,
@@ -49,6 +50,11 @@ def test_total_translating_mass_basic() -> None:
 def test_drive_pulley_radius_from_drive_pulley_diameter_basic() -> None:
     result = _drive_pulley_radius_from_drive_pulley_diameter(1.04)
     assert result == pytest.approx(0.52)
+
+
+def test_translating_mass_inertia_at_pulley_shaft_basic() -> None:
+    result = _translating_mass_inertia_at_pulley_shaft(100.0, 0.5)
+    assert result == pytest.approx(25.0)
 
 
 def test_reflected_translating_mass_inertia_at_motor_shaft_basic() -> None:

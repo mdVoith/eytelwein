@@ -11,6 +11,7 @@ from eytelwein.belt_conveyor_design.extended._mass_inertia import (
     _total_translating_mass_empty,
     _total_translating_mass,
     _drive_pulley_radius_from_drive_pulley_diameter,
+    _translating_mass_inertia_at_pulley_shaft,
     _reflected_translating_mass_inertia_at_motor_shaft,
     _component_inertia_referred_to_motor_shaft,
     _total_motor_shaft_rotational_inertia_from_equivalent_component_inertias,
@@ -465,6 +466,59 @@ def drive_pulley_radius_from_drive_pulley_diameter(
     return converted
 
 
+def translating_mass_inertia_at_pulley_shaft(
+    translating_mass: Quantity,
+    drive_pulley_radius: Quantity,
+    unit: str = "kilogram * meter**2",
+    precision: int | None = None,
+) -> Quantity:
+    """Calculate translating-mass inertia contribution at pulley shaft.
+
+    Parameters
+    ----------
+    translating_mass : Quantity
+        Total translating mass quantity.
+    drive_pulley_radius : Quantity
+        Drive pulley radius quantity.
+    unit : str, optional
+        Output unit, by default ``"kilogram * meter**2"``.
+    precision : int | None, optional
+        Decimal rounding precision. Use ``None`` to skip rounding.
+
+    Returns
+    -------
+    Quantity
+        Translating-mass inertia contribution at pulley shaft (low-speed side)
+        in the requested output unit.
+
+    Raises
+    ------
+    ValueError
+        If unit conversion fails, physical constraints are violated, or the
+        requested output unit is invalid.
+    """
+    try:
+        mass = translating_mass.to(u.kilogram)
+        radius = drive_pulley_radius.to(u.meter)
+    except Exception as exc:
+        raise ValueError(f"Error in converting units: {exc}") from exc
+
+    if mass.magnitude < 0:
+        raise ValueError("translating_mass must be non-negative")
+    if radius.magnitude <= 0:
+        raise ValueError("drive_pulley_radius must be positive")
+
+    result = (
+        _translating_mass_inertia_at_pulley_shaft(mass.magnitude, radius.magnitude)
+        * u.kilogram
+        * u.meter**2
+    )
+    converted = result.to(_parse_unit(unit))
+    if precision is not None:
+        converted = round(converted, precision)
+    return converted
+
+
 def reflected_translating_mass_inertia_at_motor_shaft(
     translating_mass: Quantity,
     drive_pulley_radius: Quantity,
@@ -473,6 +527,11 @@ def reflected_translating_mass_inertia_at_motor_shaft(
     precision: int | None = None,
 ) -> Quantity:
     """Calculate reflected translating-mass inertia contribution at motor shaft.
+
+    This function converts pulley-shaft inertia to motor-shaft-equivalent inertia
+    by applying the squared speed ratio. It composes two primitives:
+    (1) translating mass → pulley-shaft inertia
+    (2) pulley-shaft inertia → motor-shaft inertia via speed reduction
 
     Parameters
     ----------
