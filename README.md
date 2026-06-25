@@ -16,17 +16,19 @@
 
 ---
 
-## Active Development Notice
 
-This repository is under active development. APIs, behaviors, and available
-functionality may change between releases while features are expanded and
-refined.
 
 Eytelwein provides production-grade engineering calculations for belt conveyor
 systems — from steady-state resistance and drive layout to idler roll loading and
 horizontal curve forces. All public functions use [Pint](https://pint.readthedocs.io/)
 `Quantity` objects for full dimensional safety: units in, units out, no silent
 conversion errors.
+
+## Active Development Notice
+
+This repository is under active development. APIs, behaviors, and available
+functionality may change between releases while features are expanded and
+refined.
 
 ## Highlights
 
