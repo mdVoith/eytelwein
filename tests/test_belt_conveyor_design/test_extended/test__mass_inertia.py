@@ -15,15 +15,10 @@ from eytelwein.belt_conveyor_design.extended._mass_inertia import (
     _mass_inertia_at_pulley_shaft,
     _reflected_translating_mass_inertia_at_motor_shaft,
     _component_inertia_referred_to_motor_shaft,
-    _total_motor_shaft_rotational_inertia_from_equivalent_component_inertias,
-    _total_motor_shaft_rotational_inertia_from_native_component_inertias,
-    _low_speed_native_component_inertia_at_motor_shaft,
-    _high_speed_native_component_inertia_at_motor_shaft,
     _fluid_coupling_inertia_referred_to_motor_shaft,
-    _total_rotational_inertia_at_motor_shaft,
-    _total_rotational_inertia_at_fluid_coupling_shaft,
-    _rotational_inertia_breakdown_at_motor_shaft,
     _motor_shaft_rotational_inertia_per_drive,
+    _total_low_speed_inertia,
+    _fluid_coupling_design_inertia,
 )
 
 
@@ -98,121 +93,365 @@ def test_component_inertia_referred_to_motor_shaft_basic() -> None:
     assert result == pytest.approx(0.3)
 
 
-def test_total_motor_shaft_rotational_inertia_from_equivalent_component_inertias() -> (
-    None
-):
-    result = _total_motor_shaft_rotational_inertia_from_equivalent_component_inertias(
-        486.227552,
-        10.0,
-        5.0,
-        2.0,
-    )
-    assert result == pytest.approx(503.227552)
-
-
-def test_total_motor_shaft_rotational_inertia_from_native_component_inertias_phase3() -> None:
-    """Phase 3: Gearbox is high-speed (not reflected). Coupling/brake are low-speed (reflected)."""
-    result = _total_motor_shaft_rotational_inertia_from_native_component_inertias(
-        486.227552,  # reflected_translating_mass_inertia
-        40.0,        # gearbox_inertia_native (high-speed, added directly)
-        2.0,         # drive_gear_ratio_motor_to_low_speed_side
-        20.0,        # coupling_inertia_native (low-speed, reflected)
-        8.0,         # brake_inertia_native (low-speed, reflected)
-    )
-    # gearbox = 40 (high-speed, not reflected)
-    # coupling = 20 / 4 = 5 (low-speed, reflected)
-    # brake = 8 / 4 = 2 (low-speed, reflected)
-    # total = 486.227552 + 40 + 5 + 2 = 533.227552
-    assert result == pytest.approx(533.227552)
-
-
 def test_motor_shaft_rotational_inertia_per_drive_basic() -> None:
     result = _motor_shaft_rotational_inertia_per_drive(503.227552, 2)
     assert result == pytest.approx(251.613776)
 
 
-def test_low_speed_native_component_inertia_phase3_single_ratio() -> None:
-    """Phase 3: Single gearbox ratio for all low-speed components."""
-    result = _low_speed_native_component_inertia_at_motor_shaft(
-        pulley_inertia_native_kg_m2=40.0,
-        low_speed_coupling_inertia_native_kg_m2=20.0,
-        low_speed_brake_inertia_native_kg_m2=8.0,
-        gearbox_ratio_motor_to_low_speed_side=2.0,
-    )
-    # Each component divided by 2^2 = 4: 40/4 + 20/4 + 8/4 = 10 + 5 + 2 = 17
-    assert result == pytest.approx(17.0)
-
-
-def test_low_speed_native_component_inertia_phase3_zero_components() -> None:
-    """Phase 3: All optional components zero."""
-    result = _low_speed_native_component_inertia_at_motor_shaft(
-        gearbox_ratio_motor_to_low_speed_side=2.0,
-    )
-    assert result == pytest.approx(0.0)
-
-
-def test_low_speed_native_component_inertia_phase3_requires_ratio_when_positive() -> None:
-    """Phase 3: Ratio required when any low-speed inertia > 0."""
-    with pytest.raises(ValueError, match="gearbox_ratio_motor_to_low_speed_side"):
-        _low_speed_native_component_inertia_at_motor_shaft(
-            pulley_inertia_native_kg_m2=10.0,
+def test_motor_shaft_rotational_inertia_per_drive_rejects_bool_motor_count() -> None:
+    """Phase 5: motor_count must be int, not bool."""
+    with pytest.raises(ValueError, match="motor_count.*int"):
+        _motor_shaft_rotational_inertia_per_drive(
+            total_motor_shaft_rotational_inertia_kg_m2=503.227552,
+            motor_count=True,  # type: ignore
         )
 
 
-def test_layered_total_rotational_inertia_at_motor_shaft_mixed_components_phase3() -> None:
-    """Phase 3: Low-speed with single ratio. Gearbox inertia as high-speed (not reflected)."""
-    low_speed = _low_speed_native_component_inertia_at_motor_shaft(
-        pulley_inertia_native_kg_m2=40.0,
-        low_speed_coupling_inertia_native_kg_m2=20.0,
-        low_speed_brake_inertia_native_kg_m2=8.0,
-        gearbox_ratio_motor_to_low_speed_side=2.0,
-    )
-    # low_speed = 40/4 + 20/4 + 8/4 = 17
-    assert low_speed == pytest.approx(17.0)
+def test_motor_shaft_rotational_inertia_per_drive_rejects_float_motor_count() -> None:
+    """Phase 5: motor_count must be int, not float (even if value is whole)."""
+    with pytest.raises(ValueError, match="motor_count.*int"):
+        _motor_shaft_rotational_inertia_per_drive(
+            total_motor_shaft_rotational_inertia_kg_m2=503.227552,
+            motor_count=2.0,  # type: ignore
+        )
 
-    high_speed = _high_speed_native_component_inertia_at_motor_shaft(
-        high_speed_coupling_inertia_native_kg_m2=3.0,
-        high_speed_brake_inertia_native_kg_m2=2.0,
-        fluid_coupling_inertia_native_kg_m2=4.0,
-    )
-    # high_speed = 3 + 2 + 4 = 9 (all at 1.0 ratio)
-    assert high_speed == pytest.approx(9.0)
-
-    # Phase 3: gearbox_inertia is high-speed (10.0 added directly, not divided)
-    total = _total_rotational_inertia_at_motor_shaft(
-        reflected_translating_mass_inertia_kg_m2=486.227552,
-        gearbox_inertia_at_motor_shaft_kg_m2=10.0,
-        low_speed_native_component_inertia_at_motor_shaft_kg_m2=low_speed,
-        high_speed_native_component_inertia_at_motor_shaft_kg_m2=high_speed,
-    )
-    # total = 486.227552 + 10.0 + 17.0 + 9.0 = 522.227552
-    assert total == pytest.approx(522.227552)
+    with pytest.raises(ValueError, match="motor_count.*int"):
+        _motor_shaft_rotational_inertia_per_drive(
+            total_motor_shaft_rotational_inertia_kg_m2=503.227552,
+            motor_count=2.5,  # type: ignore
+        )
 
 
 def test_fluid_coupling_reference_functions() -> None:
     fluid_referred = _fluid_coupling_inertia_referred_to_motor_shaft(1.2, 2.0)
     assert fluid_referred == pytest.approx(0.3)
 
-    total_at_fluid = _total_rotational_inertia_at_fluid_coupling_shaft(100.0, 20.0)
-    assert total_at_fluid == pytest.approx(40000.0)
+
+# Phase 4 tests: Fluid-coupling design inertia
 
 
-def test_rotational_inertia_breakdown_at_motor_shaft_phase3_single_ratio() -> None:
-    """Phase 3: Breakdown uses single gearbox ratio for low-speed components."""
-    breakdown = _rotational_inertia_breakdown_at_motor_shaft(
-        reflected_translating_mass_inertia_kg_m2=100.0,
-        gearbox_inertia_at_motor_shaft_kg_m2=10.0,
-        pulley_inertia_native_kg_m2=40.0,
-        low_speed_coupling_inertia_native_kg_m2=0.0,
-        low_speed_brake_inertia_native_kg_m2=0.0,
+def test_fluid_coupling_design_inertia_basic() -> None:
+    """Phase 4 reshaped: Fluid-coupling inertia from low-speed total + gearbox ratio + high-speed."""
+    # low_speed_total = 100
+    # reflected = 100 / (2^2) = 25
+    # high_speed components: coupling=3, brake=2, gearbox=10, flywheel=50
+    # total = 25 + 3 + 2 + 10 + 50 = 90
+    result = _fluid_coupling_design_inertia(
+        total_low_speed_inertia_kg_m2=100.0,
         gearbox_ratio_motor_to_low_speed_side=2.0,
-        high_speed_coupling_inertia_native_kg_m2=3.0,
+        high_speed_coupling_inertia_kg_m2=3.0,
+        high_speed_brake_inertia_kg_m2=2.0,
+        gearbox_inertia_kg_m2=10.0,
+        flywheel_inertia_kg_m2=50.0,
     )
-    assert "low_speed_native_component_inertia_at_motor_shaft_kg_m2" in breakdown
-    assert "high_speed_native_component_inertia_at_motor_shaft_kg_m2" in breakdown
-    # pulley (low-speed): 40 / 4 = 10
-    # high_speed_coupling: 3 / 1 = 3
-    # total = 100 + 10 + 10 + 3 = 123
-    assert breakdown["total_rotational_inertia_at_motor_shaft_kg_m2"] == pytest.approx(
-        123.0
+    assert result == pytest.approx(90.0)
+
+
+def test_fluid_coupling_design_inertia_zero_gearbox() -> None:
+    """Phase 4 reshaped: Optional gearbox inertia defaults to zero."""
+    result = _fluid_coupling_design_inertia(
+        total_low_speed_inertia_kg_m2=100.0,
+        gearbox_ratio_motor_to_low_speed_side=2.0,
     )
+    # reflected = 100 / 4 = 25
+    assert result == pytest.approx(25.0)
+
+
+def test_fluid_coupling_design_inertia_negative_raises() -> None:
+    """Phase 4 reshaped: Negative low-speed inertia raises."""
+    with pytest.raises(ValueError):
+        _fluid_coupling_design_inertia(
+            total_low_speed_inertia_kg_m2=-1.0,
+            gearbox_ratio_motor_to_low_speed_side=2.0,
+        )
+
+
+# Phase 4 new cascade: total_low_speed_inertia + reshaped fluid_coupling_design_inertia
+
+
+def test_total_low_speed_inertia_basic() -> None:
+    """Phase 4: Total low-speed inertia sums mass_at_shaft + ls_coupling + ls_brake."""
+    result = _total_low_speed_inertia(
+        mass_inertia_at_pulley_shaft_kg_m2=100.0,
+        low_speed_coupling_inertia_kg_m2=20.0,
+        low_speed_brake_inertia_kg_m2=8.0,
+    )
+    assert result == pytest.approx(128.0)
+
+
+def test_total_low_speed_inertia_zero_optional() -> None:
+    """Phase 4: Optional low-speed components default to zero."""
+    result = _total_low_speed_inertia(
+        mass_inertia_at_pulley_shaft_kg_m2=100.0,
+    )
+    assert result == pytest.approx(100.0)
+
+
+def test_total_low_speed_inertia_all_zero() -> None:
+    """Phase 4: All components can be zero."""
+    result = _total_low_speed_inertia(
+        mass_inertia_at_pulley_shaft_kg_m2=0.0,
+    )
+    assert result == pytest.approx(0.0)
+
+
+def test_total_low_speed_inertia_negative_raises() -> None:
+    """Phase 4: Negative inertia raises."""
+    with pytest.raises(ValueError):
+        _total_low_speed_inertia(
+            mass_inertia_at_pulley_shaft_kg_m2=-1.0,
+        )
+
+
+def test_fluid_coupling_design_inertia_reshaped_invalid_ratio_raises() -> None:
+    """Phase 4 reshaped: Invalid gearbox ratio raises."""
+    with pytest.raises(ValueError):
+        _fluid_coupling_design_inertia(
+            total_low_speed_inertia_kg_m2=100.0,
+            gearbox_ratio_motor_to_low_speed_side=0.0,
+        )
+
+
+def test_fluid_coupling_design_inertia_reshaped_negative_high_speed_component_raises() -> (
+    None
+):
+    """Phase 4 reshaped: Negative high-speed component raises."""
+    with pytest.raises(ValueError):
+        _fluid_coupling_design_inertia(
+            total_low_speed_inertia_kg_m2=100.0,
+            gearbox_ratio_motor_to_low_speed_side=2.0,
+            high_speed_coupling_inertia_kg_m2=-1.0,
+        )
+
+
+def test_cascade_mass_inertia_to_fluid_coupling_design_inertia_private() -> None:
+    """Phase 4 cascade (private): mass_inertia_at_pulley_shaft -> total_low_speed_inertia -> fluid_coupling_design_inertia."""
+    # Step 1: Compute mass inertia at pulley shaft with native pulley inertia.
+    mass_inertia = _mass_inertia_at_pulley_shaft(
+        translating_mass_kg=100.0,
+        drive_pulley_radius_m=0.5,
+        pulley_inertia_native_kg_m2=10.0,
+    )
+    # 100 * (0.5^2) + 10 = 25 + 10 = 35
+    assert mass_inertia == pytest.approx(35.0)
+
+    # Step 2: Feed into total_low_speed_inertia with coupling, brake omitted (defaults to 0).
+    total_low_speed = _total_low_speed_inertia(
+        mass_inertia_at_pulley_shaft_kg_m2=mass_inertia,
+        low_speed_coupling_inertia_kg_m2=5.0,
+        low_speed_brake_inertia_kg_m2=0.0,
+    )
+    # 35 + 5 + 0 = 40
+    assert total_low_speed == pytest.approx(40.0)
+
+    # Step 3: Feed into fluid_coupling_design_inertia with some high-speed components omitted.
+    design_inertia = _fluid_coupling_design_inertia(
+        total_low_speed_inertia_kg_m2=total_low_speed,
+        gearbox_ratio_motor_to_low_speed_side=2.0,
+        high_speed_coupling_inertia_kg_m2=3.0,
+        high_speed_brake_inertia_kg_m2=0.0,
+        gearbox_inertia_kg_m2=2.0,
+        flywheel_inertia_kg_m2=0.0,
+    )
+    # Reflect: 40 / (2^2) = 40 / 4 = 10
+    # Total: 10 + 3 + 0 + 2 + 0 = 15
+    assert design_inertia == pytest.approx(15.0)
+
+
+# Phase 5 tests: Canonical single-drive total inertia
+
+
+def test_total_inertia_for_single_drive_basic() -> None:
+    """Phase 5: Per-drive total inertia with shared low-speed reflection divided by quantity_of_drives."""
+    # low_speed_total = 100
+    # quantity_of_drives = 2
+    # reflected = 100 / (2^2) = 25
+    # divided by quantity = 25 / 2 = 12.5
+    # high_speed components: coupling=3, brake=2, gearbox=10, flywheel=50, fluid=1, motor_coupling=1, motor=2
+    # total = 12.5 + 3 + 2 + 10 + 50 + 1 + 1 + 2 = 81.5
+    from eytelwein.belt_conveyor_design.extended._mass_inertia import (
+        _total_inertia_for_single_drive,
+    )
+
+    result = _total_inertia_for_single_drive(
+        total_low_speed_inertia_kg_m2=100.0,
+        quantity_of_drives=2,
+        gearbox_ratio_motor_to_low_speed_side=2.0,
+        high_speed_coupling_inertia_kg_m2=3.0,
+        high_speed_brake_inertia_kg_m2=2.0,
+        gearbox_inertia_kg_m2=10.0,
+        flywheel_inertia_kg_m2=50.0,
+        fluid_coupling_inertia_kg_m2=1.0,
+        motor_coupling_inertia_kg_m2=1.0,
+        motor_inertia_kg_m2=2.0,
+    )
+    assert result == pytest.approx(81.5)
+
+
+def test_total_inertia_for_single_drive_single_drive() -> None:
+    """Phase 5: With single drive, divided inertia = reflected inertia (no division effect)."""
+    # low_speed_total = 100
+    # quantity_of_drives = 1
+    # reflected = 100 / (2^2) = 25
+    # divided by quantity = 25 / 1 = 25
+    # no high-speed components (all 0)
+    # total = 25
+    from eytelwein.belt_conveyor_design.extended._mass_inertia import (
+        _total_inertia_for_single_drive,
+    )
+
+    result = _total_inertia_for_single_drive(
+        total_low_speed_inertia_kg_m2=100.0,
+        quantity_of_drives=1,
+        gearbox_ratio_motor_to_low_speed_side=2.0,
+    )
+    assert result == pytest.approx(25.0)
+
+
+def test_total_inertia_for_single_drive_proves_quantity_divides_reflected_only() -> (
+    None
+):
+    """Phase 5: Prove that quantity_of_drives divides only the reflected shared low-speed contribution."""
+    from eytelwein.belt_conveyor_design.extended._mass_inertia import (
+        _total_inertia_for_single_drive,
+    )
+
+    # low_speed_total = 100, gearbox_ratio = 2, reflected = 25
+    # For 1 drive: reflected_per_drive = 25 / 1 = 25; motor_inertia = 5; total = 30
+    result_1_drive = _total_inertia_for_single_drive(
+        total_low_speed_inertia_kg_m2=100.0,
+        quantity_of_drives=1,
+        gearbox_ratio_motor_to_low_speed_side=2.0,
+        motor_inertia_kg_m2=5.0,
+    )
+    assert result_1_drive == pytest.approx(30.0)
+
+    # For 2 drives: reflected_per_drive = 25 / 2 = 12.5; motor_inertia = 5 (NOT divided); total = 17.5
+    result_2_drives = _total_inertia_for_single_drive(
+        total_low_speed_inertia_kg_m2=100.0,
+        quantity_of_drives=2,
+        gearbox_ratio_motor_to_low_speed_side=2.0,
+        motor_inertia_kg_m2=5.0,
+    )
+    assert result_2_drives == pytest.approx(17.5)
+
+    # For 4 drives: reflected_per_drive = 25 / 4 = 6.25; motor_inertia = 5 (NOT divided); total = 11.25
+    result_4_drives = _total_inertia_for_single_drive(
+        total_low_speed_inertia_kg_m2=100.0,
+        quantity_of_drives=4,
+        gearbox_ratio_motor_to_low_speed_side=2.0,
+        motor_inertia_kg_m2=5.0,
+    )
+    assert result_4_drives == pytest.approx(11.25)
+
+
+def test_total_inertia_for_single_drive_zero_low_speed() -> None:
+    """Phase 5: With zero low-speed inertia, only high-speed/motor components remain."""
+    from eytelwein.belt_conveyor_design.extended._mass_inertia import (
+        _total_inertia_for_single_drive,
+    )
+
+    result = _total_inertia_for_single_drive(
+        total_low_speed_inertia_kg_m2=0.0,
+        quantity_of_drives=2,
+        gearbox_ratio_motor_to_low_speed_side=2.0,
+        motor_inertia_kg_m2=10.0,
+    )
+    assert result == pytest.approx(10.0)
+
+
+def test_total_inertia_for_single_drive_quantity_validation() -> None:
+    """Phase 5: quantity_of_drives must be >= 1."""
+    from eytelwein.belt_conveyor_design.extended._mass_inertia import (
+        _total_inertia_for_single_drive,
+    )
+
+    with pytest.raises(ValueError, match="quantity_of_drives"):
+        _total_inertia_for_single_drive(
+            total_low_speed_inertia_kg_m2=100.0,
+            quantity_of_drives=0,
+            gearbox_ratio_motor_to_low_speed_side=2.0,
+        )
+
+    with pytest.raises(ValueError, match="quantity_of_drives"):
+        _total_inertia_for_single_drive(
+            total_low_speed_inertia_kg_m2=100.0,
+            quantity_of_drives=-1,
+            gearbox_ratio_motor_to_low_speed_side=2.0,
+        )
+
+
+def test_fluid_coupling_design_inertia_delegates_to_canonical_helper() -> None:
+    """Phase 5: _fluid_coupling_design_inertia should delegate to _total_inertia_for_single_drive with motor-side terms zeroed."""
+    from eytelwein.belt_conveyor_design.extended._mass_inertia import (
+        _total_inertia_for_single_drive,
+    )
+
+    # Fluid-coupling design inertia = _total_inertia_for_single_drive with quantity=1 and motor terms = 0
+    low_speed = 100.0
+    gearbox_ratio = 2.0
+    hs_coupling = 3.0
+    hs_brake = 2.0
+    gearbox = 10.0
+    flywheel = 50.0
+
+    # Expected behavior: reflected = 100 / 4 = 25; total = 25 + 3 + 2 + 10 + 50 = 90
+    canonical_result = _total_inertia_for_single_drive(
+        total_low_speed_inertia_kg_m2=low_speed,
+        quantity_of_drives=1,
+        gearbox_ratio_motor_to_low_speed_side=gearbox_ratio,
+        high_speed_coupling_inertia_kg_m2=hs_coupling,
+        high_speed_brake_inertia_kg_m2=hs_brake,
+        gearbox_inertia_kg_m2=gearbox,
+        flywheel_inertia_kg_m2=flywheel,
+        fluid_coupling_inertia_kg_m2=0.0,
+        motor_coupling_inertia_kg_m2=0.0,
+        motor_inertia_kg_m2=0.0,
+    )
+    assert canonical_result == pytest.approx(90.0)
+
+    # Now call fluid_coupling_design_inertia and verify it matches
+    design_result = _fluid_coupling_design_inertia(
+        total_low_speed_inertia_kg_m2=low_speed,
+        gearbox_ratio_motor_to_low_speed_side=gearbox_ratio,
+        high_speed_coupling_inertia_kg_m2=hs_coupling,
+        high_speed_brake_inertia_kg_m2=hs_brake,
+        gearbox_inertia_kg_m2=gearbox,
+        flywheel_inertia_kg_m2=flywheel,
+    )
+    assert design_result == pytest.approx(canonical_result)
+
+
+def test_total_inertia_for_single_drive_rejects_float_quantity_of_drives() -> None:
+    """Phase 5: quantity_of_drives must be int, not float (even if value is whole)."""
+    from eytelwein.belt_conveyor_design.extended._mass_inertia import (
+        _total_inertia_for_single_drive,
+    )
+
+    with pytest.raises(ValueError, match="quantity_of_drives.*int"):
+        _total_inertia_for_single_drive(
+            total_low_speed_inertia_kg_m2=100.0,
+            quantity_of_drives=2.0,  # type: ignore
+            gearbox_ratio_motor_to_low_speed_side=2.0,
+        )
+
+    with pytest.raises(ValueError, match="quantity_of_drives.*int"):
+        _total_inertia_for_single_drive(
+            total_low_speed_inertia_kg_m2=100.0,
+            quantity_of_drives=2.5,  # type: ignore
+            gearbox_ratio_motor_to_low_speed_side=2.0,
+        )
+
+
+def test_total_inertia_for_single_drive_rejects_bool_quantity_of_drives() -> None:
+    """Phase 5: quantity_of_drives must be int, not bool."""
+    from eytelwein.belt_conveyor_design.extended._mass_inertia import (
+        _total_inertia_for_single_drive,
+    )
+
+    with pytest.raises(ValueError, match="quantity_of_drives.*int"):
+        _total_inertia_for_single_drive(
+            total_low_speed_inertia_kg_m2=100.0,
+            quantity_of_drives=True,  # type: ignore
+            gearbox_ratio_motor_to_low_speed_side=2.0,
+        )
