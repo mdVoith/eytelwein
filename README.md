@@ -16,6 +16,12 @@
 
 ---
 
+## Active Development Notice
+
+This repository is under active development. APIs, behaviors, and available
+functionality may change between releases while features are expanded and
+refined.
+
 Eytelwein provides production-grade engineering calculations for belt conveyor
 systems — from steady-state resistance and drive layout to idler roll loading and
 horizontal curve forces. All public functions use [Pint](https://pint.readthedocs.io/)
@@ -221,6 +227,9 @@ uv run sphinx-build -b html docs/source docs/_build/html
 ## Contributing
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for development guidelines.
+
+Please note: because the project is actively evolving, contribution targets and
+public interfaces can change over time.
 
 ## License
 
