@@ -13,10 +13,7 @@ from eytelwein.belt_conveyor_design.extended._mass_inertia import (
     _drive_pulley_radius_from_drive_pulley_diameter,
     _translating_mass_inertia_at_pulley_circumference,
     _mass_inertia_at_pulley_shaft,
-    _reflected_translating_mass_inertia_at_motor_shaft,
     _component_inertia_referred_to_motor_shaft,
-    _fluid_coupling_inertia_referred_to_motor_shaft,
-    _motor_shaft_rotational_inertia_per_drive,
     _total_low_speed_inertia,
     _total_inertia_for_single_drive,
     _fluid_coupling_design_inertia,
@@ -588,72 +585,6 @@ def mass_inertia_at_pulley_shaft(
     return converted
 
 
-def reflected_translating_mass_inertia_at_motor_shaft(
-    translating_mass: Quantity,
-    drive_pulley_radius: Quantity,
-    gear_ratio_motor_to_pulley: Quantity,
-    unit: str = "kilogram * meter**2",
-    precision: int | None = None,
-) -> Quantity:
-    """Calculate reflected translating-mass inertia contribution at motor shaft.
-
-    This function converts pulley-shaft inertia to motor-shaft-equivalent inertia
-    by applying the squared speed ratio. It composes two primitives:
-    (1) translating mass → pulley-shaft inertia
-    (2) pulley-shaft inertia → motor-shaft inertia via speed reduction
-
-    Parameters
-    ----------
-    translating_mass : Quantity
-        Total translating mass quantity.
-    drive_pulley_radius : Quantity
-        Drive pulley radius quantity.
-    gear_ratio_motor_to_pulley : Quantity
-        Gear ratio quantity defined as ``omega_motor / omega_pulley``.
-    unit : str, optional
-        Output unit, by default ``"kilogram * meter**2"``.
-    precision : int | None, optional
-        Decimal rounding precision. Use ``None`` to skip rounding.
-
-    Returns
-    -------
-    Quantity
-        Reflected translating-mass inertia contribution at motor shaft in the
-        requested output unit.
-
-    Raises
-    ------
-    ValueError
-        If unit conversion fails, physical constraints are violated, or the
-        requested output unit is invalid.
-    """
-    try:
-        mass = translating_mass.to(u.kilogram)
-        radius = drive_pulley_radius.to(u.meter)
-        ratio = gear_ratio_motor_to_pulley.to(u.dimensionless)
-    except Exception as exc:
-        raise ValueError(f"Error in converting units: {exc}") from exc
-
-    if mass.magnitude < 0:
-        raise ValueError("translating_mass must be non-negative")
-    if radius.magnitude <= 0:
-        raise ValueError("drive_pulley_radius must be positive")
-    if ratio.magnitude <= 0:
-        raise ValueError("gear_ratio_motor_to_pulley must be positive")
-
-    result = (
-        _reflected_translating_mass_inertia_at_motor_shaft(
-            mass.magnitude, radius.magnitude, ratio.magnitude
-        )
-        * u.kilogram
-        * u.meter**2
-    )
-    converted = result.to(_parse_unit(unit))
-    if precision is not None:
-        converted = round(converted, precision)
-    return converted
-
-
 def component_inertia_referred_to_motor_shaft(
     component_inertia: Quantity,
     gear_ratio_motor_to_component: Quantity,
@@ -700,88 +631,6 @@ def component_inertia_referred_to_motor_shaft(
         _component_inertia_referred_to_motor_shaft(
             inertia.magnitude, gear_ratio.magnitude
         )
-        * u.kilogram
-        * u.meter**2
-    )
-    converted = result.to(_parse_unit(unit))
-    if precision is not None:
-        converted = round(converted, precision)
-    return converted
-
-
-def fluid_coupling_inertia_referred_to_motor_shaft(
-    fluid_coupling_inertia_native: Quantity,
-    gear_ratio_motor_to_fluid_coupling: Quantity,
-    unit: str = "kilogram * meter**2",
-    precision: int | None = None,
-) -> Quantity:
-    """Convert native fluid-coupling inertia to motor-shaft-equivalent inertia."""
-    try:
-        fluid_inertia = fluid_coupling_inertia_native.to(u.kilogram * u.meter**2)
-        ratio = gear_ratio_motor_to_fluid_coupling.to(u.dimensionless)
-    except Exception as exc:
-        raise ValueError(f"Error in converting units: {exc}") from exc
-
-    result = (
-        _fluid_coupling_inertia_referred_to_motor_shaft(
-            fluid_inertia.magnitude,
-            ratio.magnitude,
-        )
-        * u.kilogram
-        * u.meter**2
-    )
-    converted = result.to(_parse_unit(unit))
-    if precision is not None:
-        converted = round(converted, precision)
-    return converted
-
-
-def motor_shaft_rotational_inertia_per_drive(
-    total_motor_shaft_rotational_inertia: Quantity,
-    motor_count: int,
-    unit: str = "kilogram * meter**2",
-    precision: int | None = None,
-) -> Quantity:
-    """Calculate per-drive motor-shaft rotational inertia.
-
-    Parameters
-    ----------
-    total_motor_shaft_rotational_inertia : Quantity
-        Total motor-shaft rotational inertia quantity.
-    motor_count : int
-        Number of drives sharing the inertia.
-    unit : str, optional
-        Output unit, by default ``"kilogram * meter**2"``.
-    precision : int | None, optional
-        Decimal rounding precision. Use ``None`` to skip rounding.
-
-    Returns
-    -------
-    Quantity
-        Per-drive motor-shaft rotational inertia in the requested output unit.
-
-    Raises
-    ------
-    ValueError
-        If unit conversion fails, physical constraints are violated, or the
-        requested output unit is invalid.
-    """
-    try:
-        total_inertia = total_motor_shaft_rotational_inertia.to(u.kilogram * u.meter**2)
-    except Exception as exc:
-        raise ValueError(f"Error in converting units: {exc}") from exc
-
-    if total_inertia.magnitude < 0:
-        raise ValueError("total_motor_shaft_rotational_inertia must be non-negative")
-    if isinstance(motor_count, bool):
-        raise ValueError("motor_count must be int, not bool")
-    if not isinstance(motor_count, int):
-        raise ValueError("motor_count must be int")
-    if motor_count < 1:
-        raise ValueError("motor_count must be >= 1")
-
-    result = (
-        _motor_shaft_rotational_inertia_per_drive(total_inertia.magnitude, motor_count)
         * u.kilogram
         * u.meter**2
     )
