@@ -14,10 +14,7 @@ from eytelwein.belt_conveyor_design.extended.mass_inertia import (
     drive_pulley_radius_from_drive_pulley_diameter,
     translating_mass_inertia_at_pulley_circumference,
     mass_inertia_at_pulley_shaft,
-    reflected_translating_mass_inertia_at_motor_shaft,
     component_inertia_referred_to_motor_shaft,
-    fluid_coupling_inertia_referred_to_motor_shaft,
-    motor_shaft_rotational_inertia_per_drive,
     total_low_speed_inertia,
     total_inertia_for_single_drive,
     fluid_coupling_design_inertia,
@@ -125,71 +122,12 @@ def test_translating_mass_inertia_at_pulley_circumference_spec_case() -> None:
     assert result.magnitude == pytest.approx(67116.766245, rel=0.005)
 
 
-def test_reflected_translating_mass_inertia_at_motor_shaft_spec_case() -> None:
-    result = reflected_translating_mass_inertia_at_motor_shaft(
-        Quantity(247458.825, u.kilogram),
-        Quantity(0.52, u.meter),
-        Quantity(11.731, u.dimensionless),
-    )
-    assert result.magnitude == pytest.approx(486.227552, rel=0.005)
-
-
-def test_reflected_translating_mass_inertia_at_motor_shaft_full_belt_case() -> None:
-    """Full belt case with large mass and high speed reduction."""
-    result = reflected_translating_mass_inertia_at_motor_shaft(
-        Quantity(234511, u.kilogram),
-        Quantity(0.4, u.meter),  # radius = 0.8 m diameter / 2
-        Quantity(20.153, u.dimensionless),
-    )
-    assert result.magnitude == pytest.approx(92.4, rel=0.005)
-
-
 def test_component_inertia_referred_to_motor_shaft_basic() -> None:
     result = component_inertia_referred_to_motor_shaft(
         Quantity(1.2, u.kilogram * u.meter**2),
         Quantity(2.0, u.dimensionless),
     )
     assert result.magnitude == pytest.approx(0.3)
-
-
-def test_motor_shaft_rotational_inertia_per_drive_basic() -> None:
-    result = motor_shaft_rotational_inertia_per_drive(
-        Quantity(503.227552, u.kilogram * u.meter**2),
-        2,
-    )
-    assert result.magnitude == pytest.approx(251.613776)
-
-
-def test_motor_shaft_rotational_inertia_per_drive_rejects_bool_motor_count() -> None:
-    """Phase 5: motor_count must be int, not bool."""
-    with pytest.raises(ValueError, match="motor_count.*int"):
-        motor_shaft_rotational_inertia_per_drive(
-            Quantity(503.227552, u.kilogram * u.meter**2),
-            True,  # type: ignore
-        )
-
-
-def test_motor_shaft_rotational_inertia_per_drive_rejects_float_motor_count() -> None:
-    """Phase 5: motor_count must be int, not float (even if value is whole)."""
-    with pytest.raises(ValueError, match="motor_count.*int"):
-        motor_shaft_rotational_inertia_per_drive(
-            Quantity(503.227552, u.kilogram * u.meter**2),
-            2.0,  # type: ignore
-        )
-
-    with pytest.raises(ValueError, match="motor_count.*int"):
-        motor_shaft_rotational_inertia_per_drive(
-            Quantity(503.227552, u.kilogram * u.meter**2),
-            2.5,  # type: ignore
-        )
-
-
-def test_fluid_coupling_reference_functions() -> None:
-    fluid_referred = fluid_coupling_inertia_referred_to_motor_shaft(
-        Quantity(1.2, u.kilogram * u.meter**2),
-        Quantity(2.0, u.dimensionless),
-    )
-    assert fluid_referred.magnitude == pytest.approx(0.3)
 
 
 # Phase 4 tests: Fluid-coupling design inertia and total-low-speed inertia cascade

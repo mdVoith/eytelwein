@@ -251,54 +251,6 @@ def _mass_inertia_at_pulley_shaft(
     return translating_inertia + pulley_inertia_native_kg_m2
 
 
-def _reflected_translating_mass_inertia_at_motor_shaft(
-    translating_mass_kg: float,
-    drive_pulley_radius_m: float,
-    gear_ratio_motor_to_pulley: float,
-) -> float:
-    """Calculate reflected translating-mass inertia contribution at motor shaft.
-
-    This function converts pulley-shaft inertia to motor-shaft-equivalent inertia
-    by applying the squared speed ratio. It composes two primitives:
-    (1) translating mass → pulley-shaft inertia
-    (2) pulley-shaft inertia → motor-shaft inertia via speed reduction
-
-    Parameters
-    ----------
-    translating_mass_kg : float
-        Total translating mass in kilograms.
-    drive_pulley_radius_m : float
-        Drive pulley radius in meters.
-    gear_ratio_motor_to_pulley : float
-        Gear ratio ``omega_motor / omega_pulley``.
-
-    Returns
-    -------
-    float
-        Reflected translating-mass inertia contribution at motor shaft in
-        kilogram meter squared.
-
-    Raises
-    ------
-    ValueError
-        If mass is negative, radius is not positive, or gear ratio is not
-        positive.
-    """
-    if translating_mass_kg < 0:
-        raise ValueError("translating_mass_kg must be non-negative")
-    if drive_pulley_radius_m <= 0:
-        raise ValueError("drive_pulley_radius_m must be positive")
-    if gear_ratio_motor_to_pulley <= 0:
-        raise ValueError("gear_ratio_motor_to_pulley must be positive")
-
-    pulley_inertia = _translating_mass_inertia_at_pulley_circumference(
-        translating_mass_kg, drive_pulley_radius_m
-    )
-    return _component_inertia_referred_to_motor_shaft(
-        pulley_inertia, gear_ratio_motor_to_pulley
-    )
-
-
 def _component_inertia_referred_to_motor_shaft(
     component_inertia_kg_m2: float, gear_ratio_motor_to_component: float
 ) -> float:
@@ -328,65 +280,6 @@ def _component_inertia_referred_to_motor_shaft(
     return component_inertia_kg_m2 / (
         gear_ratio_motor_to_component * gear_ratio_motor_to_component
     )
-
-
-def _fluid_coupling_inertia_referred_to_motor_shaft(
-    fluid_coupling_inertia_native_kg_m2: float,
-    gear_ratio_motor_to_fluid_coupling: float,
-) -> float:
-    """Convert native fluid-coupling inertia to motor-shaft-equivalent inertia.
-
-    Parameters
-    ----------
-    fluid_coupling_inertia_native_kg_m2 : float
-        Native fluid-coupling inertia in kilogram meter squared.
-    gear_ratio_motor_to_fluid_coupling : float
-        Gear ratio ``omega_motor / omega_fluid_coupling``.
-
-    Returns
-    -------
-    float
-        Fluid-coupling inertia referred to motor shaft in kilogram meter squared.
-    """
-    return _component_inertia_referred_to_motor_shaft(
-        fluid_coupling_inertia_native_kg_m2,
-        gear_ratio_motor_to_fluid_coupling,
-    )
-
-
-def _motor_shaft_rotational_inertia_per_drive(
-    total_motor_shaft_rotational_inertia_kg_m2: float, motor_count: int
-) -> float:
-    """Calculate per-drive motor-shaft rotational inertia.
-
-    Parameters
-    ----------
-    total_motor_shaft_rotational_inertia_kg_m2 : float
-        Total motor-shaft rotational inertia in kilogram meter squared.
-    motor_count : int
-        Number of motors sharing the rotational inertia.
-
-    Returns
-    -------
-    float
-        Per-drive motor-shaft rotational inertia in kilogram meter squared.
-
-    Raises
-    ------
-    ValueError
-        If total inertia is negative or ``motor_count`` is less than 1.
-    """
-    if total_motor_shaft_rotational_inertia_kg_m2 < 0:
-        raise ValueError(
-            "total_motor_shaft_rotational_inertia_kg_m2 must be non-negative"
-        )
-    if isinstance(motor_count, bool):
-        raise ValueError("motor_count must be int, not bool")
-    if not isinstance(motor_count, int):
-        raise ValueError("motor_count must be int")
-    if motor_count < 1:
-        raise ValueError("motor_count must be >= 1")
-    return total_motor_shaft_rotational_inertia_kg_m2 / motor_count
 
 
 def _total_low_speed_inertia(
