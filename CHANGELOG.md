@@ -1,3 +1,21 @@
+## v0.1.5 (2026-06-30)
+
+### Feat
+
+- remove unused inertia functions and related tests
+- unify single-drive inertia model
+- add total pulley shaft inertia function
+- add translating mass inertia calculation at pulley shaft with unit tests
+
+### Refactor
+
+- switch translating mass calculation to a canonical aggregate implementation as single source of truth and with fewer regression paths plus derived thin wrapper implementations for useful cases
+- use one gearbox ratio for low-speed inertia
+- rename translating mass inertia function
+- rename gearbox gear ratio parameters to drive gear ratio for clarity
+- update variable names for clarity in mass inertia calculations and use gear ratio
+- Refactor mass inertia tests
+
 ## v0.1.4 (2026-06-24)
 
 ### Feat

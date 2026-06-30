@@ -21,7 +21,7 @@ main
 from . import belt_conveyor_design, idler_design, horizontal_curves
 from . import main
 
-__version__ = "0.1.4"
+__version__ = "0.1.5"
 
 __all__ = [
     "belt_conveyor_design",
