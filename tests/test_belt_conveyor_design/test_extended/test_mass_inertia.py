@@ -98,6 +98,131 @@ def test_total_translating_mass_loaded_delegates_to_canonical() -> None:
     assert loaded.magnitude == pytest.approx(canonical.magnitude)
 
 
+def test_dataset_line_load_to_translating_masses_public() -> None:
+    """Dataset check: line-load-derived masses for carry/return/material and one belt strand."""
+    segment = Quantity(1300.0, u.meter)
+    idler_carry = translating_mass_idler_carry(
+        Quantity(7.38318255890753, u.kilogram / u.meter), segment
+    )
+    idler_return = translating_mass_idler_return(
+        Quantity(1.64070723531278, u.kilogram / u.meter), segment
+    )
+    belt_single_strand = translating_mass_belt(
+        Quantity(16.24, u.kilogram / u.meter), segment
+    )
+    material = translating_mass_material(
+        Quantity(138.888888888889, u.kilogram / u.meter), segment
+    )
+
+    assert idler_carry.magnitude == pytest.approx(9598.137326579788)
+    assert idler_return.magnitude == pytest.approx(2132.919405906614)
+    assert belt_single_strand.magnitude == pytest.approx(21112.0)
+    assert material.magnitude == pytest.approx(180555.5555555557)
+
+
+def test_dataset_translating_mass_totals_public_line_load_derived() -> None:
+    """Dataset check using line-load-derived masses.
+
+    This test intentionally asserts the model-consistent totals from the provided
+    line loads and conveyor length.
+    """
+    empty_total = total_translating_mass_empty(
+        translating_mass_idler_carry_value=Quantity(9598.137326579788, u.kilogram),
+        translating_mass_idler_return_value=Quantity(2132.919405906614, u.kilogram),
+        translating_mass_belt_carry_strand_value=Quantity(21112.0, u.kilogram),
+        translating_mass_belt_return_strand_value=Quantity(21112.0, u.kilogram),
+    )
+    loaded_total = total_translating_mass_loaded(
+        translating_mass_idler_carry_value=Quantity(9598.137326579788, u.kilogram),
+        translating_mass_idler_return_value=Quantity(2132.919405906614, u.kilogram),
+        translating_mass_belt_carry_strand_value=Quantity(21112.0, u.kilogram),
+        translating_mass_belt_return_strand_value=Quantity(21112.0, u.kilogram),
+        translating_mass_material_value=Quantity(180555.5555555557, u.kilogram),
+    )
+
+    assert empty_total.magnitude == pytest.approx(53955.056732486395)
+    assert loaded_total.magnitude == pytest.approx(234510.6122880421)
+
+
+def test_dataset_translating_mass_totals_public_given_mass_inventory() -> None:
+    """Dataset check using the explicitly provided mass inventory values."""
+    loaded_total = total_translating_mass_loaded(
+        translating_mass_idler_carry_value=Quantity(9598.0, u.kilogram),
+        translating_mass_idler_return_value=Quantity(2133.0, u.kilogram),
+        translating_mass_belt_carry_strand_value=Quantity(21112.0, u.kilogram),
+        translating_mass_belt_return_strand_value=Quantity(21112.0, u.kilogram),
+        translating_mass_material_value=Quantity(180556.0, u.kilogram),
+    )
+    assert loaded_total.magnitude == pytest.approx(234511.0)
+    assert loaded_total.units == u.kilogram
+
+
+def test_dataset_inertia_chain_public_given_mass_inventory() -> None:
+    """Dataset inertia chain with provided mass inventory and stated drivetrain values."""
+    pulley_radius = drive_pulley_radius_from_drive_pulley_diameter(Quantity(0.8, u.meter))
+    gearbox_ratio = Quantity(20.153, u.dimensionless)
+
+    empty_total_mass = total_translating_mass_empty(
+        translating_mass_idler_carry_value=Quantity(9598.0, u.kilogram),
+        translating_mass_idler_return_value=Quantity(2133.0, u.kilogram),
+        translating_mass_belt_carry_strand_value=Quantity(21112.0, u.kilogram),
+        translating_mass_belt_return_strand_value=Quantity(21112.0, u.kilogram),
+    )
+    loaded_total_mass = total_translating_mass_loaded(
+        translating_mass_idler_carry_value=Quantity(9598.0, u.kilogram),
+        translating_mass_idler_return_value=Quantity(2133.0, u.kilogram),
+        translating_mass_belt_carry_strand_value=Quantity(21112.0, u.kilogram),
+        translating_mass_belt_return_strand_value=Quantity(21112.0, u.kilogram),
+        translating_mass_material_value=Quantity(180556.0, u.kilogram),
+    )
+
+    empty_mass_inertia_at_pulley = mass_inertia_at_pulley_shaft(
+        translating_mass=empty_total_mass,
+        drive_pulley_radius=pulley_radius,
+    )
+    loaded_mass_inertia_at_pulley = mass_inertia_at_pulley_shaft(
+        translating_mass=loaded_total_mass,
+        drive_pulley_radius=pulley_radius,
+    )
+
+    empty_low_speed = total_low_speed_inertia(
+        mass_inertia_at_pulley_shaft=empty_mass_inertia_at_pulley
+    )
+    loaded_low_speed = total_low_speed_inertia(
+        mass_inertia_at_pulley_shaft=loaded_mass_inertia_at_pulley
+    )
+
+    empty_motor_total = total_inertia_for_single_drive(
+        total_low_speed_inertia=empty_low_speed,
+        quantity_of_drives=1,
+        gearbox_ratio_motor_to_low_speed_side=gearbox_ratio,
+    )
+    loaded_motor_total = total_inertia_for_single_drive(
+        total_low_speed_inertia=loaded_low_speed,
+        quantity_of_drives=1,
+        gearbox_ratio_motor_to_low_speed_side=gearbox_ratio,
+    )
+    empty_per_drive = total_inertia_for_single_drive(
+        total_low_speed_inertia=empty_low_speed,
+        quantity_of_drives=4,
+        gearbox_ratio_motor_to_low_speed_side=gearbox_ratio,
+    )
+    loaded_per_drive = total_inertia_for_single_drive(
+        total_low_speed_inertia=loaded_low_speed,
+        quantity_of_drives=4,
+        gearbox_ratio_motor_to_low_speed_side=gearbox_ratio,
+    )
+
+    assert empty_motor_total.magnitude == pytest.approx(21.3, abs=0.1)
+    assert empty_motor_total.units == u.kilogram * u.meter**2
+    assert loaded_motor_total.magnitude == pytest.approx(92.4, abs=0.1)
+    assert loaded_motor_total.units == u.kilogram * u.meter**2
+    assert empty_per_drive.magnitude == pytest.approx(5.3, abs=0.1)
+    assert empty_per_drive.units == u.kilogram * u.meter**2
+    assert loaded_per_drive.magnitude == pytest.approx(23.1, abs=0.1)
+    assert loaded_per_drive.units == u.kilogram * u.meter**2
+
+
 def test_drive_pulley_radius_from_drive_pulley_diameter_basic() -> None:
     result = drive_pulley_radius_from_drive_pulley_diameter(Quantity(1.04, u.meter))
     assert result.units == u.meter
