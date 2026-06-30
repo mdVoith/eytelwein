@@ -17,6 +17,7 @@ from eytelwein.belt_conveyor_design.extended._mass_inertia import (
     _component_inertia_referred_to_motor_shaft,
     _total_low_speed_inertia,
     _fluid_coupling_design_inertia,
+    _total_inertia_for_single_drive,
 )
 
 
@@ -69,6 +70,124 @@ def test_total_translating_mass_loaded_delegates_to_canonical() -> None:
         translating_mass_material_kg=536584.1,
     )
     assert result_loaded == pytest.approx(result_canonical)
+
+
+def test_dataset_line_load_to_translating_masses_private() -> None:
+    """Dataset check: line-load-derived masses for carry/return/material and one belt strand."""
+    segment_length_m = 1300.0
+    idler_carry = _translating_mass_idler_carry(7.38318255890753, segment_length_m)
+    idler_return = _translating_mass_idler_return(1.64070723531278, segment_length_m)
+    belt_single_strand = _translating_mass_belt(16.24, segment_length_m)
+    material = _translating_mass_material(138.888888888889, segment_length_m)
+
+    assert idler_carry == pytest.approx(9598.137326579788)
+    assert idler_return == pytest.approx(2132.919405906614)
+    assert belt_single_strand == pytest.approx(21112.0)
+    assert material == pytest.approx(180555.5555555557)
+
+
+def test_dataset_translating_mass_totals_private_line_load_derived() -> None:
+    """Dataset check using line-load-derived masses.
+
+    This test intentionally asserts the model-consistent totals from the provided
+    line loads and conveyor length.
+    """
+    empty_total = _total_translating_mass_empty(
+        translating_mass_idler_carry_kg=9598.137326579788,
+        translating_mass_idler_return_kg=2132.919405906614,
+        translating_mass_belt_carry_strand_kg=21112.0,
+        translating_mass_belt_return_strand_kg=21112.0,
+    )
+    loaded_total = _total_translating_mass_loaded(
+        translating_mass_idler_carry_kg=9598.137326579788,
+        translating_mass_idler_return_kg=2132.919405906614,
+        translating_mass_belt_carry_strand_kg=21112.0,
+        translating_mass_belt_return_strand_kg=21112.0,
+        translating_mass_material_kg=180555.5555555557,
+    )
+
+    assert empty_total == pytest.approx(53955.056732486395)
+    assert loaded_total == pytest.approx(234510.6122880421)
+
+
+def test_dataset_translating_mass_totals_private_given_mass_inventory() -> None:
+    """Dataset check using the explicitly provided mass inventory values.
+
+    The provided component masses are internally consistent with the provided
+    loaded total even though they differ slightly from line-load-derived values.
+    """
+    loaded_total = _total_translating_mass_loaded(
+        translating_mass_idler_carry_kg=9598.0,
+        translating_mass_idler_return_kg=2133.0,
+        translating_mass_belt_carry_strand_kg=21112.0,
+        translating_mass_belt_return_strand_kg=21112.0,
+        translating_mass_material_kg=180556.0,
+    )
+    assert loaded_total == pytest.approx(234511.0)
+
+
+def test_dataset_inertia_chain_private_given_mass_inventory() -> None:
+    """Dataset inertia chain with provided mass inventory and stated drivetrain values."""
+    pulley_radius_m = _drive_pulley_radius_from_drive_pulley_diameter(0.8)
+    gearbox_ratio = 20.153
+
+    empty_total_mass = _total_translating_mass_empty(
+        translating_mass_idler_carry_kg=9598.0,
+        translating_mass_idler_return_kg=2133.0,
+        translating_mass_belt_carry_strand_kg=21112.0,
+        translating_mass_belt_return_strand_kg=21112.0,
+    )
+    loaded_total_mass = _total_translating_mass_loaded(
+        translating_mass_idler_carry_kg=9598.0,
+        translating_mass_idler_return_kg=2133.0,
+        translating_mass_belt_carry_strand_kg=21112.0,
+        translating_mass_belt_return_strand_kg=21112.0,
+        translating_mass_material_kg=180556.0,
+    )
+
+    empty_mass_inertia_at_pulley = _mass_inertia_at_pulley_shaft(
+        translating_mass_kg=empty_total_mass,
+        drive_pulley_radius_m=pulley_radius_m,
+        pulley_inertia_native_kg_m2=0.0,
+    )
+    loaded_mass_inertia_at_pulley = _mass_inertia_at_pulley_shaft(
+        translating_mass_kg=loaded_total_mass,
+        drive_pulley_radius_m=pulley_radius_m,
+        pulley_inertia_native_kg_m2=0.0,
+    )
+
+    empty_low_speed = _total_low_speed_inertia(
+        mass_inertia_at_pulley_shaft_kg_m2=empty_mass_inertia_at_pulley
+    )
+    loaded_low_speed = _total_low_speed_inertia(
+        mass_inertia_at_pulley_shaft_kg_m2=loaded_mass_inertia_at_pulley
+    )
+
+    empty_motor_total = _total_inertia_for_single_drive(
+        total_low_speed_inertia_kg_m2=empty_low_speed,
+        quantity_of_drives=1,
+        gearbox_ratio_motor_to_low_speed_side=gearbox_ratio,
+    )
+    loaded_motor_total = _total_inertia_for_single_drive(
+        total_low_speed_inertia_kg_m2=loaded_low_speed,
+        quantity_of_drives=1,
+        gearbox_ratio_motor_to_low_speed_side=gearbox_ratio,
+    )
+    empty_per_drive = _total_inertia_for_single_drive(
+        total_low_speed_inertia_kg_m2=empty_low_speed,
+        quantity_of_drives=4,
+        gearbox_ratio_motor_to_low_speed_side=gearbox_ratio,
+    )
+    loaded_per_drive = _total_inertia_for_single_drive(
+        total_low_speed_inertia_kg_m2=loaded_low_speed,
+        quantity_of_drives=4,
+        gearbox_ratio_motor_to_low_speed_side=gearbox_ratio,
+    )
+
+    assert empty_motor_total == pytest.approx(21.3, abs=0.1)
+    assert loaded_motor_total == pytest.approx(92.4, abs=0.1)
+    assert empty_per_drive == pytest.approx(5.3, abs=0.1)
+    assert loaded_per_drive == pytest.approx(23.1, abs=0.1)
 
 
 def test_drive_pulley_radius_from_drive_pulley_diameter_basic() -> None:
