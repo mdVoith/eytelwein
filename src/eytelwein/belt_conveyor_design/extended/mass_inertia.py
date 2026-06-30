@@ -10,6 +10,7 @@ from eytelwein.belt_conveyor_design.extended._mass_inertia import (
     _translating_mass_material,
     _total_translating_mass_empty,
     _total_translating_mass,
+    _total_translating_mass_loaded,
     _drive_pulley_radius_from_drive_pulley_diameter,
     _translating_mass_inertia_at_pulley_circumference,
     _mass_inertia_at_pulley_shaft,
@@ -313,7 +314,8 @@ def translating_mass_material(
 def total_translating_mass_empty(
     translating_mass_idler_carry_value: Quantity,
     translating_mass_idler_return_value: Quantity,
-    translating_mass_belt_per_strand_value: Quantity,
+    translating_mass_belt_carry_strand_value: Quantity,
+    translating_mass_belt_return_strand_value: Quantity,
     unit: str = "kilogram",
     precision: int | None = None,
 ) -> Quantity:
@@ -325,8 +327,10 @@ def total_translating_mass_empty(
         Carry-idler translating mass quantity.
     translating_mass_idler_return_value : Quantity
         Return-idler translating mass quantity.
-    translating_mass_belt_per_strand_value : Quantity
-        Belt translating mass quantity for one strand.
+    translating_mass_belt_carry_strand_value : Quantity
+        Belt translating mass quantity for the carry strand.
+    translating_mass_belt_return_strand_value : Quantity
+        Belt translating mass quantity for the return strand.
     unit : str, optional
         Output unit, by default ``"kilogram"``.
     precision : int | None, optional
@@ -346,7 +350,8 @@ def total_translating_mass_empty(
     try:
         idler_carry = translating_mass_idler_carry_value.to(u.kilogram)
         idler_return = translating_mass_idler_return_value.to(u.kilogram)
-        belt = translating_mass_belt_per_strand_value.to(u.kilogram)
+        belt_carry = translating_mass_belt_carry_strand_value.to(u.kilogram)
+        belt_return = translating_mass_belt_return_strand_value.to(u.kilogram)
     except Exception as exc:
         raise ValueError(f"Error in converting units: {exc}") from exc
 
@@ -354,14 +359,21 @@ def total_translating_mass_empty(
         raise ValueError("translating_mass_idler_carry_value must be non-negative")
     if idler_return.magnitude < 0:
         raise ValueError("translating_mass_idler_return_value must be non-negative")
-    if belt.magnitude < 0:
-        raise ValueError("translating_mass_belt_per_strand_value must be non-negative")
+    if belt_carry.magnitude < 0:
+        raise ValueError(
+            "translating_mass_belt_carry_strand_value must be non-negative"
+        )
+    if belt_return.magnitude < 0:
+        raise ValueError(
+            "translating_mass_belt_return_strand_value must be non-negative"
+        )
 
     result = (
         _total_translating_mass_empty(
             idler_carry.magnitude,
             idler_return.magnitude,
-            belt.magnitude,
+            belt_carry.magnitude,
+            belt_return.magnitude,
         )
         * u.kilogram
     )
@@ -372,19 +384,28 @@ def total_translating_mass_empty(
 
 
 def total_translating_mass(
-    total_translating_mass_empty_value: Quantity,
-    translating_mass_material_value: Quantity,
+    translating_mass_idler_carry_value: Quantity,
+    translating_mass_idler_return_value: Quantity,
+    translating_mass_belt_carry_strand_value: Quantity,
+    translating_mass_belt_return_strand_value: Quantity,
+    translating_mass_material_value: Quantity | None = None,
     unit: str = "kilogram",
     precision: int | None = None,
 ) -> Quantity:
-    """Calculate total translating mass for loaded conveyor.
+    """Calculate total translating mass for a conveyor segment.
 
     Parameters
     ----------
-    total_translating_mass_empty_value : Quantity
-        Empty-conveyor total translating mass quantity.
-    translating_mass_material_value : Quantity
-        Material translating mass quantity.
+    translating_mass_idler_carry_value : Quantity
+        Carry-idler translating mass quantity.
+    translating_mass_idler_return_value : Quantity
+        Return-idler translating mass quantity.
+    translating_mass_belt_carry_strand_value : Quantity
+        Belt translating mass quantity for the carry strand.
+    translating_mass_belt_return_strand_value : Quantity
+        Belt translating mass quantity for the return strand.
+    translating_mass_material_value : Quantity | None, optional
+        Material translating mass quantity, by default None (treated as zero).
     unit : str, optional
         Output unit, by default ``"kilogram"``.
     precision : int | None, optional
@@ -393,7 +414,7 @@ def total_translating_mass(
     Returns
     -------
     Quantity
-        Loaded-conveyor total translating mass in the requested output unit.
+        Total translating mass in the requested output unit.
 
     Raises
     ------
@@ -402,18 +423,95 @@ def total_translating_mass(
         requested output unit is invalid.
     """
     try:
-        empty_mass = total_translating_mass_empty_value.to(u.kilogram)
-        material_mass = translating_mass_material_value.to(u.kilogram)
+        idler_carry = translating_mass_idler_carry_value.to(u.kilogram)
+        idler_return = translating_mass_idler_return_value.to(u.kilogram)
+        belt_carry = translating_mass_belt_carry_strand_value.to(u.kilogram)
+        belt_return = translating_mass_belt_return_strand_value.to(u.kilogram)
+        material_mass = (
+            0.0
+            if translating_mass_material_value is None
+            else translating_mass_material_value.to(u.kilogram).magnitude
+        )
     except Exception as exc:
         raise ValueError(f"Error in converting units: {exc}") from exc
 
-    if empty_mass.magnitude < 0:
-        raise ValueError("total_translating_mass_empty_value must be non-negative")
-    if material_mass.magnitude < 0:
+    if idler_carry.magnitude < 0:
+        raise ValueError("translating_mass_idler_carry_value must be non-negative")
+    if idler_return.magnitude < 0:
+        raise ValueError("translating_mass_idler_return_value must be non-negative")
+    if belt_carry.magnitude < 0:
+        raise ValueError(
+            "translating_mass_belt_carry_strand_value must be non-negative"
+        )
+    if belt_return.magnitude < 0:
+        raise ValueError(
+            "translating_mass_belt_return_strand_value must be non-negative"
+        )
+    if material_mass < 0:
         raise ValueError("translating_mass_material_value must be non-negative")
 
     result = (
-        _total_translating_mass(empty_mass.magnitude, material_mass.magnitude)
+        _total_translating_mass(
+            translating_mass_idler_carry_kg=idler_carry.magnitude,
+            translating_mass_idler_return_kg=idler_return.magnitude,
+            translating_mass_belt_carry_strand_kg=belt_carry.magnitude,
+            translating_mass_belt_return_strand_kg=belt_return.magnitude,
+            translating_mass_material_kg=material_mass,
+        )
+        * u.kilogram
+    )
+    converted = result.to(_parse_unit(unit))
+    if precision is not None:
+        converted = round(converted, precision)
+    return converted
+
+
+def total_translating_mass_loaded(
+    translating_mass_idler_carry_value: Quantity,
+    translating_mass_idler_return_value: Quantity,
+    translating_mass_belt_carry_strand_value: Quantity,
+    translating_mass_belt_return_strand_value: Quantity,
+    translating_mass_material_value: Quantity,
+    unit: str = "kilogram",
+    precision: int | None = None,
+) -> Quantity:
+    """Calculate total translating mass for loaded conveyor.
+
+    This is a thin wrapper around :func:`total_translating_mass` with
+    explicit material contribution.
+    """
+    try:
+        idler_carry = translating_mass_idler_carry_value.to(u.kilogram)
+        idler_return = translating_mass_idler_return_value.to(u.kilogram)
+        belt_carry = translating_mass_belt_carry_strand_value.to(u.kilogram)
+        belt_return = translating_mass_belt_return_strand_value.to(u.kilogram)
+        material = translating_mass_material_value.to(u.kilogram)
+    except Exception as exc:
+        raise ValueError(f"Error in converting units: {exc}") from exc
+
+    if idler_carry.magnitude < 0:
+        raise ValueError("translating_mass_idler_carry_value must be non-negative")
+    if idler_return.magnitude < 0:
+        raise ValueError("translating_mass_idler_return_value must be non-negative")
+    if belt_carry.magnitude < 0:
+        raise ValueError(
+            "translating_mass_belt_carry_strand_value must be non-negative"
+        )
+    if belt_return.magnitude < 0:
+        raise ValueError(
+            "translating_mass_belt_return_strand_value must be non-negative"
+        )
+    if material.magnitude < 0:
+        raise ValueError("translating_mass_material_value must be non-negative")
+
+    result = (
+        _total_translating_mass_loaded(
+            translating_mass_idler_carry_kg=idler_carry.magnitude,
+            translating_mass_idler_return_kg=idler_return.magnitude,
+            translating_mass_belt_carry_strand_kg=belt_carry.magnitude,
+            translating_mass_belt_return_strand_kg=belt_return.magnitude,
+            translating_mass_material_kg=material.magnitude,
+        )
         * u.kilogram
     )
     converted = result.to(_parse_unit(unit))

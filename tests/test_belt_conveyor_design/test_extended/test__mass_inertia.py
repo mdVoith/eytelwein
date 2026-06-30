@@ -10,6 +10,7 @@ from eytelwein.belt_conveyor_design.extended._mass_inertia import (
     _translating_mass_material,
     _total_translating_mass_empty,
     _total_translating_mass,
+    _total_translating_mass_loaded,
     _drive_pulley_radius_from_drive_pulley_diameter,
     _translating_mass_inertia_at_pulley_circumference,
     _mass_inertia_at_pulley_shaft,
@@ -37,13 +38,37 @@ def test_translating_mass_specialized_functions_delegate_to_primitive() -> None:
 
 
 def test_total_translating_mass_empty_basic() -> None:
-    result = _total_translating_mass_empty(18503.0, 6168.0, 111393.9125)
+    result = _total_translating_mass_empty(18503.0, 6168.0, 111393.9125, 111393.9125)
     assert result == pytest.approx(247458.825, rel=0.005)
 
 
 def test_total_translating_mass_basic() -> None:
-    result = _total_translating_mass(247458.825, 536584.1)
+    result = _total_translating_mass(
+        translating_mass_idler_carry_kg=18503.0,
+        translating_mass_idler_return_kg=6168.0,
+        translating_mass_belt_carry_strand_kg=111393.9125,
+        translating_mass_belt_return_strand_kg=111393.9125,
+        translating_mass_material_kg=536584.1,
+    )
     assert result == pytest.approx(784042.925, rel=0.005)
+
+
+def test_total_translating_mass_loaded_delegates_to_canonical() -> None:
+    result_loaded = _total_translating_mass_loaded(
+        translating_mass_idler_carry_kg=18503.0,
+        translating_mass_idler_return_kg=6168.0,
+        translating_mass_belt_carry_strand_kg=111393.9125,
+        translating_mass_belt_return_strand_kg=111393.9125,
+        translating_mass_material_kg=536584.1,
+    )
+    result_canonical = _total_translating_mass(
+        translating_mass_idler_carry_kg=18503.0,
+        translating_mass_idler_return_kg=6168.0,
+        translating_mass_belt_carry_strand_kg=111393.9125,
+        translating_mass_belt_return_strand_kg=111393.9125,
+        translating_mass_material_kg=536584.1,
+    )
+    assert result_loaded == pytest.approx(result_canonical)
 
 
 def test_drive_pulley_radius_from_drive_pulley_diameter_basic() -> None:
