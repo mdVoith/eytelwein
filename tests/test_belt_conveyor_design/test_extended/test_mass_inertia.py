@@ -11,6 +11,7 @@ from eytelwein.belt_conveyor_design.extended.mass_inertia import (
     translating_mass_material,
     total_translating_mass_empty,
     total_translating_mass,
+    total_translating_mass_loaded,
     drive_pulley_radius_from_drive_pulley_diameter,
     translating_mass_inertia_at_pulley_circumference,
     mass_inertia_at_pulley_shaft,
@@ -51,20 +52,50 @@ def test_total_translating_mass_empty_spec_case() -> None:
         Quantity(6168.0 / 4303.0, u.kilogram / u.meter),
         Quantity(4303.0, u.meter),
     )
-    belt = translating_mass_belt(
+    belt_carry = translating_mass_belt(
         Quantity(25.8875, u.kilogram / u.meter),
         Quantity(4303.0, u.meter),
     )
-    result = total_translating_mass_empty(idler_carry, idler_return, belt)
+    belt_return = translating_mass_belt(
+        Quantity(25.8875, u.kilogram / u.meter),
+        Quantity(4303.0, u.meter),
+    )
+    result = total_translating_mass_empty(
+        idler_carry,
+        idler_return,
+        belt_carry,
+        belt_return,
+    )
     assert result.magnitude == pytest.approx(247458.825, rel=0.005)
 
 
 def test_total_translating_mass_spec_case() -> None:
     result = total_translating_mass(
-        Quantity(247458.825, u.kilogram),
-        Quantity(536584.1, u.kilogram),
+        translating_mass_idler_carry_value=Quantity(18503.0, u.kilogram),
+        translating_mass_idler_return_value=Quantity(6168.0, u.kilogram),
+        translating_mass_belt_carry_strand_value=Quantity(111393.9125, u.kilogram),
+        translating_mass_belt_return_strand_value=Quantity(111393.9125, u.kilogram),
+        translating_mass_material_value=Quantity(536584.1, u.kilogram),
     )
     assert result.magnitude == pytest.approx(784042.925, rel=0.005)
+
+
+def test_total_translating_mass_loaded_delegates_to_canonical() -> None:
+    loaded = total_translating_mass_loaded(
+        translating_mass_idler_carry_value=Quantity(18503.0, u.kilogram),
+        translating_mass_idler_return_value=Quantity(6168.0, u.kilogram),
+        translating_mass_belt_carry_strand_value=Quantity(111393.9125, u.kilogram),
+        translating_mass_belt_return_strand_value=Quantity(111393.9125, u.kilogram),
+        translating_mass_material_value=Quantity(536584.1, u.kilogram),
+    )
+    canonical = total_translating_mass(
+        translating_mass_idler_carry_value=Quantity(18503.0, u.kilogram),
+        translating_mass_idler_return_value=Quantity(6168.0, u.kilogram),
+        translating_mass_belt_carry_strand_value=Quantity(111393.9125, u.kilogram),
+        translating_mass_belt_return_strand_value=Quantity(111393.9125, u.kilogram),
+        translating_mass_material_value=Quantity(536584.1, u.kilogram),
+    )
+    assert loaded.magnitude == pytest.approx(canonical.magnitude)
 
 
 def test_drive_pulley_radius_from_drive_pulley_diameter_basic() -> None:

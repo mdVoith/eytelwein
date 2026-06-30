@@ -72,7 +72,7 @@ def _translating_mass_idler_return(
 def _translating_mass_belt(
     belt_line_load_kg_per_m: float, segment_length_m: float
 ) -> float:
-    """Calculate belt translating mass for one strand.
+    """Calculate belt translating mass for a given segment, which can be one or more strands, the entire belt or one single segment.
 
     Parameters
     ----------
@@ -84,7 +84,7 @@ def _translating_mass_belt(
     Returns
     -------
     float
-        Translating belt mass for one strand in kilograms.
+        Translating belt mass for the given segment in kilograms.
     """
     return _translating_mass_from_line_load_and_segment_length(
         belt_line_load_kg_per_m, segment_length_m
@@ -94,7 +94,7 @@ def _translating_mass_belt(
 def _translating_mass_material(
     material_line_load_kg_per_m: float, segment_length_m: float
 ) -> float:
-    """Calculate material translating mass.
+    """Calculate material translating mass for a given segment or the entire conveyor.
 
     Parameters
     ----------
@@ -106,7 +106,7 @@ def _translating_mass_material(
     Returns
     -------
     float
-        Translating material mass in kilograms.
+        Translating material mass for the given segment in kilograms.
     """
     return _translating_mass_from_line_load_and_segment_length(
         material_line_load_kg_per_m, segment_length_m
@@ -116,7 +116,8 @@ def _translating_mass_material(
 def _total_translating_mass_empty(
     translating_mass_idler_carry_kg: float,
     translating_mass_idler_return_kg: float,
-    translating_mass_belt_per_strand_kg: float,
+    translating_mass_belt_carry_strand_kg: float,
+    translating_mass_belt_return_strand_kg: float,
 ) -> float:
     """Calculate total translating mass for empty conveyor.
 
@@ -126,39 +127,100 @@ def _total_translating_mass_empty(
         Carry-idler translating mass in kilograms.
     translating_mass_idler_return_kg : float
         Return-idler translating mass in kilograms.
-    translating_mass_belt_per_strand_kg : float
-        Translating belt mass per strand in kilograms.
+    translating_mass_belt_carry_strand_kg : float
+        Translating belt mass for the carry strand in kilograms.
+    translating_mass_belt_return_strand_kg : float
+        Translating belt mass for the return strand in kilograms.
 
     Returns
     -------
     float
         Empty-conveyor total translating mass in kilograms.
+
+    Equation
+    --------
+    .. math::
+        m_{total, empty} = m_{idler, carry} + m_{idler, return} + m_{belt, carry} + m_{belt, return}
     """
-    return (
-        translating_mass_idler_carry_kg
-        + translating_mass_idler_return_kg
-        + 2.0 * translating_mass_belt_per_strand_kg
+    return _total_translating_mass(
+        translating_mass_idler_carry_kg=translating_mass_idler_carry_kg,
+        translating_mass_idler_return_kg=translating_mass_idler_return_kg,
+        translating_mass_belt_carry_strand_kg=translating_mass_belt_carry_strand_kg,
+        translating_mass_belt_return_strand_kg=translating_mass_belt_return_strand_kg,
+        translating_mass_material_kg=0.0,
     )
 
 
 def _total_translating_mass(
-    total_translating_mass_empty_kg: float, translating_mass_material_kg: float
+    translating_mass_idler_carry_kg: float,
+    translating_mass_idler_return_kg: float,
+    translating_mass_belt_carry_strand_kg: float,
+    translating_mass_belt_return_strand_kg: float,
+    translating_mass_material_kg: float = 0.0,
 ) -> float:
-    """Calculate total translating mass for loaded conveyor.
+    """Calculate total translating mass for a conveyor segment.
 
     Parameters
     ----------
-    total_translating_mass_empty_kg : float
-        Empty-conveyor total translating mass in kilograms.
+    translating_mass_idler_carry_kg : float
+        Carry-idler translating mass in kilograms.
+    translating_mass_idler_return_kg : float
+        Return-idler translating mass in kilograms.
+    translating_mass_belt_carry_strand_kg : float
+        Translating belt mass for the carry strand in kilograms.
+    translating_mass_belt_return_strand_kg : float
+        Translating belt mass for the return strand in kilograms.
     translating_mass_material_kg : float
-        Translating material mass in kilograms.
+        Translating material mass in kilograms, by default 0.0.
 
     Returns
     -------
     float
-        Loaded-conveyor total translating mass in kilograms.
+        Total translating mass in kilograms.
+
+    Raises
+    ------
+    ValueError
+        If any mass contribution is negative.
     """
-    return total_translating_mass_empty_kg + translating_mass_material_kg
+    if translating_mass_idler_carry_kg < 0:
+        raise ValueError("translating_mass_idler_carry_kg must be non-negative")
+    if translating_mass_idler_return_kg < 0:
+        raise ValueError("translating_mass_idler_return_kg must be non-negative")
+    if translating_mass_belt_carry_strand_kg < 0:
+        raise ValueError("translating_mass_belt_carry_strand_kg must be non-negative")
+    if translating_mass_belt_return_strand_kg < 0:
+        raise ValueError("translating_mass_belt_return_strand_kg must be non-negative")
+    if translating_mass_material_kg < 0:
+        raise ValueError("translating_mass_material_kg must be non-negative")
+    return (
+        translating_mass_idler_carry_kg
+        + translating_mass_idler_return_kg
+        + translating_mass_belt_carry_strand_kg
+        + translating_mass_belt_return_strand_kg
+        + translating_mass_material_kg
+    )
+
+
+def _total_translating_mass_loaded(
+    translating_mass_idler_carry_kg: float,
+    translating_mass_idler_return_kg: float,
+    translating_mass_belt_carry_strand_kg: float,
+    translating_mass_belt_return_strand_kg: float,
+    translating_mass_material_kg: float,
+) -> float:
+    """Calculate total translating mass for loaded conveyor.
+
+    This is a thin wrapper around :func:`_total_translating_mass` with
+    explicit material contribution.
+    """
+    return _total_translating_mass(
+        translating_mass_idler_carry_kg=translating_mass_idler_carry_kg,
+        translating_mass_idler_return_kg=translating_mass_idler_return_kg,
+        translating_mass_belt_carry_strand_kg=translating_mass_belt_carry_strand_kg,
+        translating_mass_belt_return_strand_kg=translating_mass_belt_return_strand_kg,
+        translating_mass_material_kg=translating_mass_material_kg,
+    )
 
 
 def _drive_pulley_radius_from_drive_pulley_diameter(
