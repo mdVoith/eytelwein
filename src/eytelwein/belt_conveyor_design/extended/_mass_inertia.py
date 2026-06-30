@@ -252,6 +252,7 @@ def _translating_mass_inertia_at_pulley_circumference(
     translating_mass_kg: float, drive_pulley_radius_m: float
 ) -> float:
     """Calculate translating-mass inertia contribution at pulley circumference.
+       This function converts the translating mass to an equivalent rotational inertia at the drive pulley circumference.
 
     Parameters
     ----------
