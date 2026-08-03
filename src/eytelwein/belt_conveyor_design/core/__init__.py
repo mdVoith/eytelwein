@@ -64,6 +64,8 @@ from eytelwein.belt_conveyor_design.core.belt_tensions_and_takeup_forces import 
     minimum_belt_tension_from_sag_carry,
     takeup_weight_force_from_takeup_weight,
     takeup_weight_from_takeup_weight_force,
+    rope_travel_from_takeup_travel,
+    takeup_travel_from_rope_travel,
 )
 
 # Public functions from design_of_conveyor_belt
@@ -194,6 +196,8 @@ __all__ = [
     "minimum_belt_tension_from_sag_carry",
     "takeup_weight_force_from_takeup_weight",
     "takeup_weight_from_takeup_weight_force",
+    "rope_travel_from_takeup_travel",
+    "takeup_travel_from_rope_travel",
     # Public design_of_conveyor_belt
     "belt_safety_factor_from_splice_strength_and_belt_tension",
     "rating_tension_from_belt_safety_factor_and_belt_tension",

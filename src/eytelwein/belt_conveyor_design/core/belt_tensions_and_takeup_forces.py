@@ -11,11 +11,58 @@ from eytelwein.belt_conveyor_design.core._belt_tensions_and_takeup_forces import
     _minimum_belt_tension_from_sag_carry,
     _takeup_weight_force_from_takeup_weight,
     _takeup_weight_from_takeup_weight_force,
+    _rope_travel_from_takeup_travel,
+    _takeup_travel_from_rope_travel,
 )
 from eytelwein.main.units import get_unit_registry
 
 # Get the unit registry
 u = get_unit_registry()
+
+
+def _validate_positive_count(count: int, param_name: str = "count") -> None:
+    """
+    Validate that a discrete configuration count is a positive integer.
+
+    This centralized helper is used for parameters like strand_count and
+    quantity_of_drives that represent discrete configuration counts,
+    which must be plain int (not Quantity) values.
+
+    Parameters
+    ----------
+    count : int
+        The count value to validate.
+    param_name : str, optional
+        Name of the parameter for error messages (default: "count").
+
+    Raises
+    ------
+    ValueError
+        If count is a bool (which is a subclass of int in Python).
+    ValueError
+        If count is not an integer type.
+    ValueError
+        If count is not >= 1.
+
+    Notes
+    -----
+    Discrete configuration counts (e.g., strand_count, quantity_of_drives)
+    represent architectural choices in reeving or drive design and are always
+    plain integers, never Quantity objects. This is intentional: while measured
+    values and dimensionless ratios use Quantity, configuration counts reflect
+    the logical structure of the system, not measurements with units.
+    """
+    # Explicitly reject bool (which is a subclass of int in Python)
+    if isinstance(count, bool):
+        raise ValueError(
+            f"{param_name} must be an integer, got {type(count).__name__}."
+        )
+    if not isinstance(count, int):
+        raise ValueError(
+            f"{param_name} must be an integer, got {type(count).__name__}."
+        )
+    if count <= 0:
+        raise ValueError(f"{param_name} must be a positive integer >= 1, got {count}.")
 
 
 def minimum_belt_tension_from_sag_carry(
@@ -195,20 +242,8 @@ def takeup_weight_force_from_takeup_weight(
     >>> result  # doctest: +SKIP
     29.41995... kilonewton
     """
-    # Validate strand_count
-    # Explicitly reject bool (which is a subclass of int in Python)
-    if isinstance(strand_count, bool):
-        raise ValueError(
-            f"strand_count must be an integer, got {type(strand_count).__name__}."
-        )
-    if not isinstance(strand_count, int):
-        raise ValueError(
-            f"strand_count must be an integer, got {type(strand_count).__name__}."
-        )
-    if strand_count <= 0:
-        raise ValueError(
-            f"strand_count must be a positive integer >= 1, got {strand_count}."
-        )
+    # Validate strand_count using centralized helper
+    _validate_positive_count(strand_count, "strand_count")
 
     try:
         # Convert input to standard working units (kg)
@@ -327,20 +362,8 @@ def takeup_weight_from_takeup_weight_force(
     >>> result  # doctest: +SKIP
     3000.0... kilogram
     """
-    # Validate strand_count
-    # Explicitly reject bool (which is a subclass of int in Python)
-    if isinstance(strand_count, bool):
-        raise ValueError(
-            f"strand_count must be an integer, got {type(strand_count).__name__}."
-        )
-    if not isinstance(strand_count, int):
-        raise ValueError(
-            f"strand_count must be an integer, got {type(strand_count).__name__}."
-        )
-    if strand_count <= 0:
-        raise ValueError(
-            f"strand_count must be a positive integer >= 1, got {strand_count}."
-        )
+    # Validate strand_count using centralized helper
+    _validate_positive_count(strand_count, "strand_count")
 
     try:
         # Convert input to standard working units (newtons)
@@ -389,6 +412,264 @@ def takeup_weight_from_takeup_weight_force(
 
     # Attach units to result (kg)
     result = weight_kg * u.kilogram
+
+    # Convert to requested output unit
+    try:
+        result = result.to(pint_unit)
+    except Exception as e:
+        raise ValueError(f"Error in attaching unit '{unit}': {e}")
+
+    # Apply precision rounding if specified
+    if precision is not None:
+        result = round(result, precision)
+
+    return result
+
+
+def rope_travel_from_takeup_travel(
+    takeup_travel: Quantity,
+    strand_count: int = 1,
+    unit: str = "meter",
+    precision: int | None = None,
+) -> Quantity:
+    """
+    Calculate rope travel from takeup travel in an ideal reeving system.
+
+    This function converts a takeup travel distance to a rope travel distance
+    using the ideal reeving relationship. For ideal reeving, the rope travels
+    a distance equal to the takeup travel multiplied by the strand count.
+    All inputs must be strict Quantity objects with explicit units.
+
+    Parameters
+    ----------
+    takeup_travel : Quantity
+        Takeup travel distance in meters or equivalent length units.
+    strand_count : int, optional
+        Number of strands in ideal reeving system (default: 1).
+        Must be a positive integer >= 1.
+        This is a plain integer configuration parameter, not a Quantity.
+    unit : str, optional
+        Output unit for travel result (default: "meter").
+        Common values: "meter", "millimeter".
+        Must be a length unit.
+    precision : int or None, optional
+        Decimal places to round the result to (default: None).
+        If None, no rounding is applied.
+
+    Returns
+    -------
+    Quantity
+        Rope travel distance in the specified output unit.
+
+    Raises
+    ------
+    ValueError
+        If unit conversion fails due to incompatible input units.
+    ValueError
+        If takeup_travel is negative.
+    ValueError
+        If unit is invalid or incompatible with length.
+    ValueError
+        If strand_count is not a positive integer.
+
+    Notes
+    -----
+    **Why strand_count is plain int, not Quantity:**
+    Discrete configuration counts like strand_count represent the logical
+    structure of a reeving system (2-part, 4-part, etc.), not measured values.
+    They are always plain integers, while measured travel distances and
+    dimensionless computed ratios use Quantity objects.
+
+    **Field-error prevention:**
+    The coupled force/travel transforms help prevent a common design error:
+    if a load calculation divides force by strand_count for mechanical
+    advantage while forgetting the reciprocal travel penalty (multiplying
+    by strand_count), the system appears to gain energy. Using coupled
+    APIs ensures both transforms are applied correctly.
+
+    Examples
+    --------
+    >>> from pint import Quantity
+    >>> from eytelwein.main.units import get_unit_registry
+    >>> u = get_unit_registry()
+    >>> result = rope_travel_from_takeup_travel(
+    ...     takeup_travel=Quantity(1.5, u.meter), strand_count=2
+    ... )
+    >>> result  # doctest: +SKIP
+    3.0 meter
+    """
+    # Validate strand_count using centralized helper
+    _validate_positive_count(strand_count, "strand_count")
+
+    try:
+        # Convert input to standard working units (meters)
+        takeup_travel_m = takeup_travel.to(u.meter)
+    except Exception as e:
+        raise ValueError(f"Error in unit conversion: {e}")
+
+    # Validate physical constraints after unit conversion
+    # Handle both scalar and array magnitudes
+    magnitude = takeup_travel_m.magnitude
+    try:
+        import numpy as np
+
+        if isinstance(magnitude, np.ndarray):
+            if np.any(magnitude < 0):
+                raise ValueError(
+                    f"takeup_travel cannot be negative, got {takeup_travel_m}"
+                )
+        elif magnitude < 0:
+            raise ValueError(f"takeup_travel cannot be negative, got {takeup_travel_m}")
+    except (ImportError, TypeError):
+        # Fall back to simple comparison if numpy not available or comparison fails
+        try:
+            if magnitude < 0:
+                raise ValueError(
+                    f"takeup_travel cannot be negative, got {takeup_travel_m}"
+                )
+        except TypeError:
+            raise ValueError(f"takeup_travel cannot be negative, got {takeup_travel_m}")
+
+    # Ensure the output unit is valid
+    try:
+        pint_unit = u.parse_units(unit)
+    except Exception as e:
+        raise ValueError(f"Invalid unit: {unit}. Error: {e}")
+
+    # Call private implementation with magnitude value and strand_count
+    travel_m = _rope_travel_from_takeup_travel(
+        takeup_travel_m=takeup_travel_m.magnitude, strand_count=strand_count
+    )
+
+    # Attach units to result (meters)
+    result = travel_m * u.meter
+
+    # Convert to requested output unit
+    try:
+        result = result.to(pint_unit)
+    except Exception as e:
+        raise ValueError(f"Error in attaching unit '{unit}': {e}")
+
+    # Apply precision rounding if specified
+    if precision is not None:
+        result = round(result, precision)
+
+    return result
+
+
+def takeup_travel_from_rope_travel(
+    rope_travel: Quantity,
+    strand_count: int = 1,
+    unit: str = "meter",
+    precision: int | None = None,
+) -> Quantity:
+    """
+    Calculate takeup travel from rope travel in an ideal reeving system (inverse).
+
+    This function converts a rope travel distance to a takeup travel distance
+    using the inverse ideal reeving relationship. For ideal reeving, the takeup
+    travel is the rope travel divided by the strand count.
+    All inputs must be strict Quantity objects with explicit units.
+
+    Parameters
+    ----------
+    rope_travel : Quantity
+        Rope travel distance in meters or equivalent length units.
+    strand_count : int, optional
+        Number of strands in ideal reeving system (default: 1).
+        Must be a positive integer >= 1.
+        This is a plain integer configuration parameter, not a Quantity.
+    unit : str, optional
+        Output unit for travel result (default: "meter").
+        Common values: "meter", "millimeter".
+        Must be a length unit.
+    precision : int or None, optional
+        Decimal places to round the result to (default: None).
+        If None, no rounding is applied.
+
+    Returns
+    -------
+    Quantity
+        Takeup travel distance in the specified output unit.
+
+    Raises
+    ------
+    ValueError
+        If unit conversion fails due to incompatible input units.
+    ValueError
+        If rope_travel is negative.
+    ValueError
+        If unit is invalid or incompatible with length.
+    ValueError
+        If strand_count is not a positive integer.
+
+    Notes
+    -----
+    **Why strand_count is plain int, not Quantity:**
+    Discrete configuration counts like strand_count represent the logical
+    structure of a reeving system (2-part, 4-part, etc.), not measured values.
+    They are always plain integers, while measured travel distances and
+    dimensionless computed ratios use Quantity objects.
+
+    **Field-error prevention:**
+    The coupled force/travel transforms help prevent a common design error:
+    if a load calculation divides force by strand_count for mechanical
+    advantage while forgetting the reciprocal travel penalty (multiplying
+    by strand_count), the system appears to gain energy. Using coupled
+    APIs ensures both transforms are applied correctly.
+
+    Examples
+    --------
+    >>> from pint import Quantity
+    >>> from eytelwein.main.units import get_unit_registry
+    >>> u = get_unit_registry()
+    >>> result = takeup_travel_from_rope_travel(
+    ...     rope_travel=Quantity(3.0, u.meter), strand_count=2
+    ... )
+    >>> result  # doctest: +SKIP
+    1.5 meter
+    """
+    # Validate strand_count using centralized helper
+    _validate_positive_count(strand_count, "strand_count")
+
+    try:
+        # Convert input to standard working units (meters)
+        rope_travel_m = rope_travel.to(u.meter)
+    except Exception as e:
+        raise ValueError(f"Error in unit conversion: {e}")
+
+    # Validate physical constraints after unit conversion
+    # Handle both scalar and array magnitudes
+    magnitude = rope_travel_m.magnitude
+    try:
+        import numpy as np
+
+        if isinstance(magnitude, np.ndarray):
+            if np.any(magnitude < 0):
+                raise ValueError(f"rope_travel cannot be negative, got {rope_travel_m}")
+        elif magnitude < 0:
+            raise ValueError(f"rope_travel cannot be negative, got {rope_travel_m}")
+    except (ImportError, TypeError):
+        # Fall back to simple comparison if numpy not available or comparison fails
+        try:
+            if magnitude < 0:
+                raise ValueError(f"rope_travel cannot be negative, got {rope_travel_m}")
+        except TypeError:
+            raise ValueError(f"rope_travel cannot be negative, got {rope_travel_m}")
+
+    # Ensure the output unit is valid
+    try:
+        pint_unit = u.parse_units(unit)
+    except Exception as e:
+        raise ValueError(f"Invalid unit: {unit}. Error: {e}")
+
+    # Call private implementation with magnitude value and strand_count
+    travel_m = _takeup_travel_from_rope_travel(
+        rope_travel_m=rope_travel_m.magnitude, strand_count=strand_count
+    )
+
+    # Attach units to result (meters)
+    result = travel_m * u.meter
 
     # Convert to requested output unit
     try:
