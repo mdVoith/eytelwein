@@ -1,3 +1,16 @@
+## v0.1.7 (2026-08-03)
+
+### Feat
+
+- add coupled reeving public APIs
+- add reeving travel transforms and count docs
+- add strand_count parameter to takeup weight calculations and enhance validation
+
+### Refactor
+
+- replace reeving coupled force api
+- restore gravity and add reeving force primitives
+
 ## v0.1.6 (2026-08-03)
 
 ### Feat
