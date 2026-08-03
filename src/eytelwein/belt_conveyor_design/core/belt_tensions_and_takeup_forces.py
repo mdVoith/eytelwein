@@ -143,12 +143,14 @@ def takeup_weight_force_from_takeup_weight(
     takeup_weight: Quantity,
     unit: str = "kilonewton",
     precision: int | None = None,
+    strand_count: int = 1,
 ) -> Quantity:
     """
     Calculate takeup weight force from takeup weight.
 
     This function converts a mass-based takeup weight to a force quantity
-    using the standard gravitational acceleration constant.
+    using the standard gravitational acceleration constant and optional
+    reeving (strand count) configuration.
     All inputs must be strict Quantity objects with explicit units.
 
     Parameters
@@ -162,6 +164,9 @@ def takeup_weight_force_from_takeup_weight(
     precision : int or None, optional
         Decimal places to round the result to (default: None).
         If None, no rounding is applied.
+    strand_count : int, optional
+        Number of strands in ideal reeving system (default: 1).
+        Must be a positive integer >= 1.
 
     Returns
     -------
@@ -176,6 +181,8 @@ def takeup_weight_force_from_takeup_weight(
         If takeup_weight is negative.
     ValueError
         If unit is invalid or incompatible with force.
+    ValueError
+        If strand_count is not a positive integer.
 
     Examples
     --------
@@ -188,6 +195,21 @@ def takeup_weight_force_from_takeup_weight(
     >>> result  # doctest: +SKIP
     29.41995... kilonewton
     """
+    # Validate strand_count
+    # Explicitly reject bool (which is a subclass of int in Python)
+    if isinstance(strand_count, bool):
+        raise ValueError(
+            f"strand_count must be an integer, got {type(strand_count).__name__}."
+        )
+    if not isinstance(strand_count, int):
+        raise ValueError(
+            f"strand_count must be an integer, got {type(strand_count).__name__}."
+        )
+    if strand_count <= 0:
+        raise ValueError(
+            f"strand_count must be a positive integer >= 1, got {strand_count}."
+        )
+
     try:
         # Convert input to standard working units (kg)
         takeup_weight_kg = takeup_weight.to(u.kilogram)
@@ -195,8 +217,32 @@ def takeup_weight_force_from_takeup_weight(
         raise ValueError(f"Error in unit conversion: {e}")
 
     # Validate physical constraints after unit conversion
-    if takeup_weight_kg.magnitude < 0:
-        raise ValueError(f"takeup_weight cannot be negative, got {takeup_weight_kg}")
+    # Handle both scalar and array magnitudes
+    magnitude = takeup_weight_kg.magnitude
+    try:
+        import numpy as np
+
+        if isinstance(magnitude, np.ndarray):
+            if np.any(magnitude < 0):
+                raise ValueError(
+                    f"takeup_weight cannot be negative, got {takeup_weight_kg}"
+                )
+        elif magnitude < 0:
+            raise ValueError(
+                f"takeup_weight cannot be negative, got {takeup_weight_kg}"
+            )
+    except (ImportError, TypeError):
+        # Fall back to simple comparison if numpy not available or comparison fails
+        # Normalize any comparison error to ValueError for consistent behavior
+        try:
+            if magnitude < 0:
+                raise ValueError(
+                    f"takeup_weight cannot be negative, got {takeup_weight_kg}"
+                )
+        except TypeError:
+            raise ValueError(
+                f"takeup_weight cannot be negative, got {takeup_weight_kg}"
+            )
 
     # Ensure the output unit is valid
     try:
@@ -204,9 +250,9 @@ def takeup_weight_force_from_takeup_weight(
     except Exception as e:
         raise ValueError(f"Invalid unit: {unit}. Error: {e}")
 
-    # Call private implementation with magnitude value
+    # Call private implementation with magnitude value and strand_count
     force_newtons = _takeup_weight_force_from_takeup_weight(
-        takeup_weight_kg=takeup_weight_kg.magnitude
+        takeup_weight_kg=takeup_weight_kg.magnitude, strand_count=strand_count
     )
 
     # Attach units to result (newtons)
@@ -229,12 +275,14 @@ def takeup_weight_from_takeup_weight_force(
     takeup_weight_force: Quantity,
     unit: str = "kilogram",
     precision: int | None = None,
+    strand_count: int = 1,
 ) -> Quantity:
     """
     Calculate takeup weight from takeup weight force.
 
     This function converts a force-based takeup weight force to a mass quantity
-    using the standard gravitational acceleration constant.
+    using the standard gravitational acceleration constant and optional
+    reeving (strand count) configuration.
     All inputs must be strict Quantity objects with explicit units.
 
     Parameters
@@ -248,6 +296,9 @@ def takeup_weight_from_takeup_weight_force(
     precision : int or None, optional
         Decimal places to round the result to (default: None).
         If None, no rounding is applied.
+    strand_count : int, optional
+        Number of strands in ideal reeving system (default: 1).
+        Must be a positive integer >= 1.
 
     Returns
     -------
@@ -262,6 +313,8 @@ def takeup_weight_from_takeup_weight_force(
         If takeup_weight_force is negative.
     ValueError
         If unit is invalid or incompatible with mass.
+    ValueError
+        If strand_count is not a positive integer.
 
     Examples
     --------
@@ -274,6 +327,21 @@ def takeup_weight_from_takeup_weight_force(
     >>> result  # doctest: +SKIP
     3000.0... kilogram
     """
+    # Validate strand_count
+    # Explicitly reject bool (which is a subclass of int in Python)
+    if isinstance(strand_count, bool):
+        raise ValueError(
+            f"strand_count must be an integer, got {type(strand_count).__name__}."
+        )
+    if not isinstance(strand_count, int):
+        raise ValueError(
+            f"strand_count must be an integer, got {type(strand_count).__name__}."
+        )
+    if strand_count <= 0:
+        raise ValueError(
+            f"strand_count must be a positive integer >= 1, got {strand_count}."
+        )
+
     try:
         # Convert input to standard working units (newtons)
         takeup_weight_force_n = takeup_weight_force.to(u.newton)
@@ -281,10 +349,32 @@ def takeup_weight_from_takeup_weight_force(
         raise ValueError(f"Error in unit conversion: {e}")
 
     # Validate physical constraints after unit conversion
-    if takeup_weight_force_n.magnitude < 0:
-        raise ValueError(
-            f"takeup_weight_force cannot be negative, got {takeup_weight_force_n}"
-        )
+    # Handle both scalar and array magnitudes
+    magnitude = takeup_weight_force_n.magnitude
+    try:
+        import numpy as np
+
+        if isinstance(magnitude, np.ndarray):
+            if np.any(magnitude < 0):
+                raise ValueError(
+                    f"takeup_weight_force cannot be negative, got {takeup_weight_force_n}"
+                )
+        elif magnitude < 0:
+            raise ValueError(
+                f"takeup_weight_force cannot be negative, got {takeup_weight_force_n}"
+            )
+    except (ImportError, TypeError):
+        # Fall back to simple comparison if numpy not available or comparison fails
+        # Normalize any comparison error to ValueError for consistent behavior
+        try:
+            if magnitude < 0:
+                raise ValueError(
+                    f"takeup_weight_force cannot be negative, got {takeup_weight_force_n}"
+                )
+        except TypeError:
+            raise ValueError(
+                f"takeup_weight_force cannot be negative, got {takeup_weight_force_n}"
+            )
 
     # Ensure the output unit is valid
     try:
@@ -292,9 +382,9 @@ def takeup_weight_from_takeup_weight_force(
     except Exception as e:
         raise ValueError(f"Invalid unit: {unit}. Error: {e}")
 
-    # Call private implementation with magnitude value
+    # Call private implementation with magnitude value and strand_count
     weight_kg = _takeup_weight_from_takeup_weight_force(
-        takeup_weight_force_n=takeup_weight_force_n.magnitude
+        takeup_weight_force_n=takeup_weight_force_n.magnitude, strand_count=strand_count
     )
 
     # Attach units to result (kg)
