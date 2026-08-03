@@ -180,12 +180,10 @@ belt_width = Quantity(0.6, u.meter)      # Measured physical width
 
 ### Validation Pattern for Discrete Counts
 
-Use the centralized `_validate_positive_count()` helper in `belt_conveyor_design.core.belt_tensions_and_takeup_forces`:
+Use the centralized `validate_positive_count()` helper in `eytelwein.main.validation`:
 
 ```python
-from eytelwein.belt_conveyor_design.core.belt_tensions_and_takeup_forces import (
-    _validate_positive_count,
-)
+from eytelwein.main.validation import validate_positive_count
 
 def rope_travel_from_takeup_travel(
     takeup_travel: Quantity,
@@ -195,7 +193,7 @@ def rope_travel_from_takeup_travel(
 ) -> Quantity:
     """Calculate rope travel from takeup travel."""
     # Validate the discrete count parameter
-    _validate_positive_count(strand_count, "strand_count")
+    validate_positive_count(strand_count, "strand_count")
 
     # ... rest of implementation
 ```
