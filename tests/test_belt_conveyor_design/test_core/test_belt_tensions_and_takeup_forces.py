@@ -7,6 +7,8 @@ from eytelwein.belt_conveyor_design.core.belt_tensions_and_takeup_forces import 
     takeup_weight_from_takeup_weight_force,
     rope_travel_from_takeup_travel,
     takeup_travel_from_rope_travel,
+    effort_force_from_load_force,
+    load_force_from_effort_force,
 )
 from eytelwein.main.units import get_unit_registry
 
@@ -458,258 +460,202 @@ class TestTakeupWeightFromTakeupWeightForcePublic:
         assert result.units == u.kilogram
 
 
-class TestTakeupWeightForceFromTakeupWeightWithStrandCountPublic:
-    """Test suite for public takeup_weight_force_from_takeup_weight with strand_count."""
 
-    def test_identity_at_strand_count_one(self):
-        """Verify backward compatibility: strand_count=1 gives same result as default."""
-        takeup_weight = Quantity(3000.0, u.kilogram)
 
-        result = takeup_weight_force_from_takeup_weight(
-            takeup_weight=takeup_weight, strand_count=1
+class TestEffortForceFromLoadForcePublic:
+    """Test suite for public effort_force_from_load_force function."""
+
+    def test_effort_force_from_load_force_happy_path(self):
+        """Convert load force to effort force with typical value and strand_count=1."""
+        load_force = Quantity(2000.0, u.newton)
+
+        result = effort_force_from_load_force(
+            load_force=load_force, strand_count=1
         )
 
-        # F = 3000 kg * 9.80665 m/s² / 1 = 29419.95 N = 29.41995 kN
-        assert result.magnitude == pytest.approx(29.41995, rel=1e-4)
+        # effort = 2000 N / 1 = 2000 N = 2 kN
+        assert result.magnitude == pytest.approx(2.0, rel=1e-4)
         assert result.units == u.kilonewton
 
-    def test_default_strand_count_is_one(self):
-        """Default strand_count should be 1."""
-        takeup_weight = Quantity(3000.0, u.kilogram)
+    def test_effort_force_from_load_force_two_strands(self):
+        """Verify ideal reeving: effort = load / strand_count."""
+        load_force = Quantity(2000.0, u.newton)
 
-        result_with_default = takeup_weight_force_from_takeup_weight(
-            takeup_weight=takeup_weight
-        )
-        result_with_explicit_one = takeup_weight_force_from_takeup_weight(
-            takeup_weight=takeup_weight, strand_count=1
+        result = effort_force_from_load_force(
+            load_force=load_force, strand_count=2, unit="newton"
         )
 
-        assert result_with_default.magnitude == pytest.approx(
-            result_with_explicit_one.magnitude, rel=1e-9
-        )
-
-    def test_reeving_scaling_two_strands(self):
-        """Verify ideal reeving: F = m * g / strand_count."""
-        takeup_weight = Quantity(3000.0, u.kilogram)
-
-        result = takeup_weight_force_from_takeup_weight(
-            takeup_weight=takeup_weight, strand_count=2
-        )
-
-        # F = 3000 * 9.80665 / 2 = 14709.975 N = 14.709975 kN
-        expected = 3000.0 * 9.80665 / 2 / 1000  # Convert to kN
-        assert result.magnitude == pytest.approx(expected, rel=1e-4)
-        assert result.units == u.kilonewton
-
-    def test_reeving_scaling_four_strands(self):
-        """Verify ideal reeving with 4 strands."""
-        takeup_weight = Quantity(3000.0, u.kilogram)
-
-        result = takeup_weight_force_from_takeup_weight(
-            takeup_weight=takeup_weight, strand_count=4, unit="newton"
-        )
-
-        # F = 3000 * 9.80665 / 4 = 7354.9875 N
-        expected = 3000.0 * 9.80665 / 4
-        assert result.magnitude == pytest.approx(expected, rel=1e-4)
+        # effort = 2000 / 2 = 1000 N
+        assert result.magnitude == pytest.approx(1000.0, rel=1e-4)
         assert result.units == u.newton
 
-    def test_unit_conversion_with_strand_count(self):
-        """Unit conversion still works with strand_count parameter."""
-        takeup_weight = Quantity(3000000.0, u.gram)  # 3000 kg in grams
+    def test_effort_force_from_load_force_four_strands(self):
+        """Verify ideal reeving with 4 strands."""
+        load_force = Quantity(4000.0, u.newton)
 
-        result = takeup_weight_force_from_takeup_weight(
-            takeup_weight=takeup_weight, strand_count=2, unit="newton"
+        result = effort_force_from_load_force(
+            load_force=load_force, strand_count=4, unit="kilonewton"
         )
 
-        # Should match 3000 kg result with 2 strands
-        expected = 3000.0 * 9.80665 / 2
-        assert result.magnitude == pytest.approx(expected, rel=1e-4)
+        # effort = 4000 / 4 = 1000 N = 1 kN
+        assert result.magnitude == pytest.approx(1.0, rel=1e-4)
 
-    def test_negative_strand_count_raises_error(self):
-        """Negative strand_count should raise ValueError."""
-        takeup_weight = Quantity(3000.0, u.kilogram)
+    def test_effort_force_from_load_force_unit_conversion(self):
+        """Test unit conversion for load force input."""
+        load_force = Quantity(2.0, u.kilonewton)
 
-        with pytest.raises(ValueError, match="strand_count.*must be.*positive"):
-            takeup_weight_force_from_takeup_weight(
-                takeup_weight=takeup_weight, strand_count=-1
-            )
-
-    def test_zero_strand_count_raises_error(self):
-        """strand_count=0 should raise ValueError."""
-        takeup_weight = Quantity(3000.0, u.kilogram)
-
-        with pytest.raises(ValueError, match="strand_count.*must be.*positive"):
-            takeup_weight_force_from_takeup_weight(
-                takeup_weight=takeup_weight, strand_count=0
-            )
-
-    def test_negative_weight_still_rejected(self):
-        """Negative weight should still be rejected after unit conversion."""
-        takeup_weight = Quantity(-3000.0, u.kilogram)
-
-        with pytest.raises(ValueError, match="takeup_weight cannot be negative"):
-            takeup_weight_force_from_takeup_weight(
-                takeup_weight=takeup_weight, strand_count=2
-            )
-
-    def test_strand_count_not_integer_raises_error(self):
-        """Non-integer strand_count should raise ValueError."""
-        takeup_weight = Quantity(3000.0, u.kilogram)
-
-        with pytest.raises(ValueError, match="strand_count.*integer"):
-            takeup_weight_force_from_takeup_weight(
-                takeup_weight=takeup_weight, strand_count=2.5
-            )
-
-    def test_strand_count_with_array_quantity(self):
-        """Array Quantity input should broadcast with strand_count."""
-        import numpy as np
-
-        weights = np.array([1000.0, 2000.0, 3000.0])
-        takeup_weight = Quantity(weights, u.kilogram)
-
-        result = takeup_weight_force_from_takeup_weight(
-            takeup_weight=takeup_weight, strand_count=2, unit="newton"
+        result = effort_force_from_load_force(
+            load_force=load_force, strand_count=2, unit="newton"
         )
 
-        # Each should be weight * g / 2
-        expected = weights * 9.80665 / 2
-        assert np.allclose(result.magnitude, expected, rtol=1e-4)
+        # effort = 2000 N / 2 = 1000 N
+        assert result.magnitude == pytest.approx(1000.0, rel=1e-4)
 
-
-class TestTakeupWeightFromTakeupWeightForceWithStrandCountPublic:
-    """Test suite for public takeup_weight_from_takeup_weight_force with strand_count."""
-
-    def test_identity_at_strand_count_one(self):
-        """Verify backward compatibility: strand_count=1 gives same result as default."""
-        takeup_weight_force = Quantity(29419.95, u.newton)
-
-        result = takeup_weight_from_takeup_weight_force(
-            takeup_weight_force=takeup_weight_force, strand_count=1
-        )
-
-        # m = 29419.95 N / 9.80665 m/s² / 1 = 3000 kg
-        assert result.magnitude == pytest.approx(3000.0, rel=1e-4)
-        assert result.units == u.kilogram
-
-    def test_default_strand_count_is_one(self):
+    def test_effort_force_from_load_force_default_strand_count(self):
         """Default strand_count should be 1."""
-        takeup_weight_force = Quantity(29419.95, u.newton)
+        load_force = Quantity(2000.0, u.newton)
 
-        result_with_default = takeup_weight_from_takeup_weight_force(
-            takeup_weight_force=takeup_weight_force
-        )
-        result_with_explicit_one = takeup_weight_from_takeup_weight_force(
-            takeup_weight_force=takeup_weight_force, strand_count=1
+        result_with_default = effort_force_from_load_force(load_force=load_force)
+        result_with_one = effort_force_from_load_force(
+            load_force=load_force, strand_count=1
         )
 
         assert result_with_default.magnitude == pytest.approx(
-            result_with_explicit_one.magnitude, rel=1e-9
+            result_with_one.magnitude, rel=1e-9
         )
 
-    def test_reeving_inverse_two_strands(self):
-        """Verify ideal reeving inverse: m = F * strand_count / g."""
-        takeup_weight_force = Quantity(14709.975, u.newton)
+    def test_effort_force_from_load_force_negative_load_raises_error(self):
+        """Negative load force should raise ValueError."""
+        load_force = Quantity(-2000.0, u.newton)
 
-        result = takeup_weight_from_takeup_weight_force(
-            takeup_weight_force=takeup_weight_force, strand_count=2
-        )
+        with pytest.raises(ValueError, match="load_force cannot be negative"):
+            effort_force_from_load_force(load_force=load_force)
 
-        # m = 14709.975 * 2 / 9.80665 = 3000 kg
-        expected = 14709.975 * 2 / 9.80665
-        assert result.magnitude == pytest.approx(expected, rel=1e-4)
-        assert result.units == u.kilogram
-
-    def test_reeving_inverse_four_strands(self):
-        """Verify ideal reeving inverse with 4 strands."""
-        takeup_weight_force = Quantity(7354.9875, u.newton)
-
-        result = takeup_weight_from_takeup_weight_force(
-            takeup_weight_force=takeup_weight_force, strand_count=4, unit="kilogram"
-        )
-
-        # m = 7354.9875 * 4 / 9.80665 = 3000 kg
-        expected = 7354.9875 * 4 / 9.80665
-        assert result.magnitude == pytest.approx(expected, rel=1e-4)
-
-    def test_unit_conversion_with_strand_count(self):
-        """Unit conversion still works with strand_count parameter."""
-        takeup_weight_force = Quantity(14709.975, u.kilonewton)  # Convert from kN to N internally
-
-        result = takeup_weight_from_takeup_weight_force(
-            takeup_weight_force=takeup_weight_force, strand_count=2, unit="kilogram"
-        )
-
-        # Should match expected value
-        expected = 14709.975 * 1000 * 2 / 9.80665  # kN to N conversion
-        assert result.magnitude == pytest.approx(expected, rel=1e-4)
-
-    def test_negative_strand_count_raises_error(self):
+    def test_effort_force_from_load_force_negative_strand_count_raises_error(self):
         """Negative strand_count should raise ValueError."""
-        takeup_weight_force = Quantity(29419.95, u.newton)
-
-        with pytest.raises(ValueError, match="strand_count.*negative|must be.*positive"):
-            takeup_weight_from_takeup_weight_force(
-                takeup_weight_force=takeup_weight_force, strand_count=-1
-            )
-
-    def test_zero_strand_count_raises_error(self):
-        """strand_count=0 should raise ValueError."""
-        takeup_weight_force = Quantity(29419.95, u.newton)
+        load_force = Quantity(2000.0, u.newton)
 
         with pytest.raises(ValueError, match="strand_count.*must be.*positive"):
-            takeup_weight_from_takeup_weight_force(
-                takeup_weight_force=takeup_weight_force, strand_count=0
-            )
+            effort_force_from_load_force(load_force=load_force, strand_count=-1)
 
-    def test_negative_force_still_rejected(self):
-        """Negative force should still be rejected after unit conversion."""
-        takeup_weight_force = Quantity(-29419.95, u.newton)
+    def test_effort_force_from_load_force_zero_strand_count_raises_error(self):
+        """strand_count=0 should raise ValueError."""
+        load_force = Quantity(2000.0, u.newton)
 
-        with pytest.raises(ValueError, match="takeup_weight_force cannot be negative"):
-            takeup_weight_from_takeup_weight_force(
-                takeup_weight_force=takeup_weight_force, strand_count=2
-            )
+        with pytest.raises(ValueError, match="strand_count.*must be.*positive"):
+            effort_force_from_load_force(load_force=load_force, strand_count=0)
 
-    def test_strand_count_not_integer_raises_error(self):
+    def test_effort_force_from_load_force_non_integer_strand_count_raises_error(self):
         """Non-integer strand_count should raise ValueError."""
-        takeup_weight_force = Quantity(29419.95, u.newton)
+        load_force = Quantity(2000.0, u.newton)
 
         with pytest.raises(ValueError, match="strand_count.*integer"):
-            takeup_weight_from_takeup_weight_force(
-                takeup_weight_force=takeup_weight_force, strand_count=2.5
-            )
+            effort_force_from_load_force(load_force=load_force, strand_count=2.5)
 
-    def test_round_trip_force_weight_force_with_strand_count(self):
-        """Round-trip: force → weight → force should preserve value at any strand_count."""
-        takeup_weight_force = Quantity(29419.95, u.newton)
 
-        for sc in [1, 2, 3, 4]:
-            weight = takeup_weight_from_takeup_weight_force(
-                takeup_weight_force=takeup_weight_force, strand_count=sc
-            )
-            recovered_force = takeup_weight_force_from_takeup_weight(
-                takeup_weight=weight, strand_count=sc, unit="newton"
-            )
-            assert recovered_force.magnitude == pytest.approx(
-                takeup_weight_force.magnitude, rel=1e-4
-            )
+class TestLoadForceFromEffortForcePublic:
+    """Test suite for public load_force_from_effort_force function."""
 
-    def test_strand_count_with_array_quantity(self):
-        """Array Quantity input should broadcast with strand_count."""
-        import numpy as np
+    def test_load_force_from_effort_force_happy_path(self):
+        """Convert effort force to load force with typical value and strand_count=1."""
+        effort_force = Quantity(2000.0, u.newton)
 
-        forces = np.array([9806.65, 19613.3, 29419.95])
-        takeup_weight_force = Quantity(forces, u.newton)
-
-        result = takeup_weight_from_takeup_weight_force(
-            takeup_weight_force=takeup_weight_force, strand_count=2, unit="kilogram"
+        result = load_force_from_effort_force(
+            effort_force=effort_force, strand_count=1
         )
 
-        # Each should be force * 2 / g
-        expected = forces * 2 / 9.80665
-        assert np.allclose(result.magnitude, expected, rtol=1e-4)
+        # load = 2000 N * 1 = 2000 N = 2 kN
+        assert result.magnitude == pytest.approx(2.0, rel=1e-4)
+        assert result.units == u.kilonewton
+
+    def test_load_force_from_effort_force_two_strands(self):
+        """Verify ideal reeving inverse: load = effort * strand_count."""
+        effort_force = Quantity(1000.0, u.newton)
+
+        result = load_force_from_effort_force(
+            effort_force=effort_force, strand_count=2, unit="newton"
+        )
+
+        # load = 1000 * 2 = 2000 N
+        assert result.magnitude == pytest.approx(2000.0, rel=1e-4)
+        assert result.units == u.newton
+
+    def test_load_force_from_effort_force_four_strands(self):
+        """Verify ideal reeving inverse with 4 strands."""
+        effort_force = Quantity(1000.0, u.newton)
+
+        result = load_force_from_effort_force(
+            effort_force=effort_force, strand_count=4, unit="kilonewton"
+        )
+
+        # load = 1000 * 4 = 4000 N = 4 kN
+        assert result.magnitude == pytest.approx(4.0, rel=1e-4)
+
+    def test_load_force_from_effort_force_unit_conversion(self):
+        """Test unit conversion for effort force input."""
+        effort_force = Quantity(1.0, u.kilonewton)
+
+        result = load_force_from_effort_force(
+            effort_force=effort_force, strand_count=2, unit="newton"
+        )
+
+        # load = 1000 * 2 = 2000 N
+        assert result.magnitude == pytest.approx(2000.0, rel=1e-4)
+
+    def test_load_force_from_effort_force_default_strand_count(self):
+        """Default strand_count should be 1."""
+        effort_force = Quantity(2000.0, u.newton)
+
+        result_with_default = load_force_from_effort_force(effort_force=effort_force)
+        result_with_one = load_force_from_effort_force(
+            effort_force=effort_force, strand_count=1
+        )
+
+        assert result_with_default.magnitude == pytest.approx(
+            result_with_one.magnitude, rel=1e-9
+        )
+
+    def test_load_force_from_effort_force_negative_effort_raises_error(self):
+        """Negative effort force should raise ValueError."""
+        effort_force = Quantity(-2000.0, u.newton)
+
+        with pytest.raises(ValueError, match="effort_force cannot be negative"):
+            load_force_from_effort_force(effort_force=effort_force)
+
+    def test_load_force_from_effort_force_negative_strand_count_raises_error(self):
+        """Negative strand_count should raise ValueError."""
+        effort_force = Quantity(2000.0, u.newton)
+
+        with pytest.raises(ValueError, match="strand_count.*must be.*positive"):
+            load_force_from_effort_force(effort_force=effort_force, strand_count=-1)
+
+    def test_load_force_from_effort_force_zero_strand_count_raises_error(self):
+        """strand_count=0 should raise ValueError."""
+        effort_force = Quantity(2000.0, u.newton)
+
+        with pytest.raises(ValueError, match="strand_count.*must be.*positive"):
+            load_force_from_effort_force(effort_force=effort_force, strand_count=0)
+
+    def test_load_force_from_effort_force_non_integer_strand_count_raises_error(self):
+        """Non-integer strand_count should raise ValueError."""
+        effort_force = Quantity(2000.0, u.newton)
+
+        with pytest.raises(ValueError, match="strand_count.*integer"):
+            load_force_from_effort_force(effort_force=effort_force, strand_count=2.5)
+
+    def test_round_trip_effort_load_effort(self):
+        """Round-trip: effort → load → effort should preserve value at any strand_count."""
+        for sc in [1, 2, 3, 4]:
+            original_effort = Quantity(1000.0, u.newton)
+            load = load_force_from_effort_force(
+                effort_force=original_effort, strand_count=sc
+            )
+            recovered_effort = effort_force_from_load_force(
+                load_force=load, strand_count=sc, unit="newton"
+            )
+            assert recovered_effort.magnitude == pytest.approx(
+                original_effort.magnitude, rel=1e-4
+            )
 
 
 class TestRopeTravelFromTakeupTravelPublic:
@@ -959,44 +905,50 @@ class TestTakeupTravelFromRopeTravelPublic:
         assert np.allclose(result.magnitude, expected, rtol=1e-9)
 
 
-class TestBoolStrandCountRejection:
-    """Test suite for explicit bool rejection in strand_count parameter."""
+class TestWorkedReevingExamplesPublic:
+    """Pin exact worked reeving examples discussed during design review."""
 
-    def test_bool_true_strand_count_rejected_takeup_weight_force_from_weight(self):
-        """bool(True) should be explicitly rejected as strand_count in takeup_weight_force_from_takeup_weight."""
-        takeup_weight = Quantity(3000.0, u.kilogram)
+    def test_n6_effort_100n_gives_600n_load_and_6m_rope_travel(self):
+        """For n=6, 100 N effort and 1 m load lift should yield 600 N load and 6 m rope travel."""
+        effort_force = Quantity(100.0, u.newton)
+        load_travel = Quantity(1.0, u.meter)
 
-        with pytest.raises(ValueError, match="strand_count.*must be an integer"):
-            takeup_weight_force_from_takeup_weight(
-                takeup_weight=takeup_weight, strand_count=True  # type: ignore
-            )
+        load_force = load_force_from_effort_force(
+            effort_force=effort_force,
+            strand_count=6,
+            unit="newton",
+        )
+        rope_travel = rope_travel_from_takeup_travel(
+            takeup_travel=load_travel,
+            strand_count=6,
+            unit="meter",
+        )
 
-    def test_bool_false_strand_count_rejected_takeup_weight_force_from_weight(self):
-        """bool(False) should be explicitly rejected as strand_count in takeup_weight_force_from_takeup_weight."""
-        takeup_weight = Quantity(3000.0, u.kilogram)
+        assert load_force.magnitude == pytest.approx(600.0, rel=1e-9)
+        assert load_force.units == u.newton
+        assert rope_travel.magnitude == pytest.approx(6.0, rel=1e-9)
+        assert rope_travel.units == u.meter
 
-        with pytest.raises(ValueError, match="strand_count.*must be an integer"):
-            takeup_weight_force_from_takeup_weight(
-                takeup_weight=takeup_weight, strand_count=False  # type: ignore
-            )
+    def test_n2_load_600n_gives_300n_effort_and_2m_rope_travel(self):
+        """For n=2, 600 N load and 1 m load lift should yield 300 N effort and 2 m rope travel."""
+        load_force = Quantity(600.0, u.newton)
+        load_travel = Quantity(1.0, u.meter)
 
-    def test_bool_true_strand_count_rejected_takeup_weight_from_force(self):
-        """bool(True) should be explicitly rejected as strand_count in takeup_weight_from_takeup_weight_force."""
-        takeup_weight_force = Quantity(29419.95, u.newton)
+        effort_force = effort_force_from_load_force(
+            load_force=load_force,
+            strand_count=2,
+            unit="newton",
+        )
+        rope_travel = rope_travel_from_takeup_travel(
+            takeup_travel=load_travel,
+            strand_count=2,
+            unit="meter",
+        )
 
-        with pytest.raises(ValueError, match="strand_count.*must be an integer"):
-            takeup_weight_from_takeup_weight_force(
-                takeup_weight_force=takeup_weight_force, strand_count=True  # type: ignore
-            )
-
-    def test_bool_false_strand_count_rejected_takeup_weight_from_force(self):
-        """bool(False) should be explicitly rejected as strand_count in takeup_weight_from_takeup_weight_force."""
-        takeup_weight_force = Quantity(29419.95, u.newton)
-
-        with pytest.raises(ValueError, match="strand_count.*must be an integer"):
-            takeup_weight_from_takeup_weight_force(
-                takeup_weight_force=takeup_weight_force, strand_count=False  # type: ignore
-            )
+        assert effort_force.magnitude == pytest.approx(300.0, rel=1e-9)
+        assert effort_force.units == u.newton
+        assert rope_travel.magnitude == pytest.approx(2.0, rel=1e-9)
+        assert rope_travel.units == u.meter
 
 
 class TestNonNdarrayArrayLikeNegativeValidation:

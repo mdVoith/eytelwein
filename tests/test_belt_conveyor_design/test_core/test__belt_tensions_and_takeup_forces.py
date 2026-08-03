@@ -7,6 +7,8 @@ from eytelwein.belt_conveyor_design.core._belt_tensions_and_takeup_forces import
     _takeup_weight_from_takeup_weight_force,
     _rope_travel_from_takeup_travel,
     _takeup_travel_from_rope_travel,
+    _effort_force_from_load_force,
+    _load_force_from_effort_force,
 )
 
 
@@ -142,141 +144,102 @@ class TestTakeupWeightFromTakeupWeightForce:
         assert result == pytest.approx(0.0, abs=1e-9)
 
 
-class TestTakeupWeightForceFromTakeupWeightWithStrandCount:
-    """Test suite for _takeup_weight_force_from_takeup_weight with strand_count parameter."""
 
-    def test_identity_at_strand_count_one(self):
-        """Verify backward compatibility: strand_count=1 gives exact same result as before."""
-        # 100 kg → 100 * 9.80665 N = 980.665 N
-        result = _takeup_weight_force_from_takeup_weight(
-            takeup_weight_kg=100.0, strand_count=1
-        )
-        assert result == pytest.approx(980.665, rel=1e-5)
 
-    def test_default_strand_count_is_one(self):
-        """Default value for strand_count should be 1."""
-        # Without specifying strand_count, should behave as if strand_count=1
-        result_with_default = _takeup_weight_force_from_takeup_weight(
-            takeup_weight_kg=100.0
-        )
-        result_with_one = _takeup_weight_force_from_takeup_weight(
-            takeup_weight_kg=100.0, strand_count=1
-        )
+class TestEffortForceFromLoadForce:
+    """Test suite for the private _effort_force_from_load_force function."""
+
+    def test_effort_force_from_load_force_happy_path(self):
+        """Convert load force to effort force with typical value and strand_count=1."""
+        # 1000 N load / 1 strand = 1000 N effort
+        result = _effort_force_from_load_force(load_force_n=1000.0, strand_count=1)
+        assert result == pytest.approx(1000.0, rel=1e-5)
+
+    def test_effort_force_from_load_force_two_strands(self):
+        """Verify ideal reeving: effort = load / strand_count."""
+        # 1000 N load / 2 strands = 500 N effort
+        result = _effort_force_from_load_force(load_force_n=1000.0, strand_count=2)
+        assert result == pytest.approx(500.0, rel=1e-5)
+
+    def test_effort_force_from_load_force_four_strands(self):
+        """Verify ideal reeving with 4 strands."""
+        # 2000 N load / 4 strands = 500 N effort
+        result = _effort_force_from_load_force(load_force_n=2000.0, strand_count=4)
+        assert result == pytest.approx(500.0, rel=1e-5)
+
+    def test_effort_force_from_load_force_zero_load(self):
+        """Zero load should yield zero effort."""
+        result = _effort_force_from_load_force(load_force_n=0.0, strand_count=2)
+        assert result == pytest.approx(0.0, abs=1e-9)
+
+    def test_effort_force_from_load_force_default_strand_count(self):
+        """Default strand_count should be 1."""
+        result_with_default = _effort_force_from_load_force(load_force_n=1000.0)
+        result_with_one = _effort_force_from_load_force(load_force_n=1000.0, strand_count=1)
         assert result_with_default == pytest.approx(result_with_one, rel=1e-9)
 
-    def test_reeving_scaling_two_strands(self):
-        """Verify ideal reeving formula: F = m * g / strand_count."""
-        # With 2 strands: 100 kg → 100 * 9.80665 / 2 = 490.3325 N
-        result = _takeup_weight_force_from_takeup_weight(
-            takeup_weight_kg=100.0, strand_count=2
-        )
-        expected = 100.0 * 9.80665 / 2
-        assert result == pytest.approx(expected, rel=1e-5)
-
-    def test_reeving_scaling_four_strands(self):
-        """Verify ideal reeving formula with 4 strands."""
-        # With 4 strands: 3000 kg → 3000 * 9.80665 / 4 = 7354.9875 N
-        result = _takeup_weight_force_from_takeup_weight(
-            takeup_weight_kg=3000.0, strand_count=4
-        )
-        expected = 3000.0 * 9.80665 / 4
-        assert result == pytest.approx(expected, rel=1e-5)
-
-    def test_strand_count_zero_raises_error(self):
+    def test_effort_force_from_load_force_strand_count_zero_raises_error(self):
         """strand_count=0 should raise ValueError (division guard)."""
         with pytest.raises(ValueError, match="strand_count.*must be.*positive"):
-            _takeup_weight_force_from_takeup_weight(
-                takeup_weight_kg=100.0, strand_count=0
-            )
+            _effort_force_from_load_force(load_force_n=1000.0, strand_count=0)
 
-    def test_strand_count_negative_raises_error(self):
-        """strand_count<0 should raise ValueError (domain validation)."""
+    def test_effort_force_from_load_force_strand_count_negative_raises_error(self):
+        """Negative strand_count should raise ValueError."""
         with pytest.raises(ValueError, match="strand_count.*must be.*positive"):
-            _takeup_weight_force_from_takeup_weight(
-                takeup_weight_kg=100.0, strand_count=-2
-            )
-
-    def test_zero_weight_zero_force_all_strand_counts(self):
-        """Zero weight should yield zero force regardless of strand_count."""
-        for sc in [1, 2, 4]:
-            result = _takeup_weight_force_from_takeup_weight(
-                takeup_weight_kg=0.0, strand_count=sc
-            )
-            assert result == pytest.approx(0.0, abs=1e-9)
+            _effort_force_from_load_force(load_force_n=1000.0, strand_count=-2)
 
 
-class TestTakeupWeightFromTakeupWeightForceWithStrandCount:
-    """Test suite for _takeup_weight_from_takeup_weight_force with strand_count parameter."""
+class TestLoadForceFromEffortForce:
+    """Test suite for the private _load_force_from_effort_force function."""
 
-    def test_identity_at_strand_count_one(self):
-        """Verify backward compatibility: strand_count=1 gives exact same result as before."""
-        # 980.665 N / 9.80665 kg = 100 kg
-        result = _takeup_weight_from_takeup_weight_force(
-            takeup_weight_force_n=980.665, strand_count=1
-        )
-        assert result == pytest.approx(100.0, rel=1e-5)
+    def test_load_force_from_effort_force_happy_path(self):
+        """Convert effort force to load force with typical value and strand_count=1."""
+        # 1000 N effort * 1 strand = 1000 N load
+        result = _load_force_from_effort_force(effort_force_n=1000.0, strand_count=1)
+        assert result == pytest.approx(1000.0, rel=1e-5)
 
-    def test_default_strand_count_is_one(self):
-        """Default value for strand_count should be 1."""
-        result_with_default = _takeup_weight_from_takeup_weight_force(
-            takeup_weight_force_n=980.665
-        )
-        result_with_one = _takeup_weight_from_takeup_weight_force(
-            takeup_weight_force_n=980.665, strand_count=1
-        )
+    def test_load_force_from_effort_force_two_strands(self):
+        """Verify ideal reeving inverse: load = effort * strand_count."""
+        # 500 N effort * 2 strands = 1000 N load
+        result = _load_force_from_effort_force(effort_force_n=500.0, strand_count=2)
+        assert result == pytest.approx(1000.0, rel=1e-5)
+
+    def test_load_force_from_effort_force_four_strands(self):
+        """Verify ideal reeving inverse with 4 strands."""
+        # 500 N effort * 4 strands = 2000 N load
+        result = _load_force_from_effort_force(effort_force_n=500.0, strand_count=4)
+        assert result == pytest.approx(2000.0, rel=1e-5)
+
+    def test_load_force_from_effort_force_zero_effort(self):
+        """Zero effort should yield zero load."""
+        result = _load_force_from_effort_force(effort_force_n=0.0, strand_count=2)
+        assert result == pytest.approx(0.0, abs=1e-9)
+
+    def test_load_force_from_effort_force_default_strand_count(self):
+        """Default strand_count should be 1."""
+        result_with_default = _load_force_from_effort_force(effort_force_n=1000.0)
+        result_with_one = _load_force_from_effort_force(effort_force_n=1000.0, strand_count=1)
         assert result_with_default == pytest.approx(result_with_one, rel=1e-9)
 
-    def test_reeving_scaling_two_strands(self):
-        """Verify ideal reeving inverse formula: m = F * strand_count / g."""
-        # With 2 strands: 980.665 N → 980.665 * 2 / 9.80665 = 200 kg
-        result = _takeup_weight_from_takeup_weight_force(
-            takeup_weight_force_n=980.665, strand_count=2
-        )
-        expected = 980.665 * 2 / 9.80665
-        assert result == pytest.approx(expected, rel=1e-5)
-
-    def test_reeving_scaling_four_strands(self):
-        """Verify ideal reeving inverse formula with 4 strands."""
-        # With 4 strands: 7354.9875 N → 7354.9875 * 4 / 9.80665 = 3000 kg
-        result = _takeup_weight_from_takeup_weight_force(
-            takeup_weight_force_n=7354.9875, strand_count=4
-        )
-        expected = 7354.9875 * 4 / 9.80665
-        assert result == pytest.approx(expected, rel=1e-5)
-
-    def test_strand_count_zero_raises_error(self):
+    def test_load_force_from_effort_force_strand_count_zero_raises_error(self):
         """strand_count=0 should raise ValueError (division guard)."""
         with pytest.raises(ValueError, match="strand_count.*must be.*positive"):
-            _takeup_weight_from_takeup_weight_force(
-                takeup_weight_force_n=980.665, strand_count=0
-            )
+            _load_force_from_effort_force(effort_force_n=1000.0, strand_count=0)
 
-    def test_strand_count_negative_raises_error(self):
-        """strand_count<0 should raise ValueError (domain validation)."""
+    def test_load_force_from_effort_force_strand_count_negative_raises_error(self):
+        """Negative strand_count should raise ValueError."""
         with pytest.raises(ValueError, match="strand_count.*must be.*positive"):
-            _takeup_weight_from_takeup_weight_force(
-                takeup_weight_force_n=980.665, strand_count=-2
-            )
+            _load_force_from_effort_force(effort_force_n=1000.0, strand_count=-2)
 
-    def test_zero_force_zero_weight_all_strand_counts(self):
-        """Zero force should yield zero weight regardless of strand_count."""
-        for sc in [1, 2, 4]:
-            result = _takeup_weight_from_takeup_weight_force(
-                takeup_weight_force_n=0.0, strand_count=sc
-            )
-            assert result == pytest.approx(0.0, abs=1e-9)
-
-    def test_round_trip_weight_to_force_to_weight(self):
-        """Round-trip: weight → force → weight should preserve value at any strand_count."""
+    def test_round_trip_load_to_effort_to_load(self):
+        """Round-trip: load → effort → load should preserve value at any strand_count."""
         for sc in [1, 2, 3, 4]:
-            original_weight = 3000.0
-            force = _takeup_weight_force_from_takeup_weight(
-                takeup_weight_kg=original_weight, strand_count=sc
+            original_load = 2000.0
+            effort = _effort_force_from_load_force(load_force_n=original_load, strand_count=sc)
+            recovered_load = _load_force_from_effort_force(
+                effort_force_n=effort, strand_count=sc
             )
-            recovered_weight = _takeup_weight_from_takeup_weight_force(
-                takeup_weight_force_n=force, strand_count=sc
-            )
-            assert recovered_weight == pytest.approx(original_weight, rel=1e-5)
+            assert recovered_load == pytest.approx(original_load, rel=1e-5)
 
 
 class TestRopeTravelFromTakeupTravel:

@@ -14,6 +14,8 @@ from eytelwein.belt_conveyor_design.core._belt_tensions_and_takeup_forces import
     _takeup_weight_from_takeup_weight_force,
     _rope_travel_from_takeup_travel,
     _takeup_travel_from_rope_travel,
+    _effort_force_from_load_force,
+    _load_force_from_effort_force,
 )
 from eytelwein.main.units import get_unit_registry
 from eytelwein.main.validation import validate_positive_count
@@ -147,14 +149,12 @@ def takeup_weight_force_from_takeup_weight(
     takeup_weight: Quantity,
     unit: str = "kilonewton",
     precision: int | None = None,
-    strand_count: int = 1,
 ) -> Quantity:
     """
     Calculate takeup weight force from takeup weight.
 
     This function converts a mass-based takeup weight to a force quantity
-    using the standard gravitational acceleration constant and optional
-    reeving (strand count) configuration.
+    using the standard gravitational acceleration constant.
     All inputs must be strict Quantity objects with explicit units.
 
     Parameters
@@ -168,9 +168,6 @@ def takeup_weight_force_from_takeup_weight(
     precision : int or None, optional
         Decimal places to round the result to (default: None).
         If None, no rounding is applied.
-    strand_count : int, optional
-        Number of strands in ideal reeving system (default: 1).
-        Must be a positive integer >= 1.
 
     Returns
     -------
@@ -185,8 +182,6 @@ def takeup_weight_force_from_takeup_weight(
         If takeup_weight is negative.
     ValueError
         If unit is invalid or incompatible with force.
-    ValueError
-        If strand_count is not a positive integer.
 
     Examples
     --------
@@ -199,9 +194,6 @@ def takeup_weight_force_from_takeup_weight(
     >>> result  # doctest: +SKIP
     29.41995... kilonewton
     """
-    # Validate strand_count using centralized helper
-    validate_positive_count(strand_count, "strand_count")
-
     try:
         # Convert input to standard working units (kg)
         takeup_weight_kg = takeup_weight.to(u.kilogram)
@@ -242,9 +234,9 @@ def takeup_weight_force_from_takeup_weight(
     except Exception as e:
         raise ValueError(f"Invalid unit: {unit}. Error: {e}")
 
-    # Call private implementation with magnitude value and strand_count
+    # Call private implementation with magnitude value
     force_newtons = _takeup_weight_force_from_takeup_weight(
-        takeup_weight_kg=takeup_weight_kg.magnitude, strand_count=strand_count
+        takeup_weight_kg=takeup_weight_kg.magnitude
     )
 
     # Attach units to result (newtons)
@@ -267,14 +259,12 @@ def takeup_weight_from_takeup_weight_force(
     takeup_weight_force: Quantity,
     unit: str = "kilogram",
     precision: int | None = None,
-    strand_count: int = 1,
 ) -> Quantity:
     """
     Calculate takeup weight from takeup weight force.
 
     This function converts a force-based takeup weight force to a mass quantity
-    using the standard gravitational acceleration constant and optional
-    reeving (strand count) configuration.
+    using the standard gravitational acceleration constant.
     All inputs must be strict Quantity objects with explicit units.
 
     Parameters
@@ -288,9 +278,6 @@ def takeup_weight_from_takeup_weight_force(
     precision : int or None, optional
         Decimal places to round the result to (default: None).
         If None, no rounding is applied.
-    strand_count : int, optional
-        Number of strands in ideal reeving system (default: 1).
-        Must be a positive integer >= 1.
 
     Returns
     -------
@@ -305,8 +292,6 @@ def takeup_weight_from_takeup_weight_force(
         If takeup_weight_force is negative.
     ValueError
         If unit is invalid or incompatible with mass.
-    ValueError
-        If strand_count is not a positive integer.
 
     Examples
     --------
@@ -319,9 +304,6 @@ def takeup_weight_from_takeup_weight_force(
     >>> result  # doctest: +SKIP
     3000.0... kilogram
     """
-    # Validate strand_count using centralized helper
-    validate_positive_count(strand_count, "strand_count")
-
     try:
         # Convert input to standard working units (newtons)
         takeup_weight_force_n = takeup_weight_force.to(u.newton)
@@ -362,13 +344,235 @@ def takeup_weight_from_takeup_weight_force(
     except Exception as e:
         raise ValueError(f"Invalid unit: {unit}. Error: {e}")
 
-    # Call private implementation with magnitude value and strand_count
+    # Call private implementation with magnitude value
     weight_kg = _takeup_weight_from_takeup_weight_force(
-        takeup_weight_force_n=takeup_weight_force_n.magnitude, strand_count=strand_count
+        takeup_weight_force_n=takeup_weight_force_n.magnitude
     )
 
     # Attach units to result (kg)
     result = weight_kg * u.kilogram
+
+    # Convert to requested output unit
+    try:
+        result = result.to(pint_unit)
+    except Exception as e:
+        raise ValueError(f"Error in attaching unit '{unit}': {e}")
+
+    # Apply precision rounding if specified
+    if precision is not None:
+        result = round(result, precision)
+
+    return result
+
+
+def effort_force_from_load_force(
+    load_force: Quantity,
+    strand_count: int = 1,
+    unit: str = "kilonewton",
+    precision: int | None = None,
+) -> Quantity:
+    """
+    Calculate effort force from load force using ideal reeving.
+
+    This function converts a load force to an effort force using the ideal
+    reeving relationship where effort = load / strand_count.
+    All inputs must be strict Quantity objects with explicit units.
+
+    Parameters
+    ----------
+    load_force : Quantity
+        Load force in newtons or equivalent force units.
+    strand_count : int, optional
+        Number of strands in ideal reeving system (default: 1).
+        Must be a positive integer >= 1.
+        This is a plain integer configuration parameter, not a Quantity.
+    unit : str, optional
+        Output unit for effort force result (default: "kilonewton").
+        Common values: "newton", "kilonewton".
+        Must be a force unit.
+    precision : int or None, optional
+        Decimal places to round the result to (default: None).
+        If None, no rounding is applied.
+
+    Returns
+    -------
+    Quantity
+        Effort force in the specified output unit.
+
+    Raises
+    ------
+    ValueError
+        If unit conversion fails due to incompatible input units.
+    ValueError
+        If load_force is negative.
+    ValueError
+        If unit is invalid or incompatible with force.
+    ValueError
+        If strand_count is not a positive integer.
+
+    Examples
+    --------
+    >>> from pint import Quantity
+    >>> from eytelwein.main.units import get_unit_registry
+    >>> u = get_unit_registry()
+    >>> result = effort_force_from_load_force(
+    ...     load_force=Quantity(2000.0, u.newton), strand_count=2
+    ... )
+    >>> result  # doctest: +SKIP
+    1.0 kilonewton
+    """
+    # Validate strand_count using centralized helper
+    validate_positive_count(strand_count, "strand_count")
+
+    try:
+        # Convert input to standard working units (newtons)
+        load_force_n = load_force.to(u.newton)
+    except Exception as e:
+        raise ValueError(f"Error in unit conversion: {e}")
+
+    # Validate physical constraints after unit conversion
+    magnitude = load_force_n.magnitude
+    try:
+        import numpy as np
+
+        if isinstance(magnitude, np.ndarray):
+            if np.any(magnitude < 0):
+                raise ValueError(f"load_force cannot be negative, got {load_force_n}")
+        elif magnitude < 0:
+            raise ValueError(f"load_force cannot be negative, got {load_force_n}")
+    except (ImportError, TypeError):
+        try:
+            if magnitude < 0:
+                raise ValueError(f"load_force cannot be negative, got {load_force_n}")
+        except TypeError:
+            raise ValueError(f"load_force cannot be negative, got {load_force_n}")
+
+    # Ensure the output unit is valid
+    try:
+        pint_unit = u.parse_units(unit)
+    except Exception as e:
+        raise ValueError(f"Invalid unit: {unit}. Error: {e}")
+
+    # Call private implementation with magnitude value and strand_count
+    effort_newtons = _effort_force_from_load_force(
+        load_force_n=load_force_n.magnitude, strand_count=strand_count
+    )
+
+    # Attach units to result (newtons)
+    result = effort_newtons * u.newton
+
+    # Convert to requested output unit
+    try:
+        result = result.to(pint_unit)
+    except Exception as e:
+        raise ValueError(f"Error in attaching unit '{unit}': {e}")
+
+    # Apply precision rounding if specified
+    if precision is not None:
+        result = round(result, precision)
+
+    return result
+
+
+def load_force_from_effort_force(
+    effort_force: Quantity,
+    strand_count: int = 1,
+    unit: str = "kilonewton",
+    precision: int | None = None,
+) -> Quantity:
+    """
+    Calculate load force from effort force using ideal reeving.
+
+    This function converts an effort force to a load force using the ideal
+    reeving relationship where load = effort * strand_count.
+    All inputs must be strict Quantity objects with explicit units.
+
+    Parameters
+    ----------
+    effort_force : Quantity
+        Effort force in newtons or equivalent force units.
+    strand_count : int, optional
+        Number of strands in ideal reeving system (default: 1).
+        Must be a positive integer >= 1.
+        This is a plain integer configuration parameter, not a Quantity.
+    unit : str, optional
+        Output unit for load force result (default: "kilonewton").
+        Common values: "newton", "kilonewton".
+        Must be a force unit.
+    precision : int or None, optional
+        Decimal places to round the result to (default: None).
+        If None, no rounding is applied.
+
+    Returns
+    -------
+    Quantity
+        Load force in the specified output unit.
+
+    Raises
+    ------
+    ValueError
+        If unit conversion fails due to incompatible input units.
+    ValueError
+        If effort_force is negative.
+    ValueError
+        If unit is invalid or incompatible with force.
+    ValueError
+        If strand_count is not a positive integer.
+
+    Examples
+    --------
+    >>> from pint import Quantity
+    >>> from eytelwein.main.units import get_unit_registry
+    >>> u = get_unit_registry()
+    >>> result = load_force_from_effort_force(
+    ...     effort_force=Quantity(1000.0, u.newton), strand_count=2
+    ... )
+    >>> result  # doctest: +SKIP
+    2.0 kilonewton
+    """
+    # Validate strand_count using centralized helper
+    validate_positive_count(strand_count, "strand_count")
+
+    try:
+        # Convert input to standard working units (newtons)
+        effort_force_n = effort_force.to(u.newton)
+    except Exception as e:
+        raise ValueError(f"Error in unit conversion: {e}")
+
+    # Validate physical constraints after unit conversion
+    magnitude = effort_force_n.magnitude
+    try:
+        import numpy as np
+
+        if isinstance(magnitude, np.ndarray):
+            if np.any(magnitude < 0):
+                raise ValueError(
+                    f"effort_force cannot be negative, got {effort_force_n}"
+                )
+        elif magnitude < 0:
+            raise ValueError(f"effort_force cannot be negative, got {effort_force_n}")
+    except (ImportError, TypeError):
+        try:
+            if magnitude < 0:
+                raise ValueError(
+                    f"effort_force cannot be negative, got {effort_force_n}"
+                )
+        except TypeError:
+            raise ValueError(f"effort_force cannot be negative, got {effort_force_n}")
+
+    # Ensure the output unit is valid
+    try:
+        pint_unit = u.parse_units(unit)
+    except Exception as e:
+        raise ValueError(f"Invalid unit: {unit}. Error: {e}")
+
+    # Call private implementation with magnitude value and strand_count
+    load_newtons = _load_force_from_effort_force(
+        effort_force_n=effort_force_n.magnitude, strand_count=strand_count
+    )
+
+    # Attach units to result (newtons)
+    result = load_newtons * u.newton
 
     # Convert to requested output unit
     try:
@@ -734,15 +938,20 @@ def rope_force_and_travel_from_takeup_weight_and_travel(
     ...     strand_count=2,
     ... )
     >>> result.rope_force  # doctest: +SKIP
-    58.839... kilonewton
+    14.709975... kilonewton
     >>> result.rope_travel  # doctest: +SKIP
     3.0 meter
     """
-    rope_force = takeup_weight_force_from_takeup_weight(
+    load_force = takeup_weight_force_from_takeup_weight(
         takeup_weight=takeup_weight,
+        unit="newton",
+        precision=None,
+    )
+    rope_force = effort_force_from_load_force(
+        load_force=load_force,
+        strand_count=strand_count,
         unit=force_unit,
         precision=precision,
-        strand_count=strand_count,
     )
     rope_travel = rope_travel_from_takeup_travel(
         takeup_travel=takeup_travel,
@@ -803,7 +1012,7 @@ def takeup_weight_and_travel_from_rope_force_and_travel(
     >>> from eytelwein.main.units import get_unit_registry
     >>> u = get_unit_registry()
     >>> result = takeup_weight_and_travel_from_rope_force_and_travel(
-    ...     rope_force=Quantity(58839.9, u.newton),
+    ...     rope_force=Quantity(14709.975, u.newton),
     ...     rope_travel=Quantity(3.0, u.meter),
     ...     strand_count=2,
     ... )
@@ -812,11 +1021,16 @@ def takeup_weight_and_travel_from_rope_force_and_travel(
     >>> result.takeup_travel  # doctest: +SKIP
     1.5 meter
     """
+    load_force = load_force_from_effort_force(
+        effort_force=rope_force,
+        strand_count=strand_count,
+        unit="newton",
+        precision=None,
+    )
     takeup_weight = takeup_weight_from_takeup_weight_force(
-        takeup_weight_force=rope_force,
+        takeup_weight_force=load_force,
         unit=weight_unit,
         precision=precision,
-        strand_count=strand_count,
     )
     takeup_travel = takeup_travel_from_rope_travel(
         rope_travel=rope_travel,

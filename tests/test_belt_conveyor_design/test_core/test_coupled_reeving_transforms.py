@@ -11,6 +11,8 @@ from eytelwein.belt_conveyor_design.core.belt_tensions_and_takeup_forces import 
     takeup_weight_from_takeup_weight_force,
     rope_travel_from_takeup_travel,
     takeup_travel_from_rope_travel,
+    effort_force_from_load_force,
+    load_force_from_effort_force,
 )
 from eytelwein.main.units import get_unit_registry
 
@@ -59,8 +61,12 @@ class TestCoupledRopeForceAndTravelFromTakeup:
         )
 
         # Compare with individual transforms
-        expected_rope_force = takeup_weight_force_from_takeup_weight(
+        expected_load_force = takeup_weight_force_from_takeup_weight(
             takeup_weight=takeup_weight,
+            unit="newton",
+        )
+        expected_rope_force = effort_force_from_load_force(
+            load_force=expected_load_force,
             strand_count=strand_count,
             unit="kilonewton",
         )
@@ -163,9 +169,13 @@ class TestCoupledTakeupWeightAndTravelFromRopeForce:
         )
 
         # Compare with individual transforms
-        expected_takeup_weight = takeup_weight_from_takeup_weight_force(
-            takeup_weight_force=rope_force,
+        expected_load_force = load_force_from_effort_force(
+            effort_force=rope_force,
             strand_count=strand_count,
+            unit="newton",
+        )
+        expected_takeup_weight = takeup_weight_from_takeup_weight_force(
+            takeup_weight_force=expected_load_force,
             unit="kilogram",
         )
         expected_takeup_travel = takeup_travel_from_rope_travel(

@@ -61,9 +61,7 @@ def _minimum_belt_tension_from_sag_carry(
     return tension
 
 
-def _takeup_weight_force_from_takeup_weight(
-    takeup_weight_kg: float, strand_count: int = 1
-) -> float:
+def _takeup_weight_force_from_takeup_weight(takeup_weight_kg: float) -> float:
     """
     Calculate takeup weight force from takeup weight (private implementation).
 
@@ -71,44 +69,26 @@ def _takeup_weight_force_from_takeup_weight(
     ----------
     takeup_weight_kg : float
         Takeup weight in kilograms.
-    strand_count : int, optional
-        Number of strands in ideal reeving system (default: 1).
-        Must be a positive integer >= 1.
 
     Returns
     -------
     float
         Takeup weight force in Newtons.
 
-    Raises
-    ------
-    ValueError
-        If strand_count <= 0, preventing division by zero
-        and enforcing physically valid reeving configurations.
-
     Notes
     -----
     Converts mass to force using the formula:
-    F [N] = m [kg] * g [m/s²] / strand_count
+    F [N] = m [kg] * g [m/s²]
 
     where g is STANDARD_GRAVITY_VALUE (9.80665 m/s²).
 
-    For ideal reeving, the force is distributed equally across
-    all strands, so strand_count > 1 reduces the required force.
+    Pure gravity conversion without reeving.
     """
-    # Guard against division by zero and invalid strand count
-    if strand_count <= 0:
-        raise ValueError(
-            f"strand_count must be a positive integer >= 1, got {strand_count}."
-        )
-
-    force = (takeup_weight_kg * STANDARD_GRAVITY_VALUE) / strand_count
+    force = takeup_weight_kg * STANDARD_GRAVITY_VALUE
     return force
 
 
-def _takeup_weight_from_takeup_weight_force(
-    takeup_weight_force_n: float, strand_count: int = 1
-) -> float:
+def _takeup_weight_from_takeup_weight_force(takeup_weight_force_n: float) -> float:
     """
     Calculate takeup weight from takeup weight force (private implementation).
 
@@ -116,6 +96,33 @@ def _takeup_weight_from_takeup_weight_force(
     ----------
     takeup_weight_force_n : float
         Takeup weight force in Newtons.
+
+    Returns
+    -------
+    float
+        Takeup weight in kilograms.
+
+    Notes
+    -----
+    Converts force to mass using the formula:
+    m [kg] = F [N] / g [m/s²]
+
+    where g is STANDARD_GRAVITY_VALUE (9.80665 m/s²).
+
+    Pure gravity conversion without reeving.
+    """
+    weight = takeup_weight_force_n / STANDARD_GRAVITY_VALUE
+    return weight
+
+
+def _effort_force_from_load_force(load_force_n: float, strand_count: int = 1) -> float:
+    """
+    Calculate effort force from load force using ideal reeving (private implementation).
+
+    Parameters
+    ----------
+    load_force_n : float
+        Load force in Newtons.
     strand_count : int, optional
         Number of strands in ideal reeving system (default: 1).
         Must be a positive integer >= 1.
@@ -123,7 +130,7 @@ def _takeup_weight_from_takeup_weight_force(
     Returns
     -------
     float
-        Takeup weight in kilograms.
+        Effort force in Newtons.
 
     Raises
     ------
@@ -133,14 +140,11 @@ def _takeup_weight_from_takeup_weight_force(
 
     Notes
     -----
-    Converts force to mass using the formula:
-    m [kg] = F [N] * strand_count / g [m/s²]
-
-    where g is STANDARD_GRAVITY_VALUE (9.80665 m/s²).
+    Converts load force to effort force using the formula:
+    F_effort [N] = F_load [N] / strand_count
 
     For ideal reeving, the force is distributed equally across
-    all strands, so strand_count > 1 increases the required weight
-    to produce the given force.
+    all strands, so strand_count > 1 reduces the required effort force.
     """
     # Guard against division by zero and invalid strand count
     if strand_count <= 0:
@@ -148,8 +152,51 @@ def _takeup_weight_from_takeup_weight_force(
             f"strand_count must be a positive integer >= 1, got {strand_count}."
         )
 
-    weight = (takeup_weight_force_n * strand_count) / STANDARD_GRAVITY_VALUE
-    return weight
+    effort = load_force_n / strand_count
+    return effort
+
+
+def _load_force_from_effort_force(
+    effort_force_n: float, strand_count: int = 1
+) -> float:
+    """
+    Calculate load force from effort force using ideal reeving (private implementation).
+
+    Parameters
+    ----------
+    effort_force_n : float
+        Effort force in Newtons.
+    strand_count : int, optional
+        Number of strands in ideal reeving system (default: 1).
+        Must be a positive integer >= 1.
+
+    Returns
+    -------
+    float
+        Load force in Newtons.
+
+    Raises
+    ------
+    ValueError
+        If strand_count <= 0, preventing division by zero
+        and enforcing physically valid reeving configurations.
+
+    Notes
+    -----
+    Converts effort force to load force using the formula:
+    F_load [N] = F_effort [N] * strand_count
+
+    For ideal reeving, the effort force is multiplied by the strand count
+    to calculate the total load force.
+    """
+    # Guard against division by zero and invalid strand count
+    if strand_count <= 0:
+        raise ValueError(
+            f"strand_count must be a positive integer >= 1, got {strand_count}."
+        )
+
+    load = effort_force_n * strand_count
+    return load
 
 
 def _rope_travel_from_takeup_travel(
