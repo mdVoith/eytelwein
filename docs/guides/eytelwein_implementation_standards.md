@@ -117,6 +117,131 @@ efficiency = _efficiency_calculation(...)
 result = efficiency * u.dimensionless
 ```
 
+## Discrete Configuration Counts
+
+### Plain Integer Exception
+
+**Discrete configuration counts are the ONLY exception to the "all parameters must be Quantity" rule.**
+
+Discrete architectural or reeving configuration parameters—such as `strand_count` and `quantity_of_drives`—remain plain `int` (not `Quantity`) because they represent the logical structure of the system, not measured physical values.
+
+### When to Use Plain `int`
+
+✅ **Use plain `int` for:**
+- **Strand count in reeving systems** (`strand_count`)
+  ```python
+  def rope_travel_from_takeup_travel(
+      takeup_travel: Quantity,
+      strand_count: int = 1,  # Plain int: 1-part, 2-part, 4-part, etc.
+      unit: str = "meter",
+  ) -> Quantity:
+      """Convert takeup travel to rope travel for ideal reeving."""
+  ```
+
+- **Quantity of drives** (`quantity_of_drives`)
+  ```python
+  def total_inertia_for_single_drive(
+      ...,
+      quantity_of_drives: int,  # Plain int: number of independent motors
+  ) -> Quantity:
+      """Calculate motor inertia reflected to shaft."""
+  ```
+
+- **Any discrete architectural choice** that counts system components or logical structure
+
+### Why Not Quantity?
+
+While measured values (distances, forces, masses) and computed dimensionless ratios use `Quantity`:
+
+| Parameter Type | Example | Type | Why |
+|---|---|---|---|
+| Measured value | `belt_width`, `idler_spacing` | `Quantity` | Has physical units; user inputs value with units |
+| Computed ratio | `gear_ratio`, `safety_factor` | `Quantity` with dimensionless | Result of calculation; may scale based on context |
+| Config count | `strand_count`, `quantity_of_drives` | `int` | Represents logical structure; always dimensionless and non-measurable |
+
+**Examples:**
+```python
+# ❌ WRONG: Counting strands as Quantity
+rope_travel = rope_travel_from_takeup_travel(
+    takeup_travel=travel,
+    strand_count=Quantity(2, u.dimensionless),  # Wrong!
+)
+
+# ✅ CORRECT: Plain int for logical structure
+rope_travel = rope_travel_from_takeup_travel(
+    takeup_travel=travel,
+    strand_count=2,  # Plain int
+)
+
+# ✅ Measured values stay Quantity
+idler_spacing = Quantity(1.5, u.meter)  # Measured physical distance
+belt_width = Quantity(0.6, u.meter)      # Measured physical width
+```
+
+### Validation Pattern for Discrete Counts
+
+Use the centralized `_validate_positive_count()` helper in `belt_conveyor_design.core.belt_tensions_and_takeup_forces`:
+
+```python
+from eytelwein.belt_conveyor_design.core.belt_tensions_and_takeup_forces import (
+    _validate_positive_count,
+)
+
+def rope_travel_from_takeup_travel(
+    takeup_travel: Quantity,
+    strand_count: int = 1,
+    unit: str = "meter",
+    precision: int | None = None,
+) -> Quantity:
+    """Calculate rope travel from takeup travel."""
+    # Validate the discrete count parameter
+    _validate_positive_count(strand_count, "strand_count")
+
+    # ... rest of implementation
+```
+
+**Validation ensures:**
+- Parameter is a plain `int` (not `bool`, which is technically a Python `int` subclass)
+- Parameter is positive (>= 1)
+- Error messages are consistent across all functions using the count
+
+### Documentation in Docstrings
+
+Include a **Notes** section explicitly marking the parameter as plain int:
+
+```python
+def rope_travel_from_takeup_travel(
+    takeup_travel: Quantity,
+    strand_count: int = 1,
+    unit: str = "meter",
+    precision: int | None = None,
+) -> Quantity:
+    """
+    Calculate rope travel from takeup travel in an ideal reeving system.
+
+    ...
+
+    Parameters
+    ----------
+    takeup_travel : Quantity
+        Takeup travel distance in meters or equivalent length units.
+    strand_count : int, optional
+        Number of strands in ideal reeving system (default: 1).
+        Must be a positive integer >= 1.
+        This is a plain integer configuration parameter, not a Quantity.
+    unit : str, optional
+        Output unit for travel result (default: "meter").
+
+    Notes
+    -----
+    **Why strand_count is plain int, not Quantity:**
+    Discrete configuration counts like strand_count represent the logical
+    structure of a reeving system (2-part, 4-part, etc.), not measured values.
+    They are always plain integers, while measured travel distances and
+    dimensionless computed ratios use Quantity objects.
+    """
+```
+
 ## Array Broadcasting
 
 ### Array Detection Pattern

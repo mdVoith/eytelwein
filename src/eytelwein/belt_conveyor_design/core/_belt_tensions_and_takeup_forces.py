@@ -150,3 +150,89 @@ def _takeup_weight_from_takeup_weight_force(
 
     weight = (takeup_weight_force_n * strand_count) / STANDARD_GRAVITY_VALUE
     return weight
+
+
+def _rope_travel_from_takeup_travel(
+    takeup_travel_m: float, strand_count: int = 1
+) -> float:
+    """
+    Calculate rope travel from takeup travel (private implementation).
+
+    Parameters
+    ----------
+    takeup_travel_m : float
+        Takeup travel distance in meters.
+    strand_count : int, optional
+        Number of strands in ideal reeving system (default: 1).
+        Must be a positive integer >= 1.
+
+    Returns
+    -------
+    float
+        Rope travel distance in meters.
+
+    Raises
+    ------
+    ValueError
+        If strand_count <= 0, preventing division by zero
+        and enforcing physically valid reeving configurations.
+
+    Notes
+    -----
+    Converts takeup travel to rope travel using the formula:
+    rope_travel [m] = takeup_travel [m] * strand_count
+
+    For ideal reeving, the rope travels a distance equal to the takeup
+    travel multiplied by the strand count.
+    """
+    # Guard against division by zero and invalid strand count
+    if strand_count <= 0:
+        raise ValueError(
+            f"strand_count must be a positive integer >= 1, got {strand_count}."
+        )
+
+    travel = takeup_travel_m * strand_count
+    return travel
+
+
+def _takeup_travel_from_rope_travel(
+    rope_travel_m: float, strand_count: int = 1
+) -> float:
+    """
+    Calculate takeup travel from rope travel (private implementation).
+
+    Parameters
+    ----------
+    rope_travel_m : float
+        Rope travel distance in meters.
+    strand_count : int, optional
+        Number of strands in ideal reeving system (default: 1).
+        Must be a positive integer >= 1.
+
+    Returns
+    -------
+    float
+        Takeup travel distance in meters.
+
+    Raises
+    ------
+    ValueError
+        If strand_count <= 0, preventing division by zero
+        and enforcing physically valid reeving configurations.
+
+    Notes
+    -----
+    Converts rope travel to takeup travel using the formula:
+    takeup_travel [m] = rope_travel [m] / strand_count
+
+    For ideal reeving, the takeup travel is the rope travel divided
+    by the strand count.
+    """
+    # Guard against division by zero and invalid strand count
+    if strand_count <= 0:
+        raise ValueError(
+            f"strand_count must be a positive integer >= 1, got {strand_count}."
+        )
+
+    travel = rope_travel_m / strand_count
+    return travel

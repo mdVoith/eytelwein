@@ -5,6 +5,8 @@ from eytelwein.belt_conveyor_design.core.belt_tensions_and_takeup_forces import 
     minimum_belt_tension_from_sag_carry,
     takeup_weight_force_from_takeup_weight,
     takeup_weight_from_takeup_weight_force,
+    rope_travel_from_takeup_travel,
+    takeup_travel_from_rope_travel,
 )
 from eytelwein.main.units import get_unit_registry
 
@@ -708,6 +710,253 @@ class TestTakeupWeightFromTakeupWeightForceWithStrandCountPublic:
         # Each should be force * 2 / g
         expected = forces * 2 / 9.80665
         assert np.allclose(result.magnitude, expected, rtol=1e-4)
+
+
+class TestRopeTravelFromTakeupTravelPublic:
+    """Test suite for public rope_travel_from_takeup_travel function with reeving."""
+
+    def test_identity_at_strand_count_one(self):
+        """Verify backward compatibility: strand_count=1 is identity."""
+        takeup_travel = Quantity(1.5, u.meter)
+
+        result = rope_travel_from_takeup_travel(
+            takeup_travel=takeup_travel, strand_count=1
+        )
+
+        # rope_travel = 1.5 * 1 = 1.5 m
+        assert result.magnitude == pytest.approx(1.5, rel=1e-9)
+        assert result.units == u.meter
+
+    def test_default_strand_count_is_one(self):
+        """Default strand_count should be 1."""
+        takeup_travel = Quantity(1.5, u.meter)
+
+        result_with_default = rope_travel_from_takeup_travel(
+            takeup_travel=takeup_travel
+        )
+        result_with_explicit_one = rope_travel_from_takeup_travel(
+            takeup_travel=takeup_travel, strand_count=1
+        )
+
+        assert result_with_default.magnitude == pytest.approx(
+            result_with_explicit_one.magnitude, rel=1e-9
+        )
+
+    def test_reeving_scaling_two_strands(self):
+        """Verify ideal reeving: rope_travel = takeup_travel * strand_count."""
+        takeup_travel = Quantity(1.5, u.meter)
+
+        result = rope_travel_from_takeup_travel(
+            takeup_travel=takeup_travel, strand_count=2
+        )
+
+        # rope_travel = 1.5 * 2 = 3.0 m
+        assert result.magnitude == pytest.approx(3.0, rel=1e-9)
+        assert result.units == u.meter
+
+    def test_reeving_scaling_four_strands(self):
+        """Verify ideal reeving with 4 strands."""
+        takeup_travel = Quantity(0.5, u.meter)
+
+        result = rope_travel_from_takeup_travel(
+            takeup_travel=takeup_travel, strand_count=4, unit="millimeter"
+        )
+
+        # rope_travel = 0.5 * 4 = 2.0 m = 2000 mm
+        assert result.magnitude == pytest.approx(2000.0, rel=1e-6)
+        assert result.units == u.millimeter
+
+    def test_unit_conversion_with_strand_count(self):
+        """Unit conversion still works with strand_count parameter."""
+        takeup_travel = Quantity(1500.0, u.millimeter)
+
+        result = rope_travel_from_takeup_travel(
+            takeup_travel=takeup_travel, strand_count=2, unit="meter"
+        )
+
+        # rope_travel = 1.5 m * 2 = 3.0 m
+        assert result.magnitude == pytest.approx(3.0, rel=1e-9)
+        assert result.units == u.meter
+
+    def test_negative_strand_count_raises_error(self):
+        """Negative strand_count should raise ValueError."""
+        takeup_travel = Quantity(1.5, u.meter)
+
+        with pytest.raises(ValueError, match="strand_count.*must be.*positive"):
+            rope_travel_from_takeup_travel(
+                takeup_travel=takeup_travel, strand_count=-1
+            )
+
+    def test_zero_strand_count_raises_error(self):
+        """strand_count=0 should raise ValueError."""
+        takeup_travel = Quantity(1.5, u.meter)
+
+        with pytest.raises(ValueError, match="strand_count.*must be.*positive"):
+            rope_travel_from_takeup_travel(
+                takeup_travel=takeup_travel, strand_count=0
+            )
+
+    def test_bool_strand_count_raises_error(self):
+        """Bool strand_count should raise ValueError."""
+        takeup_travel = Quantity(1.5, u.meter)
+
+        with pytest.raises(ValueError, match="strand_count.*must be.*int"):
+            rope_travel_from_takeup_travel(
+                takeup_travel=takeup_travel, strand_count=True  # type: ignore
+            )
+
+    def test_rope_travel_array_broadcast(self):
+        """Array Quantity input should broadcast with strand_count."""
+        import numpy as np
+
+        travels = np.array([1.0, 1.5, 2.0])
+        takeup_travel = Quantity(travels, u.meter)
+
+        result = rope_travel_from_takeup_travel(
+            takeup_travel=takeup_travel, strand_count=2, unit="meter"
+        )
+
+        # Each should be takeup_travel * strand_count
+        expected = travels * 2
+        assert np.allclose(result.magnitude, expected, rtol=1e-9)
+
+
+class TestTakeupTravelFromRopeTravelPublic:
+    """Test suite for public takeup_travel_from_rope_travel function (reeving inverse)."""
+
+    def test_identity_at_strand_count_one(self):
+        """Verify backward compatibility: strand_count=1 is identity."""
+        rope_travel = Quantity(3.0, u.meter)
+
+        result = takeup_travel_from_rope_travel(
+            rope_travel=rope_travel, strand_count=1
+        )
+
+        # takeup_travel = 3.0 / 1 = 3.0 m
+        assert result.magnitude == pytest.approx(3.0, rel=1e-9)
+        assert result.units == u.meter
+
+    def test_default_strand_count_is_one(self):
+        """Default strand_count should be 1."""
+        rope_travel = Quantity(3.0, u.meter)
+
+        result_with_default = takeup_travel_from_rope_travel(
+            rope_travel=rope_travel
+        )
+        result_with_explicit_one = takeup_travel_from_rope_travel(
+            rope_travel=rope_travel, strand_count=1
+        )
+
+        assert result_with_default.magnitude == pytest.approx(
+            result_with_explicit_one.magnitude, rel=1e-9
+        )
+
+    def test_reeving_inverse_two_strands(self):
+        """Verify ideal reeving inverse: takeup_travel = rope_travel / strand_count."""
+        rope_travel = Quantity(3.0, u.meter)
+
+        result = takeup_travel_from_rope_travel(
+            rope_travel=rope_travel, strand_count=2
+        )
+
+        # takeup_travel = 3.0 / 2 = 1.5 m
+        assert result.magnitude == pytest.approx(1.5, rel=1e-9)
+        assert result.units == u.meter
+
+    def test_reeving_inverse_four_strands(self):
+        """Verify ideal reeving inverse with 4 strands."""
+        rope_travel = Quantity(4000.0, u.millimeter)
+
+        result = takeup_travel_from_rope_travel(
+            rope_travel=rope_travel, strand_count=4, unit="meter"
+        )
+
+        # takeup_travel = 4.0 / 4 = 1.0 m
+        assert result.magnitude == pytest.approx(1.0, rel=1e-9)
+        assert result.units == u.meter
+
+    def test_unit_conversion_with_strand_count(self):
+        """Unit conversion still works with strand_count parameter."""
+        rope_travel = Quantity(3000.0, u.millimeter)
+
+        result = takeup_travel_from_rope_travel(
+            rope_travel=rope_travel, strand_count=2, unit="meter"
+        )
+
+        # takeup_travel = 3.0 / 2 = 1.5 m
+        assert result.magnitude == pytest.approx(1.5, rel=1e-9)
+        assert result.units == u.meter
+
+    def test_negative_strand_count_raises_error(self):
+        """Negative strand_count should raise ValueError."""
+        rope_travel = Quantity(3.0, u.meter)
+
+        with pytest.raises(ValueError, match="strand_count.*must be.*positive"):
+            takeup_travel_from_rope_travel(
+                rope_travel=rope_travel, strand_count=-1
+            )
+
+    def test_zero_strand_count_raises_error(self):
+        """strand_count=0 should raise ValueError."""
+        rope_travel = Quantity(3.0, u.meter)
+
+        with pytest.raises(ValueError, match="strand_count.*must be.*positive"):
+            takeup_travel_from_rope_travel(
+                rope_travel=rope_travel, strand_count=0
+            )
+
+    def test_bool_strand_count_raises_error(self):
+        """Bool strand_count should raise ValueError."""
+        rope_travel = Quantity(3.0, u.meter)
+
+        with pytest.raises(ValueError, match="strand_count.*must be.*int"):
+            takeup_travel_from_rope_travel(
+                rope_travel=rope_travel, strand_count=True  # type: ignore
+            )
+
+    def test_round_trip_takeup_to_rope_to_takeup(self):
+        """Round-trip: takeup → rope → takeup should preserve value at any strand_count."""
+        for sc in [1, 2, 3, 4]:
+            original_takeup = Quantity(1.5, u.meter)
+            rope = rope_travel_from_takeup_travel(
+                takeup_travel=original_takeup, strand_count=sc
+            )
+            recovered_takeup = takeup_travel_from_rope_travel(
+                rope_travel=rope, strand_count=sc
+            )
+            assert recovered_takeup.magnitude == pytest.approx(
+                original_takeup.magnitude, rel=1e-9
+            )
+
+    def test_rope_travel_from_takeup_travel_array_broadcast(self):
+        """Array Quantity input should broadcast with strand_count."""
+        import numpy as np
+
+        travels = np.array([1.0, 1.5, 2.0])
+        takeup_travel = Quantity(travels, u.meter)
+
+        result = rope_travel_from_takeup_travel(
+            takeup_travel=takeup_travel, strand_count=2, unit="meter"
+        )
+
+        # Each should be takeup_travel * strand_count
+        expected = travels * 2
+        assert np.allclose(result.magnitude, expected, rtol=1e-9)
+
+    def test_takeup_travel_from_rope_travel_array_broadcast(self):
+        """Array Quantity input should broadcast with strand_count for inverse."""
+        import numpy as np
+
+        travels = np.array([2.0, 3.0, 4.0])
+        rope_travel = Quantity(travels, u.meter)
+
+        result = takeup_travel_from_rope_travel(
+            rope_travel=rope_travel, strand_count=2, unit="meter"
+        )
+
+        # Each should be rope_travel / strand_count
+        expected = travels / 2
+        assert np.allclose(result.magnitude, expected, rtol=1e-9)
 
 
 class TestBoolStrandCountRejection:

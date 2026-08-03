@@ -5,6 +5,8 @@ from eytelwein.belt_conveyor_design.core._belt_tensions_and_takeup_forces import
     _minimum_belt_tension_from_sag_carry,
     _takeup_weight_force_from_takeup_weight,
     _takeup_weight_from_takeup_weight_force,
+    _rope_travel_from_takeup_travel,
+    _takeup_travel_from_rope_travel,
 )
 
 
@@ -275,3 +277,119 @@ class TestTakeupWeightFromTakeupWeightForceWithStrandCount:
                 takeup_weight_force_n=force, strand_count=sc
             )
             assert recovered_weight == pytest.approx(original_weight, rel=1e-5)
+
+
+class TestRopeTravelFromTakeupTravel:
+    """Test suite for the private _rope_travel_from_takeup_travel function."""
+
+    def test_identity_at_strand_count_one(self):
+        """Verify strand_count=1 is identity: rope_travel = takeup_travel."""
+        takeup_travel_m = 1.5
+        result = _rope_travel_from_takeup_travel(
+            takeup_travel_m=takeup_travel_m, strand_count=1
+        )
+        assert result == pytest.approx(takeup_travel_m, rel=1e-9)
+
+    def test_scaling_with_strand_count_two(self):
+        """Verify ideal reeving: rope_travel = takeup_travel * strand_count."""
+        takeup_travel_m = 1.5
+        result = _rope_travel_from_takeup_travel(
+            takeup_travel_m=takeup_travel_m, strand_count=2
+        )
+        expected = takeup_travel_m * 2
+        assert result == pytest.approx(expected, rel=1e-9)
+
+    def test_scaling_with_strand_count_four(self):
+        """Verify scaling for four strands."""
+        takeup_travel_m = 1.0
+        result = _rope_travel_from_takeup_travel(
+            takeup_travel_m=takeup_travel_m, strand_count=4
+        )
+        expected = takeup_travel_m * 4
+        assert result == pytest.approx(expected, rel=1e-9)
+
+    def test_zero_travel_identity(self):
+        """Zero travel should yield zero rope travel regardless of strand_count."""
+        for sc in [1, 2, 3]:
+            result = _rope_travel_from_takeup_travel(
+                takeup_travel_m=0.0, strand_count=sc
+            )
+            assert result == pytest.approx(0.0, abs=1e-9)
+
+    def test_strand_count_zero_raises_error(self):
+        """strand_count=0 should raise ValueError (division guard)."""
+        with pytest.raises(ValueError, match="strand_count.*must be.*positive"):
+            _rope_travel_from_takeup_travel(
+                takeup_travel_m=1.5, strand_count=0
+            )
+
+    def test_strand_count_negative_raises_error(self):
+        """Negative strand_count should raise ValueError."""
+        with pytest.raises(ValueError, match="strand_count.*must be.*positive"):
+            _rope_travel_from_takeup_travel(
+                takeup_travel_m=1.5, strand_count=-1
+            )
+
+
+class TestTakeupTravelFromRopeTravel:
+    """Test suite for the private _takeup_travel_from_rope_travel function."""
+
+    def test_identity_at_strand_count_one(self):
+        """Verify strand_count=1 is identity: takeup_travel = rope_travel."""
+        rope_travel_m = 3.0
+        result = _takeup_travel_from_rope_travel(
+            rope_travel_m=rope_travel_m, strand_count=1
+        )
+        assert result == pytest.approx(rope_travel_m, rel=1e-9)
+
+    def test_scaling_with_strand_count_two(self):
+        """Verify ideal reeving inverse: takeup_travel = rope_travel / strand_count."""
+        rope_travel_m = 3.0
+        result = _takeup_travel_from_rope_travel(
+            rope_travel_m=rope_travel_m, strand_count=2
+        )
+        expected = rope_travel_m / 2
+        assert result == pytest.approx(expected, rel=1e-9)
+
+    def test_scaling_with_strand_count_four(self):
+        """Verify scaling for four strands."""
+        rope_travel_m = 4.0
+        result = _takeup_travel_from_rope_travel(
+            rope_travel_m=rope_travel_m, strand_count=4
+        )
+        expected = rope_travel_m / 4
+        assert result == pytest.approx(expected, rel=1e-9)
+
+    def test_zero_travel_identity(self):
+        """Zero travel should yield zero takeup travel regardless of strand_count."""
+        for sc in [1, 2, 3]:
+            result = _takeup_travel_from_rope_travel(
+                rope_travel_m=0.0, strand_count=sc
+            )
+            assert result == pytest.approx(0.0, abs=1e-9)
+
+    def test_strand_count_zero_raises_error(self):
+        """strand_count=0 should raise ValueError (division guard)."""
+        with pytest.raises(ValueError, match="strand_count.*must be.*positive"):
+            _takeup_travel_from_rope_travel(
+                rope_travel_m=3.0, strand_count=0
+            )
+
+    def test_strand_count_negative_raises_error(self):
+        """Negative strand_count should raise ValueError."""
+        with pytest.raises(ValueError, match="strand_count.*must be.*positive"):
+            _takeup_travel_from_rope_travel(
+                rope_travel_m=3.0, strand_count=-1
+            )
+
+    def test_round_trip_takeup_to_rope_to_takeup(self):
+        """Round-trip: takeup → rope → takeup should preserve value at any strand_count."""
+        for sc in [1, 2, 3, 4]:
+            original_takeup = 1.5
+            rope = _rope_travel_from_takeup_travel(
+                takeup_travel_m=original_takeup, strand_count=sc
+            )
+            recovered_takeup = _takeup_travel_from_rope_travel(
+                rope_travel_m=rope, strand_count=sc
+            )
+            assert recovered_takeup == pytest.approx(original_takeup, rel=1e-9)
