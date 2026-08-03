@@ -74,10 +74,10 @@ from eytelwein.belt_conveyor_design.core.belt_tensions_and_takeup_forces import 
     takeup_travel_from_rope_travel,
     effort_force_from_load_force,
     load_force_from_effort_force,
-    rope_force_and_travel_from_takeup_weight_and_travel,
-    takeup_weight_and_travel_from_rope_force_and_travel,
-    RopeForceAndTravel,
-    TakeupWeightAndTravel,
+    effort_force_and_rope_travel_from_load_force_and_takeup_travel,
+    load_force_and_takeup_travel_from_effort_force_and_rope_travel,
+    EffortForceAndRopeTravel,
+    LoadForceAndTravel,
 )
 
 # Core Module - Design of conveyor belt
@@ -209,10 +209,10 @@ __all__ = [
     "takeup_travel_from_rope_travel",
     "effort_force_from_load_force",
     "load_force_from_effort_force",
-    "rope_force_and_travel_from_takeup_weight_and_travel",
-    "takeup_weight_and_travel_from_rope_force_and_travel",
-    "RopeForceAndTravel",
-    "TakeupWeightAndTravel",
+    "effort_force_and_rope_travel_from_load_force_and_takeup_travel",
+    "load_force_and_takeup_travel_from_effort_force_and_rope_travel",
+    "EffortForceAndRopeTravel",
+    "LoadForceAndTravel",
     # Core - Design of conveyor belt
     "belt_safety_factor_from_splice_strength_and_belt_tension",
     "rating_tension_from_belt_safety_factor_and_belt_tension",

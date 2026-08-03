@@ -846,68 +846,68 @@ def takeup_travel_from_rope_travel(
 
 
 @dataclass(frozen=True)
-class RopeForceAndTravel:
-    """Coupled result of force and travel transformations for rope-side quantities.
+class EffortForceAndRopeTravel:
+    """Coupled result of effort-side force and rope travel transformations.
 
-    This result type pairs the two reciprocal transforms (force and travel) to prevent
-    design errors where one transform is applied but the other is forgotten.
+    This result type pairs effort-side force and rope travel to prevent design errors
+    where one transform is applied but the other is forgotten.
 
     Attributes
     ----------
-    rope_force : Quantity
-        Rope-side force quantity (usually in kilonewton).
+    effort_force : Quantity
+        Effort-side force quantity (usually in kilonewton).
     rope_travel : Quantity
         Rope-side travel distance (usually in meter).
     """
 
-    rope_force: Quantity
+    effort_force: Quantity
     rope_travel: Quantity
 
 
 @dataclass(frozen=True)
-class TakeupWeightAndTravel:
-    """Coupled result of force and travel transformations for takeup-side quantities.
+class LoadForceAndTravel:
+    """Coupled result of load-side force and takeup travel transformations.
 
-    This result type pairs the two reciprocal transforms (weight/force and travel)
-    to prevent design errors where one transform is applied but the other is forgotten.
+    This result type pairs load-side force and takeup travel to prevent design errors
+    where one transform is applied but the other is forgotten.
 
     Attributes
     ----------
-    takeup_weight : Quantity
-        Takeup-side weight/mass quantity (usually in kilogram).
+    load_force : Quantity
+        Load-side force quantity (usually in kilonewton).
     takeup_travel : Quantity
         Takeup-side travel distance (usually in meter).
     """
 
-    takeup_weight: Quantity
+    load_force: Quantity
     takeup_travel: Quantity
 
 
-def rope_force_and_travel_from_takeup_weight_and_travel(
-    takeup_weight: Quantity,
+def effort_force_and_rope_travel_from_load_force_and_takeup_travel(
+    load_force: Quantity,
     takeup_travel: Quantity,
     strand_count: int = 1,
     force_unit: str = "kilonewton",
     travel_unit: str = "meter",
     precision: int | None = None,
-) -> RopeForceAndTravel:
-    """Calculate coupled rope-side force and travel from takeup-side weight and travel.
+) -> EffortForceAndRopeTravel:
+    """Calculate coupled effort-side force and rope travel from load-side force and takeup travel.
 
-    This coupled transform prevents field errors by returning both the force and
-    travel transformations together. In ideal reeving, applying only one without
-    the other violates energy conservation.
+    This coupled transform operates on force (not weight) with explicit effort/load terminology.
+    It prevents field errors by returning both the force and travel transformations together.
+    In ideal reeving, applying only one without the other violates energy conservation.
 
     Parameters
     ----------
-    takeup_weight : Quantity
-        Takeup-side weight in kg or equivalent mass units.
+    load_force : Quantity
+        Load-side force in newtons or equivalent force units.
     takeup_travel : Quantity
         Takeup-side travel distance in meters or equivalent length units.
     strand_count : int, optional
         Number of strands in ideal reeving system (default: 1).
         Must be a positive integer >= 1.
     force_unit : str, optional
-        Output unit for rope force result (default: "kilonewton").
+        Output unit for effort force result (default: "kilonewton").
         Must be a force unit.
     travel_unit : str, optional
         Output unit for rope travel result (default: "meter").
@@ -918,8 +918,8 @@ def rope_force_and_travel_from_takeup_weight_and_travel(
 
     Returns
     -------
-    RopeForceAndTravel
-        Frozen dataclass with rope_force and rope_travel Quantity fields.
+    EffortForceAndRopeTravel
+        Frozen dataclass with effort_force and rope_travel Quantity fields.
 
     Raises
     ------
@@ -932,22 +932,19 @@ def rope_force_and_travel_from_takeup_weight_and_travel(
     >>> from pint import Quantity
     >>> from eytelwein.main.units import get_unit_registry
     >>> u = get_unit_registry()
-    >>> result = rope_force_and_travel_from_takeup_weight_and_travel(
-    ...     takeup_weight=Quantity(3000.0, u.kilogram),
+    >>> result = effort_force_and_rope_travel_from_load_force_and_takeup_travel(
+    ...     load_force=Quantity(29419.95, u.newton),
     ...     takeup_travel=Quantity(1.5, u.meter),
     ...     strand_count=2,
     ... )
-    >>> result.rope_force  # doctest: +SKIP
+    >>> result.effort_force  # doctest: +SKIP
     14.709975... kilonewton
     >>> result.rope_travel  # doctest: +SKIP
     3.0 meter
     """
-    load_force = takeup_weight_force_from_takeup_weight(
-        takeup_weight=takeup_weight,
-        unit="newton",
-        precision=None,
-    )
-    rope_force = effort_force_from_load_force(
+    validate_positive_count(strand_count, "strand_count")
+
+    effort_force = effort_force_from_load_force(
         load_force=load_force,
         strand_count=strand_count,
         unit=force_unit,
@@ -959,35 +956,35 @@ def rope_force_and_travel_from_takeup_weight_and_travel(
         unit=travel_unit,
         precision=precision,
     )
-    return RopeForceAndTravel(rope_force=rope_force, rope_travel=rope_travel)
+    return EffortForceAndRopeTravel(effort_force=effort_force, rope_travel=rope_travel)
 
 
-def takeup_weight_and_travel_from_rope_force_and_travel(
-    rope_force: Quantity,
+def load_force_and_takeup_travel_from_effort_force_and_rope_travel(
+    effort_force: Quantity,
     rope_travel: Quantity,
     strand_count: int = 1,
-    weight_unit: str = "kilogram",
+    force_unit: str = "kilonewton",
     travel_unit: str = "meter",
     precision: int | None = None,
-) -> TakeupWeightAndTravel:
-    """Calculate coupled takeup-side weight and travel from rope-side force and travel (inverse).
+) -> LoadForceAndTravel:
+    """Calculate coupled load-side force and takeup travel from effort-side force and rope travel (inverse).
 
-    This coupled inverse transform prevents field errors by returning both the force and
-    travel transformations together. In ideal reeving, applying only one without
-    the other violates energy conservation.
+    This coupled inverse transform operates on force (not weight) with explicit effort/load terminology.
+    It prevents field errors by returning both the force and travel transformations together.
+    In ideal reeving, applying only one without the other violates energy conservation.
 
     Parameters
     ----------
-    rope_force : Quantity
-        Rope-side force in newtons or equivalent force units.
+    effort_force : Quantity
+        Effort-side force in newtons or equivalent force units.
     rope_travel : Quantity
         Rope-side travel distance in meters or equivalent length units.
     strand_count : int, optional
         Number of strands in ideal reeving system (default: 1).
         Must be a positive integer >= 1.
-    weight_unit : str, optional
-        Output unit for takeup weight result (default: "kilogram").
-        Must be a mass unit.
+    force_unit : str, optional
+        Output unit for load force result (default: "kilonewton").
+        Must be a force unit.
     travel_unit : str, optional
         Output unit for takeup travel result (default: "meter").
         Must be a length unit.
@@ -997,8 +994,8 @@ def takeup_weight_and_travel_from_rope_force_and_travel(
 
     Returns
     -------
-    TakeupWeightAndTravel
-        Frozen dataclass with takeup_weight and takeup_travel Quantity fields.
+    LoadForceAndTravel
+        Frozen dataclass with load_force and takeup_travel Quantity fields.
 
     Raises
     ------
@@ -1011,25 +1008,23 @@ def takeup_weight_and_travel_from_rope_force_and_travel(
     >>> from pint import Quantity
     >>> from eytelwein.main.units import get_unit_registry
     >>> u = get_unit_registry()
-    >>> result = takeup_weight_and_travel_from_rope_force_and_travel(
-    ...     rope_force=Quantity(14709.975, u.newton),
+    >>> result = load_force_and_takeup_travel_from_effort_force_and_rope_travel(
+    ...     effort_force=Quantity(14709.975, u.newton),
     ...     rope_travel=Quantity(3.0, u.meter),
     ...     strand_count=2,
+    ...     force_unit="newton",
     ... )
-    >>> result.takeup_weight  # doctest: +SKIP
-    3000.0 kilogram
+    >>> result.load_force  # doctest: +SKIP
+    29419.95 newton
     >>> result.takeup_travel  # doctest: +SKIP
     1.5 meter
     """
+    validate_positive_count(strand_count, "strand_count")
+
     load_force = load_force_from_effort_force(
-        effort_force=rope_force,
+        effort_force=effort_force,
         strand_count=strand_count,
-        unit="newton",
-        precision=None,
-    )
-    takeup_weight = takeup_weight_from_takeup_weight_force(
-        takeup_weight_force=load_force,
-        unit=weight_unit,
+        unit=force_unit,
         precision=precision,
     )
     takeup_travel = takeup_travel_from_rope_travel(
@@ -1038,6 +1033,7 @@ def takeup_weight_and_travel_from_rope_force_and_travel(
         unit=travel_unit,
         precision=precision,
     )
-    return TakeupWeightAndTravel(
-        takeup_weight=takeup_weight, takeup_travel=takeup_travel
-    )
+    return LoadForceAndTravel(load_force=load_force, takeup_travel=takeup_travel)
+
+
+# End of belt_tensions_and_takeup_forces module

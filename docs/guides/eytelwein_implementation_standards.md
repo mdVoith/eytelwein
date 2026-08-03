@@ -240,6 +240,36 @@ def rope_travel_from_takeup_travel(
     """
 ```
 
+## Coupled Reeving Transform API Conventions
+
+### Force-Only Design Principle
+
+Coupled reeving transforms in the `belt_tensions_and_takeup_forces` module operate on **force only**, not weight. Gravity composition must happen outside the coupled transforms.
+
+**API Pattern:**
+```python
+# ✅ Coupled transform operates on force
+result = effort_force_and_rope_travel_from_load_force_and_takeup_travel(
+    load_force=Quantity(29420, u.newton),  # Force (not weight)
+    takeup_travel=Quantity(1.5, u.meter),
+    strand_count=2,
+)
+# Returns: EffortForceAndRopeTravel with effort_force and rope_travel
+
+# Gravity composition happens outside, when needed
+load_force = load_weight * u.kilogram * u.gravity  # Compose gravity separately
+```
+
+**Rationale:**
+- Decouples reeving geometry from gravitational assumptions
+- Allows flexible application to horizontal, inclined, and curved conveyor systems
+- Maintains energy conservation: force transform and travel transform must be paired
+- Returns coupled result dataclass to prevent accidental partial application
+
+### Coupled Result Dataclasses
+
+Coupled transforms return frozen dataclasses (e.g., `EffortForceAndRopeTravel`, `LoadForceAndTravel`) that bind related transformations together. This design prevents field errors where only one transformation is applied without the other, violating energy conservation in ideal reeving.
+
 ## Array Broadcasting
 
 ### Array Detection Pattern
