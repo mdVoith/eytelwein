@@ -6,6 +6,7 @@ the corresponding private helper with unit conversion, validation, and
 output formatting.
 """
 
+from dataclasses import dataclass
 from pint import Quantity
 from eytelwein.belt_conveyor_design.core._belt_tensions_and_takeup_forces import (
     _minimum_belt_tension_from_sag_carry,
@@ -15,54 +16,10 @@ from eytelwein.belt_conveyor_design.core._belt_tensions_and_takeup_forces import
     _takeup_travel_from_rope_travel,
 )
 from eytelwein.main.units import get_unit_registry
+from eytelwein.main.validation import validate_positive_count
 
 # Get the unit registry
 u = get_unit_registry()
-
-
-def _validate_positive_count(count: int, param_name: str = "count") -> None:
-    """
-    Validate that a discrete configuration count is a positive integer.
-
-    This centralized helper is used for parameters like strand_count and
-    quantity_of_drives that represent discrete configuration counts,
-    which must be plain int (not Quantity) values.
-
-    Parameters
-    ----------
-    count : int
-        The count value to validate.
-    param_name : str, optional
-        Name of the parameter for error messages (default: "count").
-
-    Raises
-    ------
-    ValueError
-        If count is a bool (which is a subclass of int in Python).
-    ValueError
-        If count is not an integer type.
-    ValueError
-        If count is not >= 1.
-
-    Notes
-    -----
-    Discrete configuration counts (e.g., strand_count, quantity_of_drives)
-    represent architectural choices in reeving or drive design and are always
-    plain integers, never Quantity objects. This is intentional: while measured
-    values and dimensionless ratios use Quantity, configuration counts reflect
-    the logical structure of the system, not measurements with units.
-    """
-    # Explicitly reject bool (which is a subclass of int in Python)
-    if isinstance(count, bool):
-        raise ValueError(
-            f"{param_name} must be an integer, got {type(count).__name__}."
-        )
-    if not isinstance(count, int):
-        raise ValueError(
-            f"{param_name} must be an integer, got {type(count).__name__}."
-        )
-    if count <= 0:
-        raise ValueError(f"{param_name} must be a positive integer >= 1, got {count}.")
 
 
 def minimum_belt_tension_from_sag_carry(
@@ -243,7 +200,7 @@ def takeup_weight_force_from_takeup_weight(
     29.41995... kilonewton
     """
     # Validate strand_count using centralized helper
-    _validate_positive_count(strand_count, "strand_count")
+    validate_positive_count(strand_count, "strand_count")
 
     try:
         # Convert input to standard working units (kg)
@@ -363,7 +320,7 @@ def takeup_weight_from_takeup_weight_force(
     3000.0... kilogram
     """
     # Validate strand_count using centralized helper
-    _validate_positive_count(strand_count, "strand_count")
+    validate_positive_count(strand_count, "strand_count")
 
     try:
         # Convert input to standard working units (newtons)
@@ -499,7 +456,7 @@ def rope_travel_from_takeup_travel(
     3.0 meter
     """
     # Validate strand_count using centralized helper
-    _validate_positive_count(strand_count, "strand_count")
+    validate_positive_count(strand_count, "strand_count")
 
     try:
         # Convert input to standard working units (meters)
@@ -630,7 +587,7 @@ def takeup_travel_from_rope_travel(
     1.5 meter
     """
     # Validate strand_count using centralized helper
-    _validate_positive_count(strand_count, "strand_count")
+    validate_positive_count(strand_count, "strand_count")
 
     try:
         # Convert input to standard working units (meters)
@@ -682,3 +639,191 @@ def takeup_travel_from_rope_travel(
         result = round(result, precision)
 
     return result
+
+
+@dataclass(frozen=True)
+class RopeForceAndTravel:
+    """Coupled result of force and travel transformations for rope-side quantities.
+
+    This result type pairs the two reciprocal transforms (force and travel) to prevent
+    design errors where one transform is applied but the other is forgotten.
+
+    Attributes
+    ----------
+    rope_force : Quantity
+        Rope-side force quantity (usually in kilonewton).
+    rope_travel : Quantity
+        Rope-side travel distance (usually in meter).
+    """
+
+    rope_force: Quantity
+    rope_travel: Quantity
+
+
+@dataclass(frozen=True)
+class TakeupWeightAndTravel:
+    """Coupled result of force and travel transformations for takeup-side quantities.
+
+    This result type pairs the two reciprocal transforms (weight/force and travel)
+    to prevent design errors where one transform is applied but the other is forgotten.
+
+    Attributes
+    ----------
+    takeup_weight : Quantity
+        Takeup-side weight/mass quantity (usually in kilogram).
+    takeup_travel : Quantity
+        Takeup-side travel distance (usually in meter).
+    """
+
+    takeup_weight: Quantity
+    takeup_travel: Quantity
+
+
+def rope_force_and_travel_from_takeup_weight_and_travel(
+    takeup_weight: Quantity,
+    takeup_travel: Quantity,
+    strand_count: int = 1,
+    force_unit: str = "kilonewton",
+    travel_unit: str = "meter",
+    precision: int | None = None,
+) -> RopeForceAndTravel:
+    """Calculate coupled rope-side force and travel from takeup-side weight and travel.
+
+    This coupled transform prevents field errors by returning both the force and
+    travel transformations together. In ideal reeving, applying only one without
+    the other violates energy conservation.
+
+    Parameters
+    ----------
+    takeup_weight : Quantity
+        Takeup-side weight in kg or equivalent mass units.
+    takeup_travel : Quantity
+        Takeup-side travel distance in meters or equivalent length units.
+    strand_count : int, optional
+        Number of strands in ideal reeving system (default: 1).
+        Must be a positive integer >= 1.
+    force_unit : str, optional
+        Output unit for rope force result (default: "kilonewton").
+        Must be a force unit.
+    travel_unit : str, optional
+        Output unit for rope travel result (default: "meter").
+        Must be a length unit.
+    precision : int or None, optional
+        Decimal places to round the results to (default: None).
+        If None, no rounding is applied.
+
+    Returns
+    -------
+    RopeForceAndTravel
+        Frozen dataclass with rope_force and rope_travel Quantity fields.
+
+    Raises
+    ------
+    ValueError
+        If unit conversion fails, physical constraints are violated, or
+        strand_count is not a positive integer.
+
+    Examples
+    --------
+    >>> from pint import Quantity
+    >>> from eytelwein.main.units import get_unit_registry
+    >>> u = get_unit_registry()
+    >>> result = rope_force_and_travel_from_takeup_weight_and_travel(
+    ...     takeup_weight=Quantity(3000.0, u.kilogram),
+    ...     takeup_travel=Quantity(1.5, u.meter),
+    ...     strand_count=2,
+    ... )
+    >>> result.rope_force  # doctest: +SKIP
+    58.839... kilonewton
+    >>> result.rope_travel  # doctest: +SKIP
+    3.0 meter
+    """
+    rope_force = takeup_weight_force_from_takeup_weight(
+        takeup_weight=takeup_weight,
+        unit=force_unit,
+        precision=precision,
+        strand_count=strand_count,
+    )
+    rope_travel = rope_travel_from_takeup_travel(
+        takeup_travel=takeup_travel,
+        strand_count=strand_count,
+        unit=travel_unit,
+        precision=precision,
+    )
+    return RopeForceAndTravel(rope_force=rope_force, rope_travel=rope_travel)
+
+
+def takeup_weight_and_travel_from_rope_force_and_travel(
+    rope_force: Quantity,
+    rope_travel: Quantity,
+    strand_count: int = 1,
+    weight_unit: str = "kilogram",
+    travel_unit: str = "meter",
+    precision: int | None = None,
+) -> TakeupWeightAndTravel:
+    """Calculate coupled takeup-side weight and travel from rope-side force and travel (inverse).
+
+    This coupled inverse transform prevents field errors by returning both the force and
+    travel transformations together. In ideal reeving, applying only one without
+    the other violates energy conservation.
+
+    Parameters
+    ----------
+    rope_force : Quantity
+        Rope-side force in newtons or equivalent force units.
+    rope_travel : Quantity
+        Rope-side travel distance in meters or equivalent length units.
+    strand_count : int, optional
+        Number of strands in ideal reeving system (default: 1).
+        Must be a positive integer >= 1.
+    weight_unit : str, optional
+        Output unit for takeup weight result (default: "kilogram").
+        Must be a mass unit.
+    travel_unit : str, optional
+        Output unit for takeup travel result (default: "meter").
+        Must be a length unit.
+    precision : int or None, optional
+        Decimal places to round the results to (default: None).
+        If None, no rounding is applied.
+
+    Returns
+    -------
+    TakeupWeightAndTravel
+        Frozen dataclass with takeup_weight and takeup_travel Quantity fields.
+
+    Raises
+    ------
+    ValueError
+        If unit conversion fails, physical constraints are violated, or
+        strand_count is not a positive integer.
+
+    Examples
+    --------
+    >>> from pint import Quantity
+    >>> from eytelwein.main.units import get_unit_registry
+    >>> u = get_unit_registry()
+    >>> result = takeup_weight_and_travel_from_rope_force_and_travel(
+    ...     rope_force=Quantity(58839.9, u.newton),
+    ...     rope_travel=Quantity(3.0, u.meter),
+    ...     strand_count=2,
+    ... )
+    >>> result.takeup_weight  # doctest: +SKIP
+    3000.0 kilogram
+    >>> result.takeup_travel  # doctest: +SKIP
+    1.5 meter
+    """
+    takeup_weight = takeup_weight_from_takeup_weight_force(
+        takeup_weight_force=rope_force,
+        unit=weight_unit,
+        precision=precision,
+        strand_count=strand_count,
+    )
+    takeup_travel = takeup_travel_from_rope_travel(
+        rope_travel=rope_travel,
+        strand_count=strand_count,
+        unit=travel_unit,
+        precision=precision,
+    )
+    return TakeupWeightAndTravel(
+        takeup_weight=takeup_weight, takeup_travel=takeup_travel
+    )

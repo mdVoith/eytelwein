@@ -2,9 +2,7 @@
 
 from pint import Quantity
 
-from eytelwein.belt_conveyor_design.core.belt_tensions_and_takeup_forces import (
-    _validate_positive_count,
-)
+from eytelwein.main.validation import validate_positive_count
 from eytelwein.belt_conveyor_design.extended._mass_inertia import (
     _translating_mass_from_line_load_and_segment_length,
     _translating_mass_idler_carry,
@@ -1010,7 +1008,7 @@ def total_inertia_for_single_drive(
 
     if ls_total.magnitude < 0:
         raise ValueError("total_low_speed_inertia must be non-negative")
-    _validate_positive_count(quantity_of_drives, "quantity_of_drives")
+    validate_positive_count(quantity_of_drives, "quantity_of_drives")
     if ratio.magnitude <= 0:
         raise ValueError("gearbox_ratio_motor_to_low_speed_side must be positive")
 
