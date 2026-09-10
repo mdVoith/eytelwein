@@ -3,6 +3,8 @@ import pytest
 from eytelwein.main.units import get_unit_registry
 from eytelwein.testing_methods.core.belt_joints import (
     nominal_breaking_strength_of_textile_belt_specimen,
+    specimen_width_from_nominal_breaking_strength_and_width_related_nominal_breaking_tension,
+    width_related_nominal_breaking_tension_from_nominal_breaking_strength_and_specimen_width,
 )
 
 # Get the unit registry
@@ -98,6 +100,79 @@ def test_nominal_breaking_strength_of_textile_belt_specimen_output_unit_conversi
     assert result.units == u.newton
 
 
+# Phase 3: Round-trip coverage and import-surface checks
+
+
+def test_forward_to_width_inverse_round_trip():
+    """Test forward->width_inverse round trip consistency."""
+    # Start with specimen width and tension
+    original_width = 100 * u.mm
+    tension = 10 * u.N / u.mm
+
+    # Forward: calculate breaking strength
+    breaking_strength = nominal_breaking_strength_of_textile_belt_specimen(
+        specimen_width=original_width,
+        width_related_nominal_breaking_tension=tension,
+    )
+
+    # Inverse: recover specimen width
+    recovered_width = specimen_width_from_nominal_breaking_strength_and_width_related_nominal_breaking_tension(
+        nominal_breaking_strength=breaking_strength,
+        width_related_nominal_breaking_tension=tension,
+    )
+
+    # Round-trip should recover original width (within tolerance)
+    assert recovered_width.units == original_width.units
+    assert abs(recovered_width.magnitude - original_width.magnitude) < 1e-9
+
+
+def test_forward_to_tension_inverse_round_trip():
+    """Test forward->tension_inverse round trip consistency."""
+    # Start with specimen width and tension
+    width = 100 * u.mm
+    original_tension = 10 * u.N / u.mm
+
+    # Forward: calculate breaking strength
+    breaking_strength = nominal_breaking_strength_of_textile_belt_specimen(
+        specimen_width=width,
+        width_related_nominal_breaking_tension=original_tension,
+    )
+
+    # Inverse: recover tension
+    recovered_tension = width_related_nominal_breaking_tension_from_nominal_breaking_strength_and_specimen_width(
+        nominal_breaking_strength=breaking_strength,
+        specimen_width=width,
+    )
+
+    # Round-trip should recover original tension (within tolerance)
+    assert recovered_tension.units == original_tension.units
+    assert abs(recovered_tension.magnitude - original_tension.magnitude) < 1e-9
+
+
+def test_inverse_width_import_surface():
+    """Test that width inverse public name is accessible from testing_methods package."""
+    import eytelwein.testing_methods
+
+    assert hasattr(
+        eytelwein.testing_methods,
+        "specimen_width_from_nominal_breaking_strength_and_width_related_nominal_breaking_tension",
+    )
+    func = eytelwein.testing_methods.specimen_width_from_nominal_breaking_strength_and_width_related_nominal_breaking_tension
+    assert callable(func)
+
+
+def test_inverse_tension_import_surface():
+    """Test that tension inverse public name is accessible from testing_methods package."""
+    import eytelwein.testing_methods
+
+    assert hasattr(
+        eytelwein.testing_methods,
+        "width_related_nominal_breaking_tension_from_nominal_breaking_strength_and_specimen_width",
+    )
+    func = eytelwein.testing_methods.width_related_nominal_breaking_tension_from_nominal_breaking_strength_and_specimen_width
+    assert callable(func)
+
+
 def test_nominal_breaking_strength_of_textile_belt_specimen_width_related_tension_equivalent_unit():
     """Test input conversion using equivalent unit (kN/m converted to N/mm)."""
     # 1 kN/m = 1000 N / 1000 mm = 1 N/mm
@@ -136,12 +211,22 @@ def test_root_package_exposes_testing_methods():
     from eytelwein import testing_methods as imported_package
     from eytelwein.testing_methods import (
         nominal_breaking_strength_of_textile_belt_specimen as imported_func,
+        specimen_width_from_nominal_breaking_strength_and_width_related_nominal_breaking_tension as imported_width_inverse,
+        width_related_nominal_breaking_tension_from_nominal_breaking_strength_and_specimen_width as imported_tension_inverse,
     )
 
     assert eytelwein.testing_methods is imported_package
     assert (
         imported_package.nominal_breaking_strength_of_textile_belt_specimen
         is imported_func
+    )
+    assert (
+        imported_package.specimen_width_from_nominal_breaking_strength_and_width_related_nominal_breaking_tension
+        is imported_width_inverse
+    )
+    assert (
+        imported_package.width_related_nominal_breaking_tension_from_nominal_breaking_strength_and_specimen_width
+        is imported_tension_inverse
     )
 
 
