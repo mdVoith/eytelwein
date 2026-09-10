@@ -119,3 +119,27 @@ def test_nominal_breaking_strength_of_textile_belt_specimen_incompatible_output_
             width_related_nominal_breaking_tension=10 * u.N / u.mm,
             unit="meter",
         )
+
+
+def test_testing_methods_import_chain():
+    """Test that the public function is accessible from eytelwein.testing_methods."""
+    from eytelwein.testing_methods import (
+        nominal_breaking_strength_of_textile_belt_specimen as imported_func,
+    )
+
+    assert imported_func is nominal_breaking_strength_of_textile_belt_specimen
+
+
+def test_root_package_exposes_testing_methods():
+    """Test that root eytelwein exports the testing_methods package surface."""
+    import eytelwein
+    from eytelwein import testing_methods as imported_package
+    from eytelwein.testing_methods import (
+        nominal_breaking_strength_of_textile_belt_specimen as imported_func,
+    )
+
+    assert eytelwein.testing_methods is imported_package
+    assert (
+        imported_package.nominal_breaking_strength_of_textile_belt_specimen
+        is imported_func
+    )
