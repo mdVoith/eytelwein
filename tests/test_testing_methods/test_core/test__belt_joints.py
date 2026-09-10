@@ -1,7 +1,10 @@
 import pytest
 
 from eytelwein.testing_methods.core._belt_joints import (
+    _nominal_breaking_strength_of_specimen_from_reference_upper_load_and_relative_reference_splice_efficiency,
     _nominal_breaking_strength_of_textile_belt_specimen,
+    _reference_upper_load_from_relative_reference_splice_efficiency_and_nominal_breaking_strength_of_specimen,
+    _relative_reference_splice_efficiency_from_reference_upper_load_and_nominal_breaking_strength_of_specimen,
     _specimen_width_from_nominal_breaking_strength_and_width_related_nominal_breaking_tension,
     _width_related_nominal_breaking_tension_from_nominal_breaking_strength_and_specimen_width,
 )
@@ -145,3 +148,132 @@ def test_width_related_tension_inverse_negative_numerator():
         nominal_breaking_strength_kn=-1.0, specimen_width_mm=100.0
     )
     assert result == -10.0
+
+
+# Tests for relative reference splice efficiency forward: k_t,rel = F_o,ref / F_B * 100
+def test_relative_reference_splice_efficiency_forward_positive_values():
+    """Test forward efficiency calculation with positive inputs."""
+    # k_t,rel = 10.0 / 100.0 * 100 = 10.0 percent
+    result = _relative_reference_splice_efficiency_from_reference_upper_load_and_nominal_breaking_strength_of_specimen(
+        reference_upper_load_kn=10.0,
+        nominal_breaking_strength_of_specimen_kn=100.0,
+    )
+    assert result == 10.0
+
+
+def test_relative_reference_splice_efficiency_forward_zero_numerator():
+    """Test forward efficiency with zero reference upper load."""
+    # k_t,rel = 0.0 / 100.0 * 100 = 0.0 percent
+    result = _relative_reference_splice_efficiency_from_reference_upper_load_and_nominal_breaking_strength_of_specimen(
+        reference_upper_load_kn=0.0,
+        nominal_breaking_strength_of_specimen_kn=100.0,
+    )
+    assert result == 0.0
+
+
+def test_relative_reference_splice_efficiency_forward_zero_denominator():
+    """Test forward efficiency raises ValueError when nominal breaking strength is zero."""
+    with pytest.raises(ValueError):
+        _relative_reference_splice_efficiency_from_reference_upper_load_and_nominal_breaking_strength_of_specimen(
+            reference_upper_load_kn=10.0,
+            nominal_breaking_strength_of_specimen_kn=0.0,
+        )
+
+
+def test_relative_reference_splice_efficiency_forward_negative_denominator():
+    """Test forward efficiency raises ValueError when nominal breaking strength is negative."""
+    with pytest.raises(ValueError):
+        _relative_reference_splice_efficiency_from_reference_upper_load_and_nominal_breaking_strength_of_specimen(
+            reference_upper_load_kn=10.0,
+            nominal_breaking_strength_of_specimen_kn=-100.0,
+        )
+
+
+def test_relative_reference_splice_efficiency_forward_negative_numerator():
+    """Test forward efficiency with negative reference upper load (negative denominator still guards)."""
+    # k_t,rel = (-10.0) / 100.0 * 100 = -10.0 percent
+    result = _relative_reference_splice_efficiency_from_reference_upper_load_and_nominal_breaking_strength_of_specimen(
+        reference_upper_load_kn=-10.0,
+        nominal_breaking_strength_of_specimen_kn=100.0,
+    )
+    assert result == -10.0
+
+
+# Tests for reference upper load inverse: F_o,ref = k_t,rel / 100 * F_B
+def test_reference_upper_load_inverse_positive_values():
+    """Test reference upper load inverse with positive inputs."""
+    # F_o,ref = 10.0 / 100 * 100.0 = 10.0 kN
+    result = _reference_upper_load_from_relative_reference_splice_efficiency_and_nominal_breaking_strength_of_specimen(
+        relative_reference_splice_efficiency_percent=10.0,
+        nominal_breaking_strength_of_specimen_kn=100.0,
+    )
+    assert result == 10.0
+
+
+def test_reference_upper_load_inverse_zero_efficiency():
+    """Test reference upper load inverse with zero efficiency."""
+    # F_o,ref = 0.0 / 100 * 100.0 = 0.0 kN
+    result = _reference_upper_load_from_relative_reference_splice_efficiency_and_nominal_breaking_strength_of_specimen(
+        relative_reference_splice_efficiency_percent=0.0,
+        nominal_breaking_strength_of_specimen_kn=100.0,
+    )
+    assert result == 0.0
+
+
+def test_reference_upper_load_inverse_zero_efficiency_negative_numerator():
+    """Test reference upper load inverse with zero efficiency and negative nominal breaking strength."""
+    # F_o,ref = 0.0 / 100 * (-100.0) = 0.0 kN
+    result = _reference_upper_load_from_relative_reference_splice_efficiency_and_nominal_breaking_strength_of_specimen(
+        relative_reference_splice_efficiency_percent=0.0,
+        nominal_breaking_strength_of_specimen_kn=-100.0,
+    )
+    assert result == 0.0
+
+
+def test_reference_upper_load_inverse_negative_numerator():
+    """Test reference upper load inverse with negative nominal breaking strength."""
+    # F_o,ref = 10.0 / 100 * (-100.0) = -10.0 kN
+    result = _reference_upper_load_from_relative_reference_splice_efficiency_and_nominal_breaking_strength_of_specimen(
+        relative_reference_splice_efficiency_percent=10.0,
+        nominal_breaking_strength_of_specimen_kn=-100.0,
+    )
+    assert result == -10.0
+
+
+# Tests for nominal breaking strength inverse: F_B = F_o,ref / (k_t,rel / 100)
+def test_nominal_breaking_strength_inverse_positive_values():
+    """Test nominal breaking strength inverse with positive inputs."""
+    # F_B = 10.0 / (10.0 / 100) = 10.0 / 0.1 = 100.0 kN
+    result = _nominal_breaking_strength_of_specimen_from_reference_upper_load_and_relative_reference_splice_efficiency(
+        reference_upper_load_kn=10.0,
+        relative_reference_splice_efficiency_percent=10.0,
+    )
+    assert result == 100.0
+
+
+def test_nominal_breaking_strength_inverse_zero_efficiency():
+    """Test nominal breaking strength inverse raises ValueError when efficiency is zero."""
+    with pytest.raises(ValueError):
+        _nominal_breaking_strength_of_specimen_from_reference_upper_load_and_relative_reference_splice_efficiency(
+            reference_upper_load_kn=10.0,
+            relative_reference_splice_efficiency_percent=0.0,
+        )
+
+
+def test_nominal_breaking_strength_inverse_negative_efficiency():
+    """Test nominal breaking strength inverse raises ValueError when efficiency is negative."""
+    with pytest.raises(ValueError):
+        _nominal_breaking_strength_of_specimen_from_reference_upper_load_and_relative_reference_splice_efficiency(
+            reference_upper_load_kn=10.0,
+            relative_reference_splice_efficiency_percent=-10.0,
+        )
+
+
+def test_nominal_breaking_strength_inverse_negative_numerator():
+    """Test nominal breaking strength inverse with negative reference upper load."""
+    # F_B = (-10.0) / (10.0 / 100) = (-10.0) / 0.1 = -100.0 kN
+    result = _nominal_breaking_strength_of_specimen_from_reference_upper_load_and_relative_reference_splice_efficiency(
+        reference_upper_load_kn=-10.0,
+        relative_reference_splice_efficiency_percent=10.0,
+    )
+    assert result == -100.0

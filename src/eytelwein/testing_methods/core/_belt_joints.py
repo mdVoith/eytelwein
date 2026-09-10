@@ -119,3 +119,130 @@ def _width_related_nominal_breaking_tension_from_nominal_breaking_strength_and_s
         1000.0 * nominal_breaking_strength_kn / specimen_width_mm
     )
     return tension_coefficient_n_per_mm
+
+
+def _relative_reference_splice_efficiency_from_reference_upper_load_and_nominal_breaking_strength_of_specimen(
+    reference_upper_load_kn: float,
+    nominal_breaking_strength_of_specimen_kn: float,
+) -> float:
+    """
+    Calculate relative reference splice efficiency from reference upper load and nominal breaking strength.
+
+    Parameters
+    ----------
+    reference_upper_load_kn : float
+        The reference upper load in kilonewtons (kN).
+    nominal_breaking_strength_of_specimen_kn : float
+        The nominal breaking strength of the specimen in kilonewtons (kN).
+
+    Returns
+    -------
+    float
+        The relative reference splice efficiency in percent.
+
+    Raises
+    ------
+    ValueError
+        If nominal_breaking_strength_of_specimen_kn is zero or negative,
+        preventing division by zero or physically invalid results.
+
+    Notes
+    -----
+    Formula: k_t,rel = F_o,ref / F_B * 100
+    where:
+        k_t,rel = relative reference splice efficiency (%)
+        F_o,ref = reference upper load (kN)
+        F_B = nominal breaking strength of specimen (kN)
+    """
+    # Guard against division by zero and invalid denominator
+    if nominal_breaking_strength_of_specimen_kn <= 0:
+        raise ValueError(
+            f"nominal_breaking_strength_of_specimen_kn must be positive, "
+            f"got {nominal_breaking_strength_of_specimen_kn}."
+        )
+
+    relative_reference_splice_efficiency_percent = (
+        reference_upper_load_kn / nominal_breaking_strength_of_specimen_kn * 100.0
+    )
+    return relative_reference_splice_efficiency_percent
+
+
+def _reference_upper_load_from_relative_reference_splice_efficiency_and_nominal_breaking_strength_of_specimen(
+    relative_reference_splice_efficiency_percent: float,
+    nominal_breaking_strength_of_specimen_kn: float,
+) -> float:
+    """
+    Calculate reference upper load from relative reference splice efficiency and nominal breaking strength.
+
+    Parameters
+    ----------
+    relative_reference_splice_efficiency_percent : float
+        The relative reference splice efficiency in percent.
+    nominal_breaking_strength_of_specimen_kn : float
+        The nominal breaking strength of the specimen in kilonewtons (kN).
+
+    Returns
+    -------
+    float
+        The reference upper load in kilonewtons (kN).
+
+    Notes
+    -----
+    Inverse formula: F_o,ref = k_t,rel / 100 * F_B
+    where:
+        F_o,ref = reference upper load (kN)
+        k_t,rel = relative reference splice efficiency (%)
+        F_B = nominal breaking strength of specimen (kN)
+    """
+    reference_upper_load_kn = (
+        relative_reference_splice_efficiency_percent
+        / 100.0
+        * nominal_breaking_strength_of_specimen_kn
+    )
+    return reference_upper_load_kn
+
+
+def _nominal_breaking_strength_of_specimen_from_reference_upper_load_and_relative_reference_splice_efficiency(
+    reference_upper_load_kn: float,
+    relative_reference_splice_efficiency_percent: float,
+) -> float:
+    """
+    Calculate nominal breaking strength from reference upper load and relative reference splice efficiency.
+
+    Parameters
+    ----------
+    reference_upper_load_kn : float
+        The reference upper load in kilonewtons (kN).
+    relative_reference_splice_efficiency_percent : float
+        The relative reference splice efficiency in percent.
+
+    Returns
+    -------
+    float
+        The nominal breaking strength of the specimen in kilonewtons (kN).
+
+    Raises
+    ------
+    ValueError
+        If relative_reference_splice_efficiency_percent is zero or negative,
+        preventing division by zero or physically invalid results.
+
+    Notes
+    -----
+    Inverse formula: F_B = F_o,ref / (k_t,rel / 100)
+    where:
+        F_B = nominal breaking strength of specimen (kN)
+        F_o,ref = reference upper load (kN)
+        k_t,rel = relative reference splice efficiency (%)
+    """
+    # Guard against division by zero and invalid denominator
+    if relative_reference_splice_efficiency_percent <= 0:
+        raise ValueError(
+            f"relative_reference_splice_efficiency_percent must be positive, "
+            f"got {relative_reference_splice_efficiency_percent}."
+        )
+
+    nominal_breaking_strength_of_specimen_kn = reference_upper_load_kn / (
+        relative_reference_splice_efficiency_percent / 100.0
+    )
+    return nominal_breaking_strength_of_specimen_kn
