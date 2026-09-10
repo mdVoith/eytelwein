@@ -1,11 +1,17 @@
 from eytelwein.testing_methods.core.belt_joints import (
+    nominal_breaking_strength_of_specimen_from_reference_upper_load_and_relative_reference_splice_efficiency,
     nominal_breaking_strength_of_textile_belt_specimen,
+    reference_upper_load_from_relative_reference_splice_efficiency_and_nominal_breaking_strength_of_specimen,
+    relative_reference_splice_efficiency_from_reference_upper_load_and_nominal_breaking_strength_of_specimen,
     specimen_width_from_nominal_breaking_strength_and_width_related_nominal_breaking_tension,
     width_related_nominal_breaking_tension_from_nominal_breaking_strength_and_specimen_width,
 )
 
 __all__ = [
+    "nominal_breaking_strength_of_specimen_from_reference_upper_load_and_relative_reference_splice_efficiency",
     "nominal_breaking_strength_of_textile_belt_specimen",
+    "reference_upper_load_from_relative_reference_splice_efficiency_and_nominal_breaking_strength_of_specimen",
+    "relative_reference_splice_efficiency_from_reference_upper_load_and_nominal_breaking_strength_of_specimen",
     "specimen_width_from_nominal_breaking_strength_and_width_related_nominal_breaking_tension",
     "width_related_nominal_breaking_tension_from_nominal_breaking_strength_and_specimen_width",
 ]

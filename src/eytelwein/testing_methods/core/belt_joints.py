@@ -2,7 +2,10 @@ from pint.registry import Quantity
 
 from eytelwein.main.units import get_unit_registry
 from eytelwein.testing_methods.core._belt_joints import (
+    _nominal_breaking_strength_of_specimen_from_reference_upper_load_and_relative_reference_splice_efficiency,
     _nominal_breaking_strength_of_textile_belt_specimen,
+    _reference_upper_load_from_relative_reference_splice_efficiency_and_nominal_breaking_strength_of_specimen,
+    _relative_reference_splice_efficiency_from_reference_upper_load_and_nominal_breaking_strength_of_specimen,
     _specimen_width_from_nominal_breaking_strength_and_width_related_nominal_breaking_tension,
     _width_related_nominal_breaking_tension_from_nominal_breaking_strength_and_specimen_width,
 )
@@ -249,6 +252,250 @@ def width_related_nominal_breaking_tension_from_nominal_breaking_strength_and_sp
     # First convert to the requested output unit
     try:
         result = tension_coefficient_n_per_mm.to(pint_unit)
+    except Exception as e:  # noqa: BLE001
+        raise ValueError(f"Error in converting to output unit: {e}")
+
+    # Then apply precision if specified
+    if precision is not None:
+        result = round(result, precision)
+
+    return result
+
+
+def relative_reference_splice_efficiency_from_reference_upper_load_and_nominal_breaking_strength_of_specimen(
+    reference_upper_load: Quantity,
+    nominal_breaking_strength_of_specimen: Quantity,
+    unit: str = "percent",
+    precision: int | None = None,
+) -> Quantity:
+    """
+    Calculate relative reference splice efficiency from reference upper load and nominal breaking strength.
+
+    Parameters
+    ----------
+    reference_upper_load : Quantity
+        The reference upper load in kilonewtons (kN).
+    nominal_breaking_strength_of_specimen : Quantity
+        The nominal breaking strength of the specimen in kilonewtons (kN).
+    unit : str, optional
+        The unit for the result, default is "percent".
+    precision : int | None, optional
+        The precision for rounding the result. Default is None. Use None to skip
+        rounding and retain maximum available precision.
+
+    Returns
+    -------
+    Quantity
+        The relative reference splice efficiency.
+
+    Raises
+    ------
+    ValueError
+        If there is an error in converting inputs, if physical constraints are violated, or if the unit is invalid.
+
+    Notes
+    -----
+    Formula: k_t,rel = F_o,ref / F_B * 100
+    where:
+        k_t,rel = relative reference splice efficiency (%)
+        F_o,ref = reference upper load (kN)
+        F_B = nominal breaking strength of specimen (kN)
+    """
+    try:
+        reference_upper_load_kn = reference_upper_load.to("kN")
+    except Exception as e:  # noqa: BLE001
+        raise ValueError(f"Error in converting reference_upper_load: {e}")
+
+    try:
+        nominal_breaking_strength_of_specimen_kn = (
+            nominal_breaking_strength_of_specimen.to("kN")
+        )
+    except Exception as e:  # noqa: BLE001
+        raise ValueError(
+            f"Error in converting nominal_breaking_strength_of_specimen: {e}"
+        )
+
+    try:
+        pint_unit = u.parse_units(unit)
+    except Exception as e:  # noqa: BLE001
+        raise ValueError(f"Invalid unit: {unit}. Error: {e}")
+
+    # Call the private forward helper (it validates denominator)
+    efficiency_percent = (
+        _relative_reference_splice_efficiency_from_reference_upper_load_and_nominal_breaking_strength_of_specimen(
+            reference_upper_load_kn.magnitude,
+            nominal_breaking_strength_of_specimen_kn.magnitude,
+        )
+        * u.percent
+    )
+
+    # First convert to the requested output unit
+    try:
+        result = efficiency_percent.to(pint_unit)
+    except Exception as e:  # noqa: BLE001
+        raise ValueError(f"Error in converting to output unit: {e}")
+
+    # Then apply precision if specified
+    if precision is not None:
+        result = round(result, precision)
+
+    return result
+
+
+def reference_upper_load_from_relative_reference_splice_efficiency_and_nominal_breaking_strength_of_specimen(
+    relative_reference_splice_efficiency: Quantity,
+    nominal_breaking_strength_of_specimen: Quantity,
+    unit: str = "kilonewton",
+    precision: int | None = None,
+) -> Quantity:
+    """
+    Calculate reference upper load from relative reference splice efficiency and nominal breaking strength.
+
+    Parameters
+    ----------
+    relative_reference_splice_efficiency : Quantity
+        The relative reference splice efficiency.
+    nominal_breaking_strength_of_specimen : Quantity
+        The nominal breaking strength of the specimen in kilonewtons (kN).
+    unit : str, optional
+        The unit for the result, default is "kilonewton".
+    precision : int | None, optional
+        The precision for rounding the result. Default is None. Use None to skip
+        rounding and retain maximum available precision.
+
+    Returns
+    -------
+    Quantity
+        The reference upper load in kilonewtons (kN).
+
+    Raises
+    ------
+    ValueError
+        If there is an error in converting inputs or if the unit is invalid.
+
+    Notes
+    -----
+    Inverse formula: F_o,ref = k_t,rel / 100 * F_B
+    where:
+        F_o,ref = reference upper load (kN)
+        k_t,rel = relative reference splice efficiency (%)
+        F_B = nominal breaking strength of specimen (kN)
+    """
+    try:
+        relative_reference_splice_efficiency_percent = (
+            relative_reference_splice_efficiency.to("percent")
+        )
+    except Exception as e:  # noqa: BLE001
+        raise ValueError(
+            f"Error in converting relative_reference_splice_efficiency: {e}"
+        )
+
+    try:
+        nominal_breaking_strength_of_specimen_kn = (
+            nominal_breaking_strength_of_specimen.to("kN")
+        )
+    except Exception as e:  # noqa: BLE001
+        raise ValueError(
+            f"Error in converting nominal_breaking_strength_of_specimen: {e}"
+        )
+
+    try:
+        pint_unit = u.parse_units(unit)
+    except Exception as e:  # noqa: BLE001
+        raise ValueError(f"Invalid unit: {unit}. Error: {e}")
+
+    # Call the private inverse helper
+    reference_upper_load_kn = (
+        _reference_upper_load_from_relative_reference_splice_efficiency_and_nominal_breaking_strength_of_specimen(
+            relative_reference_splice_efficiency_percent.magnitude,
+            nominal_breaking_strength_of_specimen_kn.magnitude,
+        )
+        * u.kilonewton
+    )
+
+    # First convert to the requested output unit
+    try:
+        result = reference_upper_load_kn.to(pint_unit)
+    except Exception as e:  # noqa: BLE001
+        raise ValueError(f"Error in converting to output unit: {e}")
+
+    # Then apply precision if specified
+    if precision is not None:
+        result = round(result, precision)
+
+    return result
+
+
+def nominal_breaking_strength_of_specimen_from_reference_upper_load_and_relative_reference_splice_efficiency(
+    reference_upper_load: Quantity,
+    relative_reference_splice_efficiency: Quantity,
+    unit: str = "kilonewton",
+    precision: int | None = None,
+) -> Quantity:
+    """
+    Calculate nominal breaking strength of specimen from reference upper load and relative reference splice efficiency.
+
+    Parameters
+    ----------
+    reference_upper_load : Quantity
+        The reference upper load in kilonewtons (kN).
+    relative_reference_splice_efficiency : Quantity
+        The relative reference splice efficiency.
+    unit : str, optional
+        The unit for the result, default is "kilonewton".
+    precision : int | None, optional
+        The precision for rounding the result. Default is None. Use None to skip
+        rounding and retain maximum available precision.
+
+    Returns
+    -------
+    Quantity
+        The nominal breaking strength of the specimen in kilonewtons (kN).
+
+    Raises
+    ------
+    ValueError
+        If there is an error in converting inputs, if physical constraints are violated, or if the unit is invalid.
+
+    Notes
+    -----
+    Inverse formula: F_B = F_o,ref / (k_t,rel / 100)
+    where:
+        F_B = nominal breaking strength of specimen (kN)
+        F_o,ref = reference upper load (kN)
+        k_t,rel = relative reference splice efficiency (%)
+    """
+    try:
+        reference_upper_load_kn = reference_upper_load.to("kN")
+    except Exception as e:  # noqa: BLE001
+        raise ValueError(f"Error in converting reference_upper_load: {e}")
+
+    try:
+        relative_reference_splice_efficiency_percent = (
+            relative_reference_splice_efficiency.to("percent")
+        )
+    except Exception as e:  # noqa: BLE001
+        raise ValueError(
+            f"Error in converting relative_reference_splice_efficiency: {e}"
+        )
+
+    try:
+        pint_unit = u.parse_units(unit)
+    except Exception as e:  # noqa: BLE001
+        raise ValueError(f"Invalid unit: {unit}. Error: {e}")
+
+    # Call the private inverse helper (it validates denominator)
+    nominal_breaking_strength_kn = (
+        _nominal_breaking_strength_of_specimen_from_reference_upper_load_and_relative_reference_splice_efficiency(
+            reference_upper_load_kn.magnitude,
+            relative_reference_splice_efficiency_percent.magnitude,
+        )
+        * u.kilonewton
+    )
+
+    # First convert to the requested output unit
+    try:
+        result = nominal_breaking_strength_kn.to(pint_unit)
     except Exception as e:  # noqa: BLE001
         raise ValueError(f"Error in converting to output unit: {e}")
 

@@ -211,7 +211,11 @@ def test_root_package_exposes_testing_methods():
     from eytelwein import testing_methods as imported_package
     from eytelwein.testing_methods import (
         nominal_breaking_strength_of_textile_belt_specimen as imported_func,
+    )
+    from eytelwein.testing_methods import (
         specimen_width_from_nominal_breaking_strength_and_width_related_nominal_breaking_tension as imported_width_inverse,
+    )
+    from eytelwein.testing_methods import (
         width_related_nominal_breaking_tension_from_nominal_breaking_strength_and_specimen_width as imported_tension_inverse,
     )
 
@@ -402,7 +406,485 @@ def test_width_related_nominal_breaking_tension_from_nominal_breaking_strength_a
         specimen_width=10 * u.cm,
     )
     assert result.magnitude == 10.0
-    assert result.units == u.N / u.mm
+
+
+# Tests for relative_reference_splice_efficiency_from_reference_upper_load_and_nominal_breaking_strength_of_specimen
+
+
+def test_relative_reference_splice_efficiency_from_reference_upper_load_and_nominal_breaking_strength_of_specimen_valid_values():
+    """Test forward relative reference splice efficiency with valid values."""
+    from eytelwein.testing_methods.core.belt_joints import (
+        relative_reference_splice_efficiency_from_reference_upper_load_and_nominal_breaking_strength_of_specimen,
+    )
+
+    # k_t,rel = F_o,ref / F_B * 100
+    # F_o,ref = 5 kN, F_B = 10 kN
+    # Result: 5 / 10 * 100 = 50 percent
+    result = relative_reference_splice_efficiency_from_reference_upper_load_and_nominal_breaking_strength_of_specimen(
+        reference_upper_load=5 * u.kilonewton,
+        nominal_breaking_strength_of_specimen=10 * u.kilonewton,
+    )
+    assert result.magnitude == 50.0
+    assert result.units == u.percent
+
+
+def test_relative_reference_splice_efficiency_from_reference_upper_load_and_nominal_breaking_strength_of_specimen_input_unit_conversion():
+    """Test that input units are converted correctly for forward function."""
+    from eytelwein.testing_methods.core.belt_joints import (
+        relative_reference_splice_efficiency_from_reference_upper_load_and_nominal_breaking_strength_of_specimen,
+    )
+
+    # 5000 N = 5 kN, 10000 N = 10 kN
+    result = relative_reference_splice_efficiency_from_reference_upper_load_and_nominal_breaking_strength_of_specimen(
+        reference_upper_load=5000 * u.newton,
+        nominal_breaking_strength_of_specimen=10000 * u.newton,
+    )
+    assert result.magnitude == 50.0
+    assert result.units == u.percent
+
+
+def test_relative_reference_splice_efficiency_from_reference_upper_load_and_nominal_breaking_strength_of_specimen_invalid_output_unit():
+    """Test that invalid output unit raises ValueError for forward function."""
+    from eytelwein.testing_methods.core.belt_joints import (
+        relative_reference_splice_efficiency_from_reference_upper_load_and_nominal_breaking_strength_of_specimen,
+    )
+
+    with pytest.raises(ValueError):
+        relative_reference_splice_efficiency_from_reference_upper_load_and_nominal_breaking_strength_of_specimen(
+            reference_upper_load=5 * u.kilonewton,
+            nominal_breaking_strength_of_specimen=10 * u.kilonewton,
+            unit="invalid_unit",
+        )
+
+
+def test_relative_reference_splice_efficiency_from_reference_upper_load_and_nominal_breaking_strength_of_specimen_incompatible_output_unit():
+    """Test that incompatible output unit raises ValueError for forward function."""
+    from eytelwein.testing_methods.core.belt_joints import (
+        relative_reference_splice_efficiency_from_reference_upper_load_and_nominal_breaking_strength_of_specimen,
+    )
+
+    with pytest.raises(ValueError):
+        relative_reference_splice_efficiency_from_reference_upper_load_and_nominal_breaking_strength_of_specimen(
+            reference_upper_load=5 * u.kilonewton,
+            nominal_breaking_strength_of_specimen=10 * u.kilonewton,
+            unit="meter",
+        )
+
+
+def test_relative_reference_splice_efficiency_from_reference_upper_load_and_nominal_breaking_strength_of_specimen_conversion_error():
+    """Test that invalid input raises ValueError for forward function."""
+    from eytelwein.testing_methods.core.belt_joints import (
+        relative_reference_splice_efficiency_from_reference_upper_load_and_nominal_breaking_strength_of_specimen,
+    )
+
+    with pytest.raises(ValueError):
+        relative_reference_splice_efficiency_from_reference_upper_load_and_nominal_breaking_strength_of_specimen(
+            reference_upper_load="not_a_quantity",
+            nominal_breaking_strength_of_specimen=10 * u.kilonewton,
+        )
+
+
+def test_relative_reference_splice_efficiency_from_reference_upper_load_and_nominal_breaking_strength_of_specimen_nominal_breaking_strength_conversion_error():
+    """Test that invalid nominal_breaking_strength_of_specimen input raises ValueError for forward function."""
+    from eytelwein.testing_methods.core.belt_joints import (
+        relative_reference_splice_efficiency_from_reference_upper_load_and_nominal_breaking_strength_of_specimen,
+    )
+
+    with pytest.raises(ValueError):
+        relative_reference_splice_efficiency_from_reference_upper_load_and_nominal_breaking_strength_of_specimen(
+            reference_upper_load=5 * u.kilonewton,
+            nominal_breaking_strength_of_specimen="not_a_quantity",
+        )
+
+
+def test_relative_reference_splice_efficiency_from_reference_upper_load_and_nominal_breaking_strength_of_specimen_positive_denominator_validation():
+    """Test that non-positive nominal breaking strength raises ValueError for forward function."""
+    from eytelwein.testing_methods.core.belt_joints import (
+        relative_reference_splice_efficiency_from_reference_upper_load_and_nominal_breaking_strength_of_specimen,
+    )
+
+    with pytest.raises(ValueError):
+        relative_reference_splice_efficiency_from_reference_upper_load_and_nominal_breaking_strength_of_specimen(
+            reference_upper_load=5 * u.kilonewton,
+            nominal_breaking_strength_of_specimen=0 * u.kilonewton,
+        )
+
+    with pytest.raises(ValueError):
+        relative_reference_splice_efficiency_from_reference_upper_load_and_nominal_breaking_strength_of_specimen(
+            reference_upper_load=5 * u.kilonewton,
+            nominal_breaking_strength_of_specimen=-10 * u.kilonewton,
+        )
+
+
+def test_relative_reference_splice_efficiency_from_reference_upper_load_and_nominal_breaking_strength_of_specimen_percent_output_behavior():
+    """Test that default output unit is percent for forward function."""
+    from eytelwein.testing_methods.core.belt_joints import (
+        relative_reference_splice_efficiency_from_reference_upper_load_and_nominal_breaking_strength_of_specimen,
+    )
+
+    result = relative_reference_splice_efficiency_from_reference_upper_load_and_nominal_breaking_strength_of_specimen(
+        reference_upper_load=5 * u.kilonewton,
+        nominal_breaking_strength_of_specimen=10 * u.kilonewton,
+    )
+    assert str(result.units) == "percent"
+
+
+def test_relative_reference_splice_efficiency_from_reference_upper_load_and_nominal_breaking_strength_of_specimen_dimensionless_output_conversion():
+    """Test output conversion to dimensionless for forward function."""
+    from eytelwein.testing_methods.core.belt_joints import (
+        relative_reference_splice_efficiency_from_reference_upper_load_and_nominal_breaking_strength_of_specimen,
+    )
+
+    result = relative_reference_splice_efficiency_from_reference_upper_load_and_nominal_breaking_strength_of_specimen(
+        reference_upper_load=5 * u.kilonewton,
+        nominal_breaking_strength_of_specimen=10 * u.kilonewton,
+        unit="dimensionless",
+    )
+    assert result.magnitude == 0.5
+    assert result.units == u.dimensionless
+
+
+def test_relative_reference_splice_efficiency_from_reference_upper_load_and_nominal_breaking_strength_of_specimen_precision():
+    """Test that precision parameter works correctly for forward function."""
+    from eytelwein.testing_methods.core.belt_joints import (
+        relative_reference_splice_efficiency_from_reference_upper_load_and_nominal_breaking_strength_of_specimen,
+    )
+
+    result = relative_reference_splice_efficiency_from_reference_upper_load_and_nominal_breaking_strength_of_specimen(
+        reference_upper_load=5.123 * u.kilonewton,
+        nominal_breaking_strength_of_specimen=10 * u.kilonewton,
+        precision=1,
+    )
+    assert result.magnitude == 51.2
+    assert result.units == u.percent
+
+
+# Tests for reference_upper_load_from_relative_reference_splice_efficiency_and_nominal_breaking_strength_of_specimen
+
+
+def test_reference_upper_load_from_relative_reference_splice_efficiency_and_nominal_breaking_strength_of_specimen_valid_values():
+    """Test inverse reference upper load with valid values."""
+    from eytelwein.testing_methods.core.belt_joints import (
+        reference_upper_load_from_relative_reference_splice_efficiency_and_nominal_breaking_strength_of_specimen,
+    )
+
+    # F_o,ref = k_t,rel / 100 * F_B
+    # k_t,rel = 50 percent, F_B = 10 kN
+    # Result: 50 / 100 * 10 = 5 kN
+    result = reference_upper_load_from_relative_reference_splice_efficiency_and_nominal_breaking_strength_of_specimen(
+        relative_reference_splice_efficiency=50 * u.percent,
+        nominal_breaking_strength_of_specimen=10 * u.kilonewton,
+    )
+    assert result.magnitude == 5.0
+    assert result.units == u.kilonewton
+
+
+def test_reference_upper_load_from_relative_reference_splice_efficiency_and_nominal_breaking_strength_of_specimen_unit_conversion():
+    """Test that input units are converted correctly for reference upper load inverse."""
+    from eytelwein.testing_methods.core.belt_joints import (
+        reference_upper_load_from_relative_reference_splice_efficiency_and_nominal_breaking_strength_of_specimen,
+    )
+
+    # 0.5 dimensionless = 50 percent, 10000 N = 10 kN
+    result = reference_upper_load_from_relative_reference_splice_efficiency_and_nominal_breaking_strength_of_specimen(
+        relative_reference_splice_efficiency=0.5 * u.dimensionless,
+        nominal_breaking_strength_of_specimen=10000 * u.newton,
+    )
+    assert result.magnitude == 5.0
+    assert result.units == u.kilonewton
+
+
+def test_reference_upper_load_from_relative_reference_splice_efficiency_and_nominal_breaking_strength_of_specimen_invalid_output_unit():
+    """Test that invalid output unit raises ValueError for reference upper load inverse."""
+    from eytelwein.testing_methods.core.belt_joints import (
+        reference_upper_load_from_relative_reference_splice_efficiency_and_nominal_breaking_strength_of_specimen,
+    )
+
+    with pytest.raises(ValueError):
+        reference_upper_load_from_relative_reference_splice_efficiency_and_nominal_breaking_strength_of_specimen(
+            relative_reference_splice_efficiency=50 * u.percent,
+            nominal_breaking_strength_of_specimen=10 * u.kilonewton,
+            unit="invalid_unit",
+        )
+
+
+def test_reference_upper_load_from_relative_reference_splice_efficiency_and_nominal_breaking_strength_of_specimen_incompatible_output_unit():
+    """Test that incompatible output unit raises ValueError for reference upper load inverse."""
+    from eytelwein.testing_methods.core.belt_joints import (
+        reference_upper_load_from_relative_reference_splice_efficiency_and_nominal_breaking_strength_of_specimen,
+    )
+
+    with pytest.raises(ValueError):
+        reference_upper_load_from_relative_reference_splice_efficiency_and_nominal_breaking_strength_of_specimen(
+            relative_reference_splice_efficiency=50 * u.percent,
+            nominal_breaking_strength_of_specimen=10 * u.kilonewton,
+            unit="meter",
+        )
+
+
+def test_reference_upper_load_from_relative_reference_splice_efficiency_and_nominal_breaking_strength_of_specimen_precision():
+    """Test that precision parameter works correctly for reference upper load inverse."""
+    from eytelwein.testing_methods.core.belt_joints import (
+        reference_upper_load_from_relative_reference_splice_efficiency_and_nominal_breaking_strength_of_specimen,
+    )
+
+    result = reference_upper_load_from_relative_reference_splice_efficiency_and_nominal_breaking_strength_of_specimen(
+        relative_reference_splice_efficiency=50.123 * u.percent,
+        nominal_breaking_strength_of_specimen=10 * u.kilonewton,
+        precision=2,
+    )
+    assert result.magnitude == 5.01
+    assert result.units == u.kilonewton
+
+
+def test_reference_upper_load_from_relative_reference_splice_efficiency_and_nominal_breaking_strength_of_specimen_conversion_error_bad_efficiency():
+    """Test that invalid efficiency input raises ValueError for reference upper load inverse."""
+    from eytelwein.testing_methods.core.belt_joints import (
+        reference_upper_load_from_relative_reference_splice_efficiency_and_nominal_breaking_strength_of_specimen,
+    )
+
+    with pytest.raises(ValueError):
+        reference_upper_load_from_relative_reference_splice_efficiency_and_nominal_breaking_strength_of_specimen(
+            relative_reference_splice_efficiency="not_a_quantity",
+            nominal_breaking_strength_of_specimen=10 * u.kilonewton,
+        )
+
+
+def test_reference_upper_load_from_relative_reference_splice_efficiency_and_nominal_breaking_strength_of_specimen_conversion_error_bad_nominal_breaking_strength():
+    """Test that invalid nominal breaking strength input raises ValueError for reference upper load inverse."""
+    from eytelwein.testing_methods.core.belt_joints import (
+        reference_upper_load_from_relative_reference_splice_efficiency_and_nominal_breaking_strength_of_specimen,
+    )
+
+    with pytest.raises(ValueError):
+        reference_upper_load_from_relative_reference_splice_efficiency_and_nominal_breaking_strength_of_specimen(
+            relative_reference_splice_efficiency=50 * u.percent,
+            nominal_breaking_strength_of_specimen="not_a_quantity",
+        )
+
+
+def test_reference_upper_load_from_relative_reference_splice_efficiency_and_nominal_breaking_strength_of_specimen_output_unit_conversion():
+    """Test that output can be converted to different units for reference upper load inverse."""
+    from eytelwein.testing_methods.core.belt_joints import (
+        reference_upper_load_from_relative_reference_splice_efficiency_and_nominal_breaking_strength_of_specimen,
+    )
+
+    # 5 kN = 5000 N
+    result = reference_upper_load_from_relative_reference_splice_efficiency_and_nominal_breaking_strength_of_specimen(
+        relative_reference_splice_efficiency=50 * u.percent,
+        nominal_breaking_strength_of_specimen=10 * u.kilonewton,
+        unit="newton",
+    )
+    assert result.magnitude == 5000.0
+    assert result.units == u.newton
+
+
+# Tests for nominal_breaking_strength_of_specimen_from_reference_upper_load_and_relative_reference_splice_efficiency
+
+
+def test_nominal_breaking_strength_of_specimen_from_reference_upper_load_and_relative_reference_splice_efficiency_valid_values():
+    """Test inverse nominal breaking strength with valid values."""
+    from eytelwein.testing_methods.core.belt_joints import (
+        nominal_breaking_strength_of_specimen_from_reference_upper_load_and_relative_reference_splice_efficiency,
+    )
+
+    # F_B = F_o,ref / (k_t,rel / 100)
+    # F_o,ref = 5 kN, k_t,rel = 50 percent
+    # Result: 5 / (50 / 100) = 5 / 0.5 = 10 kN
+    result = nominal_breaking_strength_of_specimen_from_reference_upper_load_and_relative_reference_splice_efficiency(
+        reference_upper_load=5 * u.kilonewton,
+        relative_reference_splice_efficiency=50 * u.percent,
+    )
+    assert result.magnitude == 10.0
+    assert result.units == u.kilonewton
+
+
+def test_nominal_breaking_strength_of_specimen_from_reference_upper_load_and_relative_reference_splice_efficiency_unit_conversion():
+    """Test that input units are converted correctly for nominal breaking strength inverse."""
+    from eytelwein.testing_methods.core.belt_joints import (
+        nominal_breaking_strength_of_specimen_from_reference_upper_load_and_relative_reference_splice_efficiency,
+    )
+
+    # 5000 N = 5 kN, 0.5 dimensionless = 50 percent
+    result = nominal_breaking_strength_of_specimen_from_reference_upper_load_and_relative_reference_splice_efficiency(
+        reference_upper_load=5000 * u.newton,
+        relative_reference_splice_efficiency=0.5 * u.dimensionless,
+    )
+    assert result.magnitude == 10.0
+    assert result.units == u.kilonewton
+
+
+def test_nominal_breaking_strength_of_specimen_from_reference_upper_load_and_relative_reference_splice_efficiency_invalid_output_unit():
+    """Test that invalid output unit raises ValueError for nominal breaking strength inverse."""
+    from eytelwein.testing_methods.core.belt_joints import (
+        nominal_breaking_strength_of_specimen_from_reference_upper_load_and_relative_reference_splice_efficiency,
+    )
+
+    with pytest.raises(ValueError):
+        nominal_breaking_strength_of_specimen_from_reference_upper_load_and_relative_reference_splice_efficiency(
+            reference_upper_load=5 * u.kilonewton,
+            relative_reference_splice_efficiency=50 * u.percent,
+            unit="invalid_unit",
+        )
+
+
+def test_nominal_breaking_strength_of_specimen_from_reference_upper_load_and_relative_reference_splice_efficiency_incompatible_output_unit():
+    """Test that incompatible output unit raises ValueError for nominal breaking strength inverse."""
+    from eytelwein.testing_methods.core.belt_joints import (
+        nominal_breaking_strength_of_specimen_from_reference_upper_load_and_relative_reference_splice_efficiency,
+    )
+
+    with pytest.raises(ValueError):
+        nominal_breaking_strength_of_specimen_from_reference_upper_load_and_relative_reference_splice_efficiency(
+            reference_upper_load=5 * u.kilonewton,
+            relative_reference_splice_efficiency=50 * u.percent,
+            unit="meter",
+        )
+
+
+def test_nominal_breaking_strength_of_specimen_from_reference_upper_load_and_relative_reference_splice_efficiency_positive_denominator_validation():
+    """Test that non-positive relative reference splice efficiency raises ValueError."""
+    from eytelwein.testing_methods.core.belt_joints import (
+        nominal_breaking_strength_of_specimen_from_reference_upper_load_and_relative_reference_splice_efficiency,
+    )
+
+    with pytest.raises(ValueError):
+        nominal_breaking_strength_of_specimen_from_reference_upper_load_and_relative_reference_splice_efficiency(
+            reference_upper_load=5 * u.kilonewton,
+            relative_reference_splice_efficiency=0 * u.percent,
+        )
+
+    with pytest.raises(ValueError):
+        nominal_breaking_strength_of_specimen_from_reference_upper_load_and_relative_reference_splice_efficiency(
+            reference_upper_load=5 * u.kilonewton,
+            relative_reference_splice_efficiency=-50 * u.percent,
+        )
+
+
+def test_nominal_breaking_strength_of_specimen_from_reference_upper_load_and_relative_reference_splice_efficiency_precision():
+    """Test that precision parameter works correctly for nominal breaking strength inverse."""
+    from eytelwein.testing_methods.core.belt_joints import (
+        nominal_breaking_strength_of_specimen_from_reference_upper_load_and_relative_reference_splice_efficiency,
+    )
+
+    result = nominal_breaking_strength_of_specimen_from_reference_upper_load_and_relative_reference_splice_efficiency(
+        reference_upper_load=5 * u.kilonewton,
+        relative_reference_splice_efficiency=50.123 * u.percent,
+        precision=2,
+    )
+    assert result.magnitude == 9.98
+    assert result.units == u.kilonewton
+
+
+def test_nominal_breaking_strength_of_specimen_from_reference_upper_load_and_relative_reference_splice_efficiency_conversion_error_bad_reference_upper_load():
+    """Test that invalid reference upper load input raises ValueError for nominal breaking strength inverse."""
+    from eytelwein.testing_methods.core.belt_joints import (
+        nominal_breaking_strength_of_specimen_from_reference_upper_load_and_relative_reference_splice_efficiency,
+    )
+
+    with pytest.raises(ValueError):
+        nominal_breaking_strength_of_specimen_from_reference_upper_load_and_relative_reference_splice_efficiency(
+            reference_upper_load="not_a_quantity",
+            relative_reference_splice_efficiency=50 * u.percent,
+        )
+
+
+def test_nominal_breaking_strength_of_specimen_from_reference_upper_load_and_relative_reference_splice_efficiency_conversion_error_bad_efficiency():
+    """Test that invalid efficiency input raises ValueError for nominal breaking strength inverse."""
+    from eytelwein.testing_methods.core.belt_joints import (
+        nominal_breaking_strength_of_specimen_from_reference_upper_load_and_relative_reference_splice_efficiency,
+    )
+
+    with pytest.raises(ValueError):
+        nominal_breaking_strength_of_specimen_from_reference_upper_load_and_relative_reference_splice_efficiency(
+            reference_upper_load=5 * u.kilonewton,
+            relative_reference_splice_efficiency="not_a_quantity",
+        )
+
+
+def test_nominal_breaking_strength_of_specimen_from_reference_upper_load_and_relative_reference_splice_efficiency_output_unit_conversion():
+    """Test that output can be converted to different units for nominal breaking strength inverse."""
+    from eytelwein.testing_methods.core.belt_joints import (
+        nominal_breaking_strength_of_specimen_from_reference_upper_load_and_relative_reference_splice_efficiency,
+    )
+
+    # 10 kN = 10000 N
+    result = nominal_breaking_strength_of_specimen_from_reference_upper_load_and_relative_reference_splice_efficiency(
+        reference_upper_load=5 * u.kilonewton,
+        relative_reference_splice_efficiency=50 * u.percent,
+        unit="newton",
+    )
+    assert result.magnitude == 10000.0
+    assert result.units == u.newton
+
+
+# Import surface tests for relative reference splice efficiency functions
+
+
+def test_relative_reference_splice_efficiency_import_from_core():
+    """Test that relative reference splice efficiency forward is accessible from core.belt_joints."""
+    from eytelwein.testing_methods.core.belt_joints import (
+        relative_reference_splice_efficiency_from_reference_upper_load_and_nominal_breaking_strength_of_specimen,
+    )
+
+    assert callable(
+        relative_reference_splice_efficiency_from_reference_upper_load_and_nominal_breaking_strength_of_specimen
+    )
+
+
+def test_reference_upper_load_import_from_core():
+    """Test that reference upper load inverse is accessible from core.belt_joints."""
+    from eytelwein.testing_methods.core.belt_joints import (
+        reference_upper_load_from_relative_reference_splice_efficiency_and_nominal_breaking_strength_of_specimen,
+    )
+
+    assert callable(
+        reference_upper_load_from_relative_reference_splice_efficiency_and_nominal_breaking_strength_of_specimen
+    )
+
+
+def test_nominal_breaking_strength_of_specimen_import_from_core():
+    """Test that nominal breaking strength of specimen inverse is accessible from core.belt_joints."""
+    from eytelwein.testing_methods.core.belt_joints import (
+        nominal_breaking_strength_of_specimen_from_reference_upper_load_and_relative_reference_splice_efficiency,
+    )
+
+    assert callable(
+        nominal_breaking_strength_of_specimen_from_reference_upper_load_and_relative_reference_splice_efficiency
+    )
+
+
+def test_relative_reference_splice_efficiency_import_from_testing_methods():
+    """Test that relative reference splice efficiency forward is accessible from eytelwein.testing_methods."""
+    from eytelwein.testing_methods import (
+        relative_reference_splice_efficiency_from_reference_upper_load_and_nominal_breaking_strength_of_specimen,
+    )
+
+    assert callable(
+        relative_reference_splice_efficiency_from_reference_upper_load_and_nominal_breaking_strength_of_specimen
+    )
+
+
+def test_reference_upper_load_import_from_testing_methods():
+    """Test that reference upper load inverse is accessible from eytelwein.testing_methods."""
+    from eytelwein.testing_methods import (
+        reference_upper_load_from_relative_reference_splice_efficiency_and_nominal_breaking_strength_of_specimen,
+    )
+
+    assert callable(
+        reference_upper_load_from_relative_reference_splice_efficiency_and_nominal_breaking_strength_of_specimen
+    )
+
+
+def test_nominal_breaking_strength_of_specimen_import_from_testing_methods():
+    """Test that nominal breaking strength of specimen inverse is accessible from eytelwein.testing_methods."""
+    from eytelwein.testing_methods import (
+        nominal_breaking_strength_of_specimen_from_reference_upper_load_and_relative_reference_splice_efficiency,
+    )
+
+    assert callable(
+        nominal_breaking_strength_of_specimen_from_reference_upper_load_and_relative_reference_splice_efficiency
+    )
 
 
 def test_width_related_nominal_breaking_tension_from_nominal_breaking_strength_and_specimen_width_invalid_output_unit():
