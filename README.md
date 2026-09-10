@@ -45,6 +45,7 @@ refined.
 | `eytelwein.belt_conveyor_design.extended` | Extended methods — mass inertia, design of conveyor belt, additional drive layout functions |
 | `eytelwein.idler_design` | Idler roll load factor calculations |
 | `eytelwein.horizontal_curves` | Lateral force analysis for horizontally curved belt conveyors |
+| `eytelwein.testing_methods` | Testing methods for belt conveyor systems (textile belt joint specimen analysis) |
 | `eytelwein.main` | Shared utilities — unit registry singleton, physical constants |
 
 ## Installation
@@ -100,6 +101,23 @@ from eytelwein.belt_conveyor_design import usable_belt_width
 # Calculate usable belt width for a 1200 mm belt
 b = usable_belt_width(belt_width=1200 * u.mm)
 print(b)  # 1050.0 millimeter
+```
+
+### Testing Methods Example
+
+```python
+from eytelwein.main.units import get_unit_registry
+from eytelwein.testing_methods import nominal_breaking_strength_of_textile_belt_specimen
+
+u = get_unit_registry()
+
+# Calculate nominal breaking strength of textile belt specimen
+# Specimen width: 100 mm, width-related nominal breaking tension: 10 N/mm
+strength = nominal_breaking_strength_of_textile_belt_specimen(
+    specimen_width=100 * u.mm,
+    width_related_nominal_breaking_tension=10 * u.N / u.mm,
+)
+print(strength)  # 1.0 kilonewton
 ```
 
 ## Real-World Example Script
