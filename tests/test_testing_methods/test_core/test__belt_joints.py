@@ -277,3 +277,69 @@ def test_nominal_breaking_strength_inverse_negative_numerator():
         relative_reference_splice_efficiency_percent=10.0,
     )
     assert result == -100.0
+
+
+# Dataset tests using approved values:
+# b = 172 mm, k_N = 630 N/mm, k_t,rel = 30 %
+# Derived: F_B = 172 * 630 / 1000 = 108.36 kN
+# Derived: F_o,ref = 30 / 100 * 108.36 = 32.508 kN
+
+
+def test_nominal_breaking_strength_of_textile_belt_specimen_dataset():
+    """Test with approved dataset: b=172mm, k_N=630N/mm."""
+    # F_B = 172 * 630 / 1000 = 108.36 kN
+    result = _nominal_breaking_strength_of_textile_belt_specimen(
+        belt_width_mm=172.0,
+        tension_coefficient_n_per_mm=630.0,
+    )
+    assert result == pytest.approx(108.36, abs=1e-10)
+
+
+def test_specimen_width_from_nominal_breaking_strength_and_width_related_nominal_breaking_tension_dataset():
+    """Test width inverse with approved dataset: F_B=108.36kN, k_N=630N/mm."""
+    # b = 1000 * 108.36 / 630 = 172.0 mm
+    result = _specimen_width_from_nominal_breaking_strength_and_width_related_nominal_breaking_tension(
+        nominal_breaking_strength_kn=108.36,
+        width_related_nominal_breaking_tension_n_per_mm=630.0,
+    )
+    assert result == pytest.approx(172.0, abs=1e-10)
+
+
+def test_width_related_nominal_breaking_tension_from_nominal_breaking_strength_and_specimen_width_dataset():
+    """Test tension inverse with approved dataset: F_B=108.36kN, b=172mm."""
+    # k_N = 1000 * 108.36 / 172 = 630.0 N/mm
+    result = _width_related_nominal_breaking_tension_from_nominal_breaking_strength_and_specimen_width(
+        nominal_breaking_strength_kn=108.36,
+        specimen_width_mm=172.0,
+    )
+    assert result == pytest.approx(630.0, abs=1e-10)
+
+
+def test_relative_reference_splice_efficiency_from_reference_upper_load_and_nominal_breaking_strength_of_specimen_dataset():
+    """Test splice efficiency forward with approved dataset: F_o,ref=32.508kN, F_B=108.36kN."""
+    # k_t,rel = 32.508 / 108.36 * 100 = 30.0 %
+    result = _relative_reference_splice_efficiency_from_reference_upper_load_and_nominal_breaking_strength_of_specimen(
+        reference_upper_load_kn=32.508,
+        nominal_breaking_strength_of_specimen_kn=108.36,
+    )
+    assert result == pytest.approx(30.0, abs=1e-10)
+
+
+def test_reference_upper_load_from_relative_reference_splice_efficiency_and_nominal_breaking_strength_of_specimen_dataset():
+    """Test reference upper load inverse with approved dataset: k_t,rel=30%, F_B=108.36kN."""
+    # F_o,ref = 30 / 100 * 108.36 = 32.508 kN
+    result = _reference_upper_load_from_relative_reference_splice_efficiency_and_nominal_breaking_strength_of_specimen(
+        relative_reference_splice_efficiency_percent=30.0,
+        nominal_breaking_strength_of_specimen_kn=108.36,
+    )
+    assert result == pytest.approx(32.508, abs=1e-10)
+
+
+def test_nominal_breaking_strength_of_specimen_from_reference_upper_load_and_relative_reference_splice_efficiency_dataset():
+    """Test nominal breaking strength inverse with approved dataset: F_o,ref=32.508kN, k_t,rel=30%."""
+    # F_B = 32.508 / (30 / 100) = 108.36 kN
+    result = _nominal_breaking_strength_of_specimen_from_reference_upper_load_and_relative_reference_splice_efficiency(
+        reference_upper_load_kn=32.508,
+        relative_reference_splice_efficiency_percent=30.0,
+    )
+    assert result == pytest.approx(108.36, abs=1e-10)
