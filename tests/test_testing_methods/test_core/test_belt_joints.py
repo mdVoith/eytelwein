@@ -1126,3 +1126,52 @@ def test_width_related_tension_dataset_inverse():
     )
     assert result.magnitude == 630.0
     assert result.units == u.N / u.mm
+
+
+# Phase 3: Dataset correctness tests for splice-efficiency triad
+# Approved dataset: F_B = 108.36 kN, F_o,ref = 32.508 kN, k_t,rel = 30 %
+
+
+def test_relative_reference_splice_efficiency_dataset_forward():
+    """Test relative reference splice efficiency forward with approved dataset."""
+    from eytelwein.testing_methods.core.belt_joints import (
+        relative_reference_splice_efficiency_from_reference_upper_load_and_nominal_breaking_strength_of_specimen,
+    )
+
+    # k_t,rel = F_o,ref / F_B * 100 = 32.508 kN / 108.36 kN * 100 = 30 %
+    result = relative_reference_splice_efficiency_from_reference_upper_load_and_nominal_breaking_strength_of_specimen(
+        reference_upper_load=32.508 * u.kilonewton,
+        nominal_breaking_strength_of_specimen=108.36 * u.kilonewton,
+    )
+    assert result.magnitude == pytest.approx(30.0)
+    assert result.units == u.percent
+
+
+def test_reference_upper_load_dataset_inverse():
+    """Test reference upper load inverse with approved dataset."""
+    from eytelwein.testing_methods.core.belt_joints import (
+        reference_upper_load_from_relative_reference_splice_efficiency_and_nominal_breaking_strength_of_specimen,
+    )
+
+    # F_o,ref = k_t,rel / 100 * F_B = 30 % / 100 * 108.36 kN = 32.508 kN
+    result = reference_upper_load_from_relative_reference_splice_efficiency_and_nominal_breaking_strength_of_specimen(
+        relative_reference_splice_efficiency=30 * u.percent,
+        nominal_breaking_strength_of_specimen=108.36 * u.kilonewton,
+    )
+    assert result.magnitude == pytest.approx(32.508)
+    assert result.units == u.kilonewton
+
+
+def test_nominal_breaking_strength_of_specimen_dataset_inverse():
+    """Test nominal breaking strength of specimen inverse with approved dataset."""
+    from eytelwein.testing_methods.core.belt_joints import (
+        nominal_breaking_strength_of_specimen_from_reference_upper_load_and_relative_reference_splice_efficiency,
+    )
+
+    # F_B = F_o,ref / (k_t,rel / 100) = 32.508 kN / (30 % / 100) = 32.508 kN / 0.30 = 108.36 kN
+    result = nominal_breaking_strength_of_specimen_from_reference_upper_load_and_relative_reference_splice_efficiency(
+        reference_upper_load=32.508 * u.kilonewton,
+        relative_reference_splice_efficiency=30 * u.percent,
+    )
+    assert result.magnitude == pytest.approx(108.36)
+    assert result.units == u.kilonewton
