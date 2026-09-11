@@ -1089,3 +1089,40 @@ def test_splice_efficiency_functions_import_from_testing_methods_identity():
         eytelwein.testing_methods.nominal_breaking_strength_of_specimen_from_reference_upper_load_and_relative_reference_splice_efficiency
         is core_breaking
     )
+
+
+# Phase 2: Dataset correctness tests for nominal breaking strength triad
+# Approved dataset: b = 172 mm, k_N = 630 N/mm, F_B = 172 * 630 / 1000 = 108.36 kN
+
+
+def test_nominal_breaking_strength_dataset_forward():
+    """Test nominal breaking strength forward with approved dataset."""
+    # F_B = b * k_N = 172 mm * 630 N/mm = 108360 N = 108.36 kN
+    result = nominal_breaking_strength_of_textile_belt_specimen(
+        specimen_width=172 * u.mm,
+        width_related_nominal_breaking_tension=630 * u.N / u.mm,
+    )
+    assert result.magnitude == 108.36
+    assert result.units == u.kilonewton
+
+
+def test_specimen_width_dataset_inverse():
+    """Test specimen width inverse with approved dataset."""
+    # b = 1000 * F_B / k_N = 1000 * 108.36 kN / 630 N/mm = 172 mm
+    result = specimen_width_from_nominal_breaking_strength_and_width_related_nominal_breaking_tension(
+        nominal_breaking_strength=108.36 * u.kilonewton,
+        width_related_nominal_breaking_tension=630 * u.N / u.mm,
+    )
+    assert result.magnitude == 172.0
+    assert result.units == u.millimeter
+
+
+def test_width_related_tension_dataset_inverse():
+    """Test width-related nominal breaking tension inverse with approved dataset."""
+    # k_N = 1000 * F_B / b = 1000 * 108.36 kN / 172 mm = 630 N/mm
+    result = width_related_nominal_breaking_tension_from_nominal_breaking_strength_and_specimen_width(
+        nominal_breaking_strength=108.36 * u.kilonewton,
+        specimen_width=172 * u.mm,
+    )
+    assert result.magnitude == 630.0
+    assert result.units == u.N / u.mm
