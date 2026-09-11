@@ -991,3 +991,101 @@ def test_width_related_nominal_breaking_tension_from_nominal_breaking_strength_a
     )
     assert result.magnitude == 10.0
     assert result.units == u.N / u.mm
+
+
+# Phase 3: Round-trip coverage and import-surface checks for splice efficiency
+
+
+def test_forward_to_reference_upper_load_inverse_round_trip():
+    """Test forward->reference_upper_load_inverse round trip consistency."""
+    from eytelwein.testing_methods.core.belt_joints import (
+        reference_upper_load_from_relative_reference_splice_efficiency_and_nominal_breaking_strength_of_specimen,
+        relative_reference_splice_efficiency_from_reference_upper_load_and_nominal_breaking_strength_of_specimen,
+    )
+
+    # Start with reference upper load and breaking strength
+    original_reference_upper_load = 5 * u.kilonewton
+    breaking_strength = 10 * u.kilonewton
+
+    # Forward: calculate relative reference splice efficiency
+    efficiency = relative_reference_splice_efficiency_from_reference_upper_load_and_nominal_breaking_strength_of_specimen(
+        reference_upper_load=original_reference_upper_load,
+        nominal_breaking_strength_of_specimen=breaking_strength,
+    )
+
+    # Inverse: recover reference upper load
+    recovered_reference_upper_load = reference_upper_load_from_relative_reference_splice_efficiency_and_nominal_breaking_strength_of_specimen(
+        relative_reference_splice_efficiency=efficiency,
+        nominal_breaking_strength_of_specimen=breaking_strength,
+    )
+
+    # Round-trip should recover original reference upper load (within tolerance)
+    assert recovered_reference_upper_load.units == original_reference_upper_load.units
+    assert (
+        abs(
+            recovered_reference_upper_load.magnitude
+            - original_reference_upper_load.magnitude
+        )
+        < 1e-9
+    )
+
+
+def test_forward_to_nominal_breaking_strength_inverse_round_trip():
+    """Test forward->nominal_breaking_strength_inverse round trip consistency."""
+    from eytelwein.testing_methods.core.belt_joints import (
+        nominal_breaking_strength_of_specimen_from_reference_upper_load_and_relative_reference_splice_efficiency,
+        relative_reference_splice_efficiency_from_reference_upper_load_and_nominal_breaking_strength_of_specimen,
+    )
+
+    # Start with reference upper load and breaking strength
+    reference_upper_load = 5 * u.kilonewton
+    original_breaking_strength = 10 * u.kilonewton
+
+    # Forward: calculate relative reference splice efficiency
+    efficiency = relative_reference_splice_efficiency_from_reference_upper_load_and_nominal_breaking_strength_of_specimen(
+        reference_upper_load=reference_upper_load,
+        nominal_breaking_strength_of_specimen=original_breaking_strength,
+    )
+
+    # Inverse: recover breaking strength
+    recovered_breaking_strength = nominal_breaking_strength_of_specimen_from_reference_upper_load_and_relative_reference_splice_efficiency(
+        reference_upper_load=reference_upper_load,
+        relative_reference_splice_efficiency=efficiency,
+    )
+
+    # Round-trip should recover original breaking strength (within tolerance)
+    assert recovered_breaking_strength.units == original_breaking_strength.units
+    assert (
+        abs(
+            recovered_breaking_strength.magnitude - original_breaking_strength.magnitude
+        )
+        < 1e-9
+    )
+
+
+def test_splice_efficiency_functions_import_from_testing_methods_identity():
+    """Test that splice efficiency functions are accessible from eytelwein.testing_methods with identity checks."""
+    import eytelwein.testing_methods
+    from eytelwein.testing_methods.core.belt_joints import (
+        nominal_breaking_strength_of_specimen_from_reference_upper_load_and_relative_reference_splice_efficiency as core_breaking,
+    )
+    from eytelwein.testing_methods.core.belt_joints import (
+        reference_upper_load_from_relative_reference_splice_efficiency_and_nominal_breaking_strength_of_specimen as core_ref_upper,
+    )
+    from eytelwein.testing_methods.core.belt_joints import (
+        relative_reference_splice_efficiency_from_reference_upper_load_and_nominal_breaking_strength_of_specimen as core_forward,
+    )
+
+    # Import from package and check identity
+    assert (
+        eytelwein.testing_methods.relative_reference_splice_efficiency_from_reference_upper_load_and_nominal_breaking_strength_of_specimen
+        is core_forward
+    )
+    assert (
+        eytelwein.testing_methods.reference_upper_load_from_relative_reference_splice_efficiency_and_nominal_breaking_strength_of_specimen
+        is core_ref_upper
+    )
+    assert (
+        eytelwein.testing_methods.nominal_breaking_strength_of_specimen_from_reference_upper_load_and_relative_reference_splice_efficiency
+        is core_breaking
+    )
