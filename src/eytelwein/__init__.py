@@ -28,7 +28,7 @@ from . import (
     testing_methods,
 )
 
-__version__ = "0.1.7"
+__version__ = "0.1.8"
 
 __all__ = [
     "belt_conveyor_design",
