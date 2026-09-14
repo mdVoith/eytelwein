@@ -13,8 +13,8 @@ u = get_unit_registry()
 
 def test_nominal_breaking_strength_of_textile_belt_specimen_valid_values():
     """Test with valid specimen width and width-related nominal breaking tension."""
-    # F_B = b * k_N
-    # b = 100 mm, k_N = 10 N/mm
+    # T_breaking = b * T_nominal_tension
+    # b = 100 mm, T_nominal_tension = 10 N/mm
     # Result: 100 * 10 = 1000 N = 1.0 kN
     result = nominal_breaking_strength_of_textile_belt_specimen(
         specimen_width=100 * u.mm,
@@ -243,8 +243,8 @@ def test_specimen_width_from_nominal_breaking_strength_and_width_related_nominal
         specimen_width_from_nominal_breaking_strength_and_width_related_nominal_breaking_tension,
     )
 
-    # b = 1000 * F_B / k_N
-    # F_B = 1.0 kN, k_N = 10 N/mm
+    # b = 1000 * T_breaking / T_nominal_tension
+    # T_breaking = 1.0 kN, T_nominal_tension = 10 N/mm
     # Result: 1000 * 1.0 / 10 = 100 mm
     result = specimen_width_from_nominal_breaking_strength_and_width_related_nominal_breaking_tension(
         nominal_breaking_strength=1.0 * u.kilonewton,
@@ -383,8 +383,8 @@ def test_width_related_nominal_breaking_tension_from_nominal_breaking_strength_a
         width_related_nominal_breaking_tension_from_nominal_breaking_strength_and_specimen_width,
     )
 
-    # k_N = 1000 * F_B / b
-    # F_B = 1.0 kN, b = 100 mm
+    # k_N = 1000 * T_breaking / b
+    # T_breaking = 1.0 kN, b = 100 mm
     # Result: 1000 * 1.0 / 100 = 10 N/mm
     result = width_related_nominal_breaking_tension_from_nominal_breaking_strength_and_specimen_width(
         nominal_breaking_strength=1.0 * u.kilonewton,
@@ -417,8 +417,8 @@ def test_relative_reference_splice_efficiency_from_reference_upper_load_and_nomi
         relative_reference_splice_efficiency_from_reference_upper_load_and_nominal_breaking_strength_of_specimen,
     )
 
-    # k_t,rel = F_o,ref / F_B * 100
-    # F_o,ref = 5 kN, F_B = 10 kN
+    # T_rel_fatigue = T_upper / T_breaking * 100
+    # T_upper = 5 kN, T_breaking = 10 kN
     # Result: 5 / 10 * 100 = 50 percent
     result = relative_reference_splice_efficiency_from_reference_upper_load_and_nominal_breaking_strength_of_specimen(
         reference_upper_load=5 * u.kilonewton,
@@ -568,8 +568,8 @@ def test_reference_upper_load_from_relative_reference_splice_efficiency_and_nomi
         reference_upper_load_from_relative_reference_splice_efficiency_and_nominal_breaking_strength_of_specimen,
     )
 
-    # F_o,ref = k_t,rel / 100 * F_B
-    # k_t,rel = 50 percent, F_B = 10 kN
+    # T_upper = T_rel_fatigue / 100 * T_breaking
+    # T_rel_fatigue = 50 percent, T_breaking = 10 kN
     # Result: 50 / 100 * 10 = 5 kN
     result = reference_upper_load_from_relative_reference_splice_efficiency_and_nominal_breaking_strength_of_specimen(
         relative_reference_splice_efficiency=50 * u.percent,
@@ -688,8 +688,8 @@ def test_nominal_breaking_strength_of_specimen_from_reference_upper_load_and_rel
         nominal_breaking_strength_of_specimen_from_reference_upper_load_and_relative_reference_splice_efficiency,
     )
 
-    # F_B = F_o,ref / (k_t,rel / 100)
-    # F_o,ref = 5 kN, k_t,rel = 50 percent
+    # T_breaking = T_upper / (T_rel_fatigue / 100)
+    # T_upper = 5 kN, T_rel_fatigue = 50 percent
     # Result: 5 / (50 / 100) = 5 / 0.5 = 10 kN
     result = nominal_breaking_strength_of_specimen_from_reference_upper_load_and_relative_reference_splice_efficiency(
         reference_upper_load=5 * u.kilonewton,
@@ -1092,12 +1092,12 @@ def test_splice_efficiency_functions_import_from_testing_methods_identity():
 
 
 # Phase 2: Dataset correctness tests for nominal breaking strength triad
-# Approved dataset: b = 172 mm, k_N = 630 N/mm, F_B = 172 * 630 / 1000 = 108.36 kN
+# Approved dataset: b = 172 mm, T_nominal_tension = 630 N/mm, T_breaking = 172 * 630 / 1000 = 108.36 kN
 
 
 def test_nominal_breaking_strength_dataset_forward():
     """Test nominal breaking strength forward with approved dataset."""
-    # F_B = b * k_N = 172 mm * 630 N/mm = 108360 N = 108.36 kN
+    # T_breaking = b * T_nominal_tension = 172 mm * 630 N/mm = 108360 N = 108.36 kN
     result = nominal_breaking_strength_of_textile_belt_specimen(
         specimen_width=172 * u.mm,
         width_related_nominal_breaking_tension=630 * u.N / u.mm,
@@ -1108,7 +1108,7 @@ def test_nominal_breaking_strength_dataset_forward():
 
 def test_specimen_width_dataset_inverse():
     """Test specimen width inverse with approved dataset."""
-    # b = 1000 * F_B / k_N = 1000 * 108.36 kN / 630 N/mm = 172 mm
+    # b = 1000 * T_breaking / T_nominal_tension = 1000 * 108.36 kN / 630 N/mm = 172 mm
     result = specimen_width_from_nominal_breaking_strength_and_width_related_nominal_breaking_tension(
         nominal_breaking_strength=108.36 * u.kilonewton,
         width_related_nominal_breaking_tension=630 * u.N / u.mm,
@@ -1119,7 +1119,7 @@ def test_specimen_width_dataset_inverse():
 
 def test_width_related_tension_dataset_inverse():
     """Test width-related nominal breaking tension inverse with approved dataset."""
-    # k_N = 1000 * F_B / b = 1000 * 108.36 kN / 172 mm = 630 N/mm
+    # T_nominal_tension = 1000 * T_breaking / b = 1000 * 108.36 kN / 172 mm = 630 N/mm
     result = width_related_nominal_breaking_tension_from_nominal_breaking_strength_and_specimen_width(
         nominal_breaking_strength=108.36 * u.kilonewton,
         specimen_width=172 * u.mm,
@@ -1129,7 +1129,7 @@ def test_width_related_tension_dataset_inverse():
 
 
 # Phase 3: Dataset correctness tests for splice-efficiency triad
-# Approved dataset: F_B = 108.36 kN, F_o,ref = 32.508 kN, k_t,rel = 30 %
+# Approved dataset: T_breaking = 108.36 kN, T_upper = 32.508 kN, T_rel_fatigue = 30 %
 
 
 def test_relative_reference_splice_efficiency_dataset_forward():
@@ -1138,7 +1138,7 @@ def test_relative_reference_splice_efficiency_dataset_forward():
         relative_reference_splice_efficiency_from_reference_upper_load_and_nominal_breaking_strength_of_specimen,
     )
 
-    # k_t,rel = F_o,ref / F_B * 100 = 32.508 kN / 108.36 kN * 100 = 30 %
+    # T_rel_fatigue = T_upper / T_breaking * 100 = 32.508 kN / 108.36 kN * 100 = 30 %
     result = relative_reference_splice_efficiency_from_reference_upper_load_and_nominal_breaking_strength_of_specimen(
         reference_upper_load=32.508 * u.kilonewton,
         nominal_breaking_strength_of_specimen=108.36 * u.kilonewton,
@@ -1153,7 +1153,7 @@ def test_reference_upper_load_dataset_inverse():
         reference_upper_load_from_relative_reference_splice_efficiency_and_nominal_breaking_strength_of_specimen,
     )
 
-    # F_o,ref = k_t,rel / 100 * F_B = 30 % / 100 * 108.36 kN = 32.508 kN
+    # T_upper = T_rel_fatigue / 100 * T_breaking = 30 % / 100 * 108.36 kN = 32.508 kN
     result = reference_upper_load_from_relative_reference_splice_efficiency_and_nominal_breaking_strength_of_specimen(
         relative_reference_splice_efficiency=30 * u.percent,
         nominal_breaking_strength_of_specimen=108.36 * u.kilonewton,
@@ -1168,7 +1168,7 @@ def test_nominal_breaking_strength_of_specimen_dataset_inverse():
         nominal_breaking_strength_of_specimen_from_reference_upper_load_and_relative_reference_splice_efficiency,
     )
 
-    # F_B = F_o,ref / (k_t,rel / 100) = 32.508 kN / (30 % / 100) = 32.508 kN / 0.30 = 108.36 kN
+    # T_breaking = T_upper / (T_rel_fatigue / 100) = 32.508 kN / (30 % / 100) = 32.508 kN / 0.30 = 108.36 kN
     result = nominal_breaking_strength_of_specimen_from_reference_upper_load_and_relative_reference_splice_efficiency(
         reference_upper_load=32.508 * u.kilonewton,
         relative_reference_splice_efficiency=30 * u.percent,
