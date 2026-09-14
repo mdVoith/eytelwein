@@ -18,11 +18,11 @@ def _nominal_breaking_strength_of_textile_belt_specimen(
 
     Notes
     -----
-    Formula: F_B = b * k_N / 1000
+    Formula: T_breaking = b * T_nominal_tension / 1000
     where:
-        F_B = breaking strength (kN)
+        T_breaking = breaking strength (kN)
         b = belt width (mm)
-        k_N = tension coefficient (N/mm)
+        T_nominal_tension = tension coefficient (N/mm)
     """
     breaking_strength_n = belt_width_mm * tension_coefficient_n_per_mm
     breaking_strength_kn = breaking_strength_n / 1000.0
@@ -56,11 +56,11 @@ def _specimen_width_from_nominal_breaking_strength_and_width_related_nominal_bre
 
     Notes
     -----
-    Inverse formula: b = 1000 * F_B / k_N
+    Inverse formula: b = 1000 * T_breaking / T_nominal_tension
     where:
         b = specimen width (mm)
-        F_B = breaking strength (kN)
-        k_N = tension coefficient (N/mm)
+        T_breaking = breaking strength (kN)
+        T_nominal_tension = tension coefficient (N/mm)
     """
     # Guard against division by zero and invalid denominator
     if width_related_nominal_breaking_tension_n_per_mm <= 0:
@@ -103,10 +103,10 @@ def _width_related_nominal_breaking_tension_from_nominal_breaking_strength_and_s
 
     Notes
     -----
-    Inverse formula: k_N = 1000 * F_B / b
+    Inverse formula: T_nominal_tension = 1000 * T_breaking / b
     where:
-        k_N = tension coefficient (N/mm)
-        F_B = breaking strength (kN)
+        T_nominal_tension = tension coefficient (N/mm)
+        T_breaking = breaking strength (kN)
         b = specimen width (mm)
     """
     # Guard against division by zero and invalid denominator
@@ -148,11 +148,11 @@ def _relative_reference_splice_efficiency_from_reference_upper_load_and_nominal_
 
     Notes
     -----
-    Formula: k_t,rel = F_o,ref / F_B * 100
+    Formula: T_rel_fatigue = T_upper / T_breaking * 100
     where:
-        k_t,rel = relative reference splice efficiency (%)
-        F_o,ref = reference upper load (kN)
-        F_B = nominal breaking strength of specimen (kN)
+        T_rel_fatigue = relative reference splice efficiency (%)
+        T_upper = reference upper load (kN)
+        T_breaking = nominal breaking strength of specimen (kN)
     """
     # Guard against division by zero and invalid denominator
     if nominal_breaking_strength_of_specimen_kn <= 0:
@@ -188,11 +188,11 @@ def _reference_upper_load_from_relative_reference_splice_efficiency_and_nominal_
 
     Notes
     -----
-    Inverse formula: F_o,ref = k_t,rel / 100 * F_B
+    Inverse formula: T_upper = T_rel_fatigue / 100 * T_breaking
     where:
-        F_o,ref = reference upper load (kN)
-        k_t,rel = relative reference splice efficiency (%)
-        F_B = nominal breaking strength of specimen (kN)
+        T_upper = reference upper load (kN)
+        T_rel_fatigue = relative reference splice efficiency (%)
+        T_breaking = nominal breaking strength of specimen (kN)
     """
     reference_upper_load_kn = (
         relative_reference_splice_efficiency_percent
@@ -229,11 +229,11 @@ def _nominal_breaking_strength_of_specimen_from_reference_upper_load_and_relativ
 
     Notes
     -----
-    Inverse formula: F_B = F_o,ref / (k_t,rel / 100)
+    Inverse formula: T_breaking = T_upper / (T_rel_fatigue / 100)
     where:
-        F_B = nominal breaking strength of specimen (kN)
-        F_o,ref = reference upper load (kN)
-        k_t,rel = relative reference splice efficiency (%)
+        T_breaking = nominal breaking strength of specimen (kN)
+        T_upper = reference upper load (kN)
+        T_rel_fatigue = relative reference splice efficiency (%)
     """
     # Guard against division by zero and invalid denominator
     if relative_reference_splice_efficiency_percent <= 0:
