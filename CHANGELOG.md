@@ -1,3 +1,18 @@
+## v0.1.8 (2026-09-14)
+
+### Feat
+
+- add public splice efficiency APIs
+- add splice efficiency private helpers
+- add belt joint inverse public APIs
+- add belt joint inverse helpers
+- add belt joint public API
+- add belt joint private helper
+
+### Refactor
+
+- update terminology
+
 ## v0.1.7 (2026-08-03)
 
 ### Feat
