@@ -1,3 +1,9 @@
+## v0.1.9 (2026-09-21)
+
+### Feat
+
+- add lower load and nominal breaking strength calculations with tests
+
 ## v0.1.8 (2026-09-14)
 
 ### Feat
