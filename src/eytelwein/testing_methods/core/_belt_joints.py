@@ -246,3 +246,89 @@ def _nominal_breaking_strength_of_specimen_from_reference_upper_load_and_relativ
         relative_reference_splice_efficiency_percent / 100.0
     )
     return nominal_breaking_strength_of_specimen_kn
+
+
+def _lower_load_from_nominal_breaking_strength_of_specimen(
+    nominal_breaking_strength_of_specimen_kn: float,
+    *,
+    lower_load_factor: float = 0.0667,
+) -> float:
+    """
+    Calculate lower load from nominal breaking strength of specimen.
+
+    Parameters
+    ----------
+    nominal_breaking_strength_of_specimen_kn : float
+        The nominal breaking strength of the specimen in kilonewtons (kN).
+    lower_load_factor : float, optional
+        Dimensionless lower-load factor. Default is 0.0667.
+
+    Returns
+    -------
+    float
+        The lower load in kilonewtons (kN).
+
+    Raises
+    ------
+    ValueError
+        If lower_load_factor is zero or negative, preventing physically invalid
+        results.
+
+    Notes
+    -----
+    Formula: T_lower = c_lower * T_breaking
+    where:
+        T_lower = lower load (kN)
+        c_lower = lower-load factor (-)
+        T_breaking = nominal breaking strength of specimen (kN)
+    """
+    if lower_load_factor <= 0:
+        raise ValueError(
+            f"lower_load_factor must be positive, got {lower_load_factor}."
+        )
+
+    lower_load_kn = lower_load_factor * nominal_breaking_strength_of_specimen_kn
+    return lower_load_kn
+
+
+def _nominal_breaking_strength_of_specimen_from_lower_load(
+    lower_load_kn: float,
+    *,
+    lower_load_factor: float = 0.0667,
+) -> float:
+    """
+    Calculate nominal breaking strength of specimen from lower load.
+
+    Parameters
+    ----------
+    lower_load_kn : float
+        The lower load in kilonewtons (kN).
+    lower_load_factor : float, optional
+        Dimensionless lower-load factor. Default is 0.0667.
+
+    Returns
+    -------
+    float
+        The nominal breaking strength of the specimen in kilonewtons (kN).
+
+    Raises
+    ------
+    ValueError
+        If lower_load_factor is zero or negative, preventing division by zero
+        or physically invalid results.
+
+    Notes
+    -----
+    Inverse formula: T_breaking = T_lower / c_lower
+    where:
+        T_breaking = nominal breaking strength of specimen (kN)
+        T_lower = lower load (kN)
+        c_lower = lower-load factor (-)
+    """
+    if lower_load_factor <= 0:
+        raise ValueError(
+            f"lower_load_factor must be positive, got {lower_load_factor}."
+        )
+
+    nominal_breaking_strength_of_specimen_kn = lower_load_kn / lower_load_factor
+    return nominal_breaking_strength_of_specimen_kn

@@ -2,6 +2,8 @@ import pytest
 
 from eytelwein.main.units import get_unit_registry
 from eytelwein.testing_methods.core.belt_joints import (
+    lower_load_from_nominal_breaking_strength_of_specimen,
+    nominal_breaking_strength_of_specimen_from_lower_load,
     nominal_breaking_strength_of_textile_belt_specimen,
     specimen_width_from_nominal_breaking_strength_and_width_related_nominal_breaking_tension,
     width_related_nominal_breaking_tension_from_nominal_breaking_strength_and_specimen_width,
@@ -210,6 +212,12 @@ def test_root_package_exposes_testing_methods():
     import eytelwein
     from eytelwein import testing_methods as imported_package
     from eytelwein.testing_methods import (
+        lower_load_from_nominal_breaking_strength_of_specimen as imported_lower_load,
+    )
+    from eytelwein.testing_methods import (
+        nominal_breaking_strength_of_specimen_from_lower_load as imported_lower_load_inverse,
+    )
+    from eytelwein.testing_methods import (
         nominal_breaking_strength_of_textile_belt_specimen as imported_func,
     )
     from eytelwein.testing_methods import (
@@ -223,6 +231,14 @@ def test_root_package_exposes_testing_methods():
     assert (
         imported_package.nominal_breaking_strength_of_textile_belt_specimen
         is imported_func
+    )
+    assert (
+        imported_package.lower_load_from_nominal_breaking_strength_of_specimen
+        is imported_lower_load
+    )
+    assert (
+        imported_package.nominal_breaking_strength_of_specimen_from_lower_load
+        is imported_lower_load_inverse
     )
     assert (
         imported_package.specimen_width_from_nominal_breaking_strength_and_width_related_nominal_breaking_tension
@@ -372,6 +388,226 @@ def test_specimen_width_from_nominal_breaking_strength_and_width_related_nominal
     )
     assert result.magnitude == 100.0
     assert result.units == u.millimeter
+
+
+def test_lower_load_from_nominal_breaking_strength_of_specimen_valid_values():
+    """Test lower load forward calculation with default factor."""
+    result = lower_load_from_nominal_breaking_strength_of_specimen(
+        nominal_breaking_strength_of_specimen=100 * u.kilonewton,
+    )
+    assert result.magnitude == 6.67
+    assert result.units == u.kilonewton
+
+
+def test_lower_load_from_nominal_breaking_strength_of_specimen_custom_factor_dataset():
+    """Test lower load forward calculation with dataset breaking strength and explicit factor."""
+    result = lower_load_from_nominal_breaking_strength_of_specimen(
+        nominal_breaking_strength_of_specimen=108.36 * u.kilonewton,
+        lower_load_factor=0.0667,
+    )
+    assert result.magnitude == pytest.approx(7.227612, abs=1e-10)
+    assert result.units == u.kilonewton
+
+
+def test_lower_load_from_nominal_breaking_strength_of_specimen_input_unit_conversion():
+    """Test lower load forward conversion from equivalent force unit."""
+    result = lower_load_from_nominal_breaking_strength_of_specimen(
+        nominal_breaking_strength_of_specimen=108360 * u.newton,
+        lower_load_factor=0.0667,
+    )
+    assert result.magnitude == pytest.approx(7.227612, abs=1e-10)
+    assert result.units == u.kilonewton
+
+
+def test_lower_load_from_nominal_breaking_strength_of_specimen_invalid_output_unit():
+    """Test lower load forward rejects invalid output unit."""
+    with pytest.raises(ValueError):
+        lower_load_from_nominal_breaking_strength_of_specimen(
+            nominal_breaking_strength_of_specimen=100 * u.kilonewton,
+            unit="invalid_unit",
+        )
+
+
+def test_lower_load_from_nominal_breaking_strength_of_specimen_incompatible_output_unit():
+    """Test lower load forward rejects incompatible output unit."""
+    with pytest.raises(ValueError):
+        lower_load_from_nominal_breaking_strength_of_specimen(
+            nominal_breaking_strength_of_specimen=100 * u.kilonewton,
+            unit="meter",
+        )
+
+
+def test_lower_load_from_nominal_breaking_strength_of_specimen_conversion_error():
+    """Test lower load forward rejects invalid breaking-strength input."""
+    with pytest.raises(ValueError):
+        lower_load_from_nominal_breaking_strength_of_specimen(
+            nominal_breaking_strength_of_specimen="not_a_quantity",
+        )
+
+
+def test_lower_load_from_nominal_breaking_strength_of_specimen_invalid_factor():
+    """Test lower load forward rejects non-positive factor."""
+    with pytest.raises(ValueError):
+        lower_load_from_nominal_breaking_strength_of_specimen(
+            nominal_breaking_strength_of_specimen=100 * u.kilonewton,
+            lower_load_factor=0.0,
+        )
+
+    with pytest.raises(ValueError):
+        lower_load_from_nominal_breaking_strength_of_specimen(
+            nominal_breaking_strength_of_specimen=100 * u.kilonewton,
+            lower_load_factor=-0.067,
+        )
+
+
+def test_lower_load_from_nominal_breaking_strength_of_specimen_precision():
+    """Test lower load forward precision handling."""
+    result = lower_load_from_nominal_breaking_strength_of_specimen(
+        nominal_breaking_strength_of_specimen=108.36 * u.kilonewton,
+        lower_load_factor=0.0667,
+        precision=3,
+    )
+    assert result.magnitude == pytest.approx(7.228, abs=1e-10)
+    assert result.units == u.kilonewton
+
+
+def test_lower_load_from_nominal_breaking_strength_of_specimen_output_unit_conversion():
+    """Test lower load forward output conversion to newton."""
+    result = lower_load_from_nominal_breaking_strength_of_specimen(
+        nominal_breaking_strength_of_specimen=100 * u.kilonewton,
+        unit="newton",
+    )
+    assert result.magnitude == 6670.0
+    assert result.units == u.newton
+
+
+def test_nominal_breaking_strength_of_specimen_from_lower_load_valid_values():
+    """Test lower load inverse calculation with default factor."""
+    result = nominal_breaking_strength_of_specimen_from_lower_load(
+        lower_load=6.7 * u.kilonewton,
+    )
+    assert result.magnitude == pytest.approx(100.44977511244379, abs=1e-10)
+    assert result.units == u.kilonewton
+
+
+def test_nominal_breaking_strength_of_specimen_from_lower_load_custom_factor_dataset():
+    """Test lower load inverse calculation with dataset lower load and explicit factor."""
+    result = nominal_breaking_strength_of_specimen_from_lower_load(
+        lower_load=7.227612 * u.kilonewton,
+        lower_load_factor=0.0667,
+    )
+    assert result.magnitude == pytest.approx(108.36, abs=1e-10)
+    assert result.units == u.kilonewton
+
+
+def test_nominal_breaking_strength_of_specimen_from_lower_load_input_unit_conversion():
+    """Test lower load inverse converts force units correctly."""
+    result = nominal_breaking_strength_of_specimen_from_lower_load(
+        lower_load=7227.612 * u.newton,
+        lower_load_factor=0.0667,
+    )
+    assert result.magnitude == pytest.approx(108.36, abs=1e-10)
+    assert result.units == u.kilonewton
+
+
+def test_nominal_breaking_strength_of_specimen_from_lower_load_invalid_output_unit():
+    """Test lower load inverse rejects invalid output unit."""
+    with pytest.raises(ValueError):
+        nominal_breaking_strength_of_specimen_from_lower_load(
+            lower_load=6.7 * u.kilonewton,
+            unit="invalid_unit",
+        )
+
+
+def test_nominal_breaking_strength_of_specimen_from_lower_load_incompatible_output_unit():
+    """Test lower load inverse rejects incompatible output unit."""
+    with pytest.raises(ValueError):
+        nominal_breaking_strength_of_specimen_from_lower_load(
+            lower_load=6.7 * u.kilonewton,
+            unit="meter",
+        )
+
+
+def test_nominal_breaking_strength_of_specimen_from_lower_load_conversion_error():
+    """Test lower load inverse rejects invalid lower-load input."""
+    with pytest.raises(ValueError):
+        nominal_breaking_strength_of_specimen_from_lower_load(
+            lower_load="not_a_quantity",
+        )
+
+
+def test_nominal_breaking_strength_of_specimen_from_lower_load_invalid_factor():
+    """Test lower load inverse rejects non-positive factor."""
+    with pytest.raises(ValueError):
+        nominal_breaking_strength_of_specimen_from_lower_load(
+            lower_load=6.7 * u.kilonewton,
+            lower_load_factor=0.0,
+        )
+
+    with pytest.raises(ValueError):
+        nominal_breaking_strength_of_specimen_from_lower_load(
+            lower_load=6.7 * u.kilonewton,
+            lower_load_factor=-0.067,
+        )
+
+
+def test_nominal_breaking_strength_of_specimen_from_lower_load_precision():
+    """Test lower load inverse precision handling."""
+    result = nominal_breaking_strength_of_specimen_from_lower_load(
+        lower_load=7.227612 * u.kilonewton,
+        lower_load_factor=0.0667,
+        precision=2,
+    )
+    assert result.magnitude == pytest.approx(108.36, abs=1e-10)
+    assert result.units == u.kilonewton
+
+
+def test_nominal_breaking_strength_of_specimen_from_lower_load_output_unit_conversion():
+    """Test lower load inverse output conversion to newton."""
+    result = nominal_breaking_strength_of_specimen_from_lower_load(
+        lower_load=6.7 * u.kilonewton,
+        unit="newton",
+    )
+    assert result.magnitude == pytest.approx(100449.7751124438, abs=1e-10)
+    assert result.units == u.newton
+
+
+def test_lower_load_round_trip_public_dataset_with_default_factor():
+    """Test lower load public round trip with dataset breaking strength and default factor."""
+    lower_load = lower_load_from_nominal_breaking_strength_of_specimen(
+        nominal_breaking_strength_of_specimen=108.36 * u.kilonewton,
+    )
+    recovered_breaking_strength = nominal_breaking_strength_of_specimen_from_lower_load(
+        lower_load=lower_load,
+    )
+    assert lower_load.magnitude == pytest.approx(7.227612, abs=1e-10)
+    assert lower_load.units == u.kilonewton
+    assert recovered_breaking_strength.magnitude == pytest.approx(108.36, abs=1e-10)
+    assert recovered_breaking_strength.units == u.kilonewton
+
+
+def test_lower_load_import_surface():
+    """Test that lower load public name is accessible from testing_methods package."""
+    import eytelwein.testing_methods
+
+    assert hasattr(
+        eytelwein.testing_methods,
+        "lower_load_from_nominal_breaking_strength_of_specimen",
+    )
+    func = eytelwein.testing_methods.lower_load_from_nominal_breaking_strength_of_specimen
+    assert callable(func)
+
+
+def test_lower_load_inverse_import_surface():
+    """Test that lower load inverse public name is accessible from testing_methods package."""
+    import eytelwein.testing_methods
+
+    assert hasattr(
+        eytelwein.testing_methods,
+        "nominal_breaking_strength_of_specimen_from_lower_load",
+    )
+    func = eytelwein.testing_methods.nominal_breaking_strength_of_specimen_from_lower_load
+    assert callable(func)
 
 
 # Tests for width_related_nominal_breaking_tension_from_nominal_breaking_strength_and_specimen_width
