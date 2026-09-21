@@ -2,6 +2,8 @@ from pint.registry import Quantity
 
 from eytelwein.main.units import get_unit_registry
 from eytelwein.testing_methods.core._belt_joints import (
+    _lower_load_from_nominal_breaking_strength_of_specimen,
+    _nominal_breaking_strength_of_specimen_from_lower_load,
     _nominal_breaking_strength_of_specimen_from_reference_upper_load_and_relative_reference_splice_efficiency,
     _nominal_breaking_strength_of_textile_belt_specimen,
     _reference_upper_load_from_relative_reference_splice_efficiency_and_nominal_breaking_strength_of_specimen,
@@ -500,6 +502,150 @@ def nominal_breaking_strength_of_specimen_from_reference_upper_load_and_relative
         raise ValueError(f"Error in converting to output unit: {e}")
 
     # Then apply precision if specified
+    if precision is not None:
+        result = round(result, precision)
+
+    return result
+
+
+def lower_load_from_nominal_breaking_strength_of_specimen(
+    nominal_breaking_strength_of_specimen: Quantity,
+    *,
+    lower_load_factor: float = 0.0667,
+    unit: str = "kilonewton",
+    precision: int | None = None,
+) -> Quantity:
+    """
+    Calculate lower load from nominal breaking strength of specimen.
+
+    Parameters
+    ----------
+    nominal_breaking_strength_of_specimen : Quantity
+        The nominal breaking strength of the specimen in kilonewtons (kN).
+    lower_load_factor : float, optional
+        Dimensionless lower-load factor. Default is 0.0667.
+    unit : str, optional
+        The unit for the result, default is "kilonewton".
+    precision : int | None, optional
+        The precision for rounding the result. Default is None. Use None to skip
+        rounding and retain maximum available precision.
+
+    Returns
+    -------
+    Quantity
+        The lower load in kilonewtons (kN).
+
+    Raises
+    ------
+    ValueError
+        If there is an error in converting inputs, if physical constraints are
+        violated, or if the unit is invalid.
+
+    Notes
+    -----
+    Formula: T_lower = c_lower * T_breaking
+    where:
+        T_lower = lower load (kN)
+        c_lower = lower-load factor (-)
+        T_breaking = nominal breaking strength of specimen (kN)
+    """
+    try:
+        nominal_breaking_strength_of_specimen_kn = (
+            nominal_breaking_strength_of_specimen.to("kN")
+        )
+    except Exception as e:  # noqa: BLE001
+        raise ValueError(
+            f"Error in converting nominal_breaking_strength_of_specimen: {e}"
+        )
+
+    try:
+        pint_unit = u.parse_units(unit)
+    except Exception as e:  # noqa: BLE001
+        raise ValueError(f"Invalid unit: {unit}. Error: {e}")
+
+    lower_load_kn = (
+        _lower_load_from_nominal_breaking_strength_of_specimen(
+            nominal_breaking_strength_of_specimen_kn.magnitude,
+            lower_load_factor=lower_load_factor,
+        )
+        * u.kilonewton
+    )
+
+    try:
+        result = lower_load_kn.to(pint_unit)
+    except Exception as e:  # noqa: BLE001
+        raise ValueError(f"Error in converting to output unit: {e}")
+
+    if precision is not None:
+        result = round(result, precision)
+
+    return result
+
+
+def nominal_breaking_strength_of_specimen_from_lower_load(
+    lower_load: Quantity,
+    *,
+    lower_load_factor: float = 0.0667,
+    unit: str = "kilonewton",
+    precision: int | None = None,
+) -> Quantity:
+    """
+    Calculate nominal breaking strength of specimen from lower load.
+
+    Parameters
+    ----------
+    lower_load : Quantity
+        The lower load in kilonewtons (kN).
+    lower_load_factor : float, optional
+        Dimensionless lower-load factor. Default is 0.0667.
+    unit : str, optional
+        The unit for the result, default is "kilonewton".
+    precision : int | None, optional
+        The precision for rounding the result. Default is None. Use None to skip
+        rounding and retain maximum available precision.
+
+    Returns
+    -------
+    Quantity
+        The nominal breaking strength of the specimen in kilonewtons (kN).
+
+    Raises
+    ------
+    ValueError
+        If there is an error in converting inputs, if physical constraints are
+        violated, or if the unit is invalid.
+
+    Notes
+    -----
+    Inverse formula: T_breaking = T_lower / c_lower
+    where:
+        T_breaking = nominal breaking strength of specimen (kN)
+        T_lower = lower load (kN)
+        c_lower = lower-load factor (-)
+    """
+    try:
+        lower_load_kn = lower_load.to("kN")
+    except Exception as e:  # noqa: BLE001
+        raise ValueError(f"Error in converting lower_load: {e}")
+
+    try:
+        pint_unit = u.parse_units(unit)
+    except Exception as e:  # noqa: BLE001
+        raise ValueError(f"Invalid unit: {unit}. Error: {e}")
+
+    nominal_breaking_strength_kn = (
+        _nominal_breaking_strength_of_specimen_from_lower_load(
+            lower_load_kn.magnitude,
+            lower_load_factor=lower_load_factor,
+        )
+        * u.kilonewton
+    )
+
+    try:
+        result = nominal_breaking_strength_kn.to(pint_unit)
+    except Exception as e:  # noqa: BLE001
+        raise ValueError(f"Error in converting to output unit: {e}")
+
     if precision is not None:
         result = round(result, precision)
 
