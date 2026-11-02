@@ -22,6 +22,7 @@ def main() -> None:
         line_load_material=line_load_material,
         idler_spacing=idler_spacing,
         allowable_sag=allowable_sag,
+        precision=5,
         unit="kilonewton",
     )
     tension_precision_2 = minimum_belt_tension_from_sag_carry(
