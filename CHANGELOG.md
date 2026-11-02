@@ -1,3 +1,13 @@
+## v0.1.10 (2026-11-02)
+
+### Feat
+
+- add drive-train kinematics calculations
+
+### Fix
+
+- add precision parameter to minimum_belt_tension_from_sag_carry function
+
 ## v0.1.9 (2026-09-21)
 
 ### Feat
