@@ -15,6 +15,19 @@ from eytelwein.belt_conveyor_design.extended.design_layout_of_drive_system impor
     revolutions_from_mechanical_power_and_torque,
     pulley_diameter_from_belt_speed_and_revolutions,
     radius_from_translatory_speed_and_revolutions,
+    effective_pulley_diameter_from_shell_diameter_and_lagging_thickness,
+    shell_diameter_from_effective_pulley_diameter_and_lagging_thickness,
+    lagging_thickness_from_effective_and_shell_diameter,
+    pulley_revolutions_from_motor_revolutions_and_gear_ratio,
+    motor_revolutions_from_pulley_revolutions_and_gear_ratio,
+    gear_ratio_from_motor_revolutions_and_pulley_revolutions,
+    synchronous_revolutions_from_supply_frequency_and_pole_pairs,
+    motor_revolutions_from_synchronous_revolutions_and_slip,
+    slip_from_synchronous_revolutions_and_motor_revolutions,
+    gear_ratio_from_belt_speed_motor_revolutions_and_pulley_diameter,
+    belt_speed_from_motor_revolutions_gear_ratio_and_pulley_diameter,
+    pulley_diameter_from_belt_speed_motor_revolutions_and_gear_ratio,
+    motor_revolutions_from_belt_speed_gear_ratio_and_pulley_diameter,
 )
 from eytelwein.main.units import get_unit_registry
 
@@ -494,6 +507,327 @@ class TestMechanicalPowerFromTorqueAndRevolutions:
         revolutions = "invalid_value"
         with pytest.raises(ValueError):
             mechanical_power_from_torque_and_revolutions(torque, revolutions)
+
+
+class TestDriveTrainKinematicsPublic:
+    """Public drive-train kinematics wrappers (Quantity in, Quantity out)."""
+
+    # Effective / shell diameter and lagging thickness
+
+    def test_effective_pulley_diameter_basic(self):
+        """Test D_eff = D_shell + 2 * t_lagging with mixed input units."""
+        result = effective_pulley_diameter_from_shell_diameter_and_lagging_thickness(
+            1.05 * u.meter, 15 * u.mm
+        )
+        assert result.units == u.meter
+        assert result.magnitude == pytest.approx(1.08)
+
+    def test_effective_pulley_diameter_unit_conversion(self):
+        """Test output unit conversion."""
+        result = effective_pulley_diameter_from_shell_diameter_and_lagging_thickness(
+            1050 * u.mm, 15 * u.mm, unit="millimeter"
+        )
+        assert result.units == u.millimeter
+        assert result.magnitude == pytest.approx(1080.0)
+
+    def test_effective_pulley_diameter_precision(self):
+        """Test precision rounding."""
+        result = effective_pulley_diameter_from_shell_diameter_and_lagging_thickness(
+            1.05 * u.meter, 0.0123456 * u.meter, precision=3
+        )
+        assert result.magnitude == 1.075
+
+    def test_effective_pulley_diameter_invalid_output_unit(self):
+        """Test invalid output unit string is rejected."""
+        with pytest.raises(ValueError, match="Invalid unit"):
+            effective_pulley_diameter_from_shell_diameter_and_lagging_thickness(
+                1.05 * u.meter, 15 * u.mm, unit="not_a_unit"
+            )
+
+    def test_effective_pulley_diameter_incompatible_output_unit(self):
+        """Test dimensionally incompatible output unit is rejected."""
+        with pytest.raises(ValueError, match="Error in converting to"):
+            effective_pulley_diameter_from_shell_diameter_and_lagging_thickness(
+                1.05 * u.meter, 15 * u.mm, unit="kilogram"
+            )
+
+    def test_effective_pulley_diameter_incompatible_input_unit(self):
+        """Test dimensionally incompatible input is rejected."""
+        with pytest.raises(ValueError, match="Error in converting units"):
+            effective_pulley_diameter_from_shell_diameter_and_lagging_thickness(
+                1 * u.kg, 15 * u.mm
+            )
+
+    def test_effective_pulley_diameter_non_positive_shell(self):
+        """Test zero shell diameter is rejected."""
+        with pytest.raises(ValueError, match="shell_diameter must be positive"):
+            effective_pulley_diameter_from_shell_diameter_and_lagging_thickness(
+                0 * u.meter, 15 * u.mm
+            )
+
+    def test_effective_pulley_diameter_negative_lagging(self):
+        """Test negative lagging thickness is rejected."""
+        with pytest.raises(ValueError, match="lagging_thickness must be non-negative"):
+            effective_pulley_diameter_from_shell_diameter_and_lagging_thickness(
+                1.05 * u.meter, -1 * u.mm
+            )
+
+    def test_shell_diameter_basic(self):
+        """Test D_shell = D_eff - 2 * t_lagging."""
+        result = shell_diameter_from_effective_pulley_diameter_and_lagging_thickness(
+            1080 * u.mm, 15 * u.mm
+        )
+        assert result.units == u.meter
+        assert result.magnitude == pytest.approx(1.05)
+
+    def test_shell_diameter_lagging_too_thick(self):
+        """Test lagging consuming the whole diameter is rejected."""
+        with pytest.raises(ValueError, match="must exceed twice the lagging_thickness"):
+            shell_diameter_from_effective_pulley_diameter_and_lagging_thickness(
+                30 * u.mm, 15 * u.mm
+            )
+
+    def test_lagging_thickness_basic(self):
+        """Test t_lagging = (D_eff - D_shell) / 2 with default millimeter output."""
+        result = lagging_thickness_from_effective_and_shell_diameter(
+            1.08 * u.meter, 1.05 * u.meter
+        )
+        assert result.units == u.millimeter
+        assert result.magnitude == pytest.approx(15.0)
+
+    def test_lagging_thickness_effective_smaller_than_shell(self):
+        """Test effective diameter below shell diameter is rejected."""
+        with pytest.raises(ValueError, match="greater than or equal to shell_diameter"):
+            lagging_thickness_from_effective_and_shell_diameter(
+                1.0 * u.meter, 1.05 * u.meter
+            )
+
+    # Gearbox
+
+    def test_pulley_revolutions_from_motor_revolutions_basic(self):
+        """Test n_pulley = n_motor / i with rpm output."""
+        result = pulley_revolutions_from_motor_revolutions_and_gear_ratio(
+            1442 * u.rpm, 12.17 * u.dimensionless, unit="rpm"
+        )
+        assert result.magnitude == pytest.approx(1442 / 12.17)
+        assert result.magnitude == pytest.approx(118.48, rel=1e-3)
+
+    def test_pulley_revolutions_zero_gear_ratio(self):
+        """Test zero gear ratio is rejected."""
+        with pytest.raises(ValueError, match="gear_ratio must be positive"):
+            pulley_revolutions_from_motor_revolutions_and_gear_ratio(
+                1440 * u.rpm, 0 * u.dimensionless
+            )
+
+    def test_motor_revolutions_from_pulley_revolutions_basic(self):
+        """Test n_motor = n_pulley * i."""
+        result = motor_revolutions_from_pulley_revolutions_and_gear_ratio(
+            118.48 * u.rpm, 12.17 * u.dimensionless, unit="rpm"
+        )
+        assert result.magnitude == pytest.approx(1442.0, rel=1e-3)
+
+    def test_motor_revolutions_from_pulley_negative_pulley(self):
+        """Test negative pulley revolutions are rejected."""
+        with pytest.raises(ValueError, match="pulley_revolutions must be non-negative"):
+            motor_revolutions_from_pulley_revolutions_and_gear_ratio(
+                -2 * u.revolution / u.second, 12 * u.dimensionless
+            )
+
+    def test_gear_ratio_from_motor_and_pulley_revolutions_basic(self):
+        """Test i = n_motor / n_pulley with precision."""
+        result = gear_ratio_from_motor_revolutions_and_pulley_revolutions(
+            1442 * u.rpm, 118.48 * u.rpm, precision=2
+        )
+        assert result.units == u.dimensionless
+        assert result.magnitude == 12.17
+
+    def test_gear_ratio_from_motor_and_pulley_zero_pulley(self):
+        """Test zero pulley revolutions are rejected."""
+        with pytest.raises(ValueError, match="pulley_revolutions must be positive"):
+            gear_ratio_from_motor_revolutions_and_pulley_revolutions(
+                1442 * u.rpm, 0 * u.rpm
+            )
+
+    # Motor (synchronous speed and slip)
+
+    def test_synchronous_revolutions_basic(self):
+        """Test n_sync = f / p with rpm output."""
+        result = synchronous_revolutions_from_supply_frequency_and_pole_pairs(
+            50 * u.Hz, 2, unit="rpm"
+        )
+        assert result.magnitude == pytest.approx(1500.0)
+
+    @pytest.mark.parametrize("pole_pairs", [0, -1, 2.0, True])
+    def test_synchronous_revolutions_invalid_pole_pairs(self, pole_pairs):
+        """Test pole_pairs must be a positive plain int."""
+        with pytest.raises(ValueError, match="pole_pairs must be"):
+            synchronous_revolutions_from_supply_frequency_and_pole_pairs(
+                50 * u.Hz, pole_pairs
+            )
+
+    def test_synchronous_revolutions_non_positive_frequency(self):
+        """Test zero supply frequency is rejected."""
+        with pytest.raises(ValueError, match="supply_frequency must be positive"):
+            synchronous_revolutions_from_supply_frequency_and_pole_pairs(0 * u.Hz, 2)
+
+    def test_motor_revolutions_from_sync_and_slip_basic(self):
+        """Test n_motor = n_sync * (1 - s)."""
+        result = motor_revolutions_from_synchronous_revolutions_and_slip(
+            1500 * u.rpm, (58 / 1500) * u.dimensionless, unit="rpm"
+        )
+        assert result.magnitude == pytest.approx(1442.0)
+
+    @pytest.mark.parametrize("slip", [-0.1, 1.0])
+    def test_motor_revolutions_from_sync_and_slip_invalid_slip(self, slip):
+        """Test slip outside [0, 1) is rejected."""
+        with pytest.raises(ValueError, match="slip must satisfy 0 <= slip < 1"):
+            motor_revolutions_from_synchronous_revolutions_and_slip(
+                1500 * u.rpm, slip * u.dimensionless
+            )
+
+    def test_slip_basic(self):
+        """Test s = (n_sync - n_motor) / n_sync with percent output."""
+        result = slip_from_synchronous_revolutions_and_motor_revolutions(
+            1500 * u.rpm, 1442 * u.rpm, unit="percent"
+        )
+        assert result.magnitude == pytest.approx(58 / 15)
+
+    def test_slip_motor_above_synchronous(self):
+        """Test motor speed above synchronous speed is rejected."""
+        with pytest.raises(
+            ValueError,
+            match="motor_revolutions must not exceed synchronous_revolutions",
+        ):
+            slip_from_synchronous_revolutions_and_motor_revolutions(
+                1500 * u.rpm, 1510 * u.rpm
+            )
+
+    # Belt speed chain v = pi * D_eff * n_motor / i
+
+    def test_belt_speed_basic(self):
+        """Test v = pi * D_eff * n_motor / i."""
+        result = belt_speed_from_motor_revolutions_gear_ratio_and_pulley_diameter(
+            1442 * u.rpm, 12.17 * u.dimensionless, 1080 * u.mm
+        )
+        assert result.units == u.meter / u.second
+        assert result.magnitude == pytest.approx(pi * 1.08 * (1442 / 60) / 12.17)
+        assert result.magnitude == pytest.approx(6.7, rel=1e-3)
+
+    def test_belt_speed_non_positive_pulley_diameter(self):
+        """Test zero pulley diameter is rejected."""
+        with pytest.raises(ValueError, match="pulley_diameter must be positive"):
+            belt_speed_from_motor_revolutions_gear_ratio_and_pulley_diameter(
+                1440 * u.rpm, 12.15 * u.dimensionless, 0 * u.mm
+            )
+
+    def test_belt_speed_incompatible_output_unit(self):
+        """Test dimensionally incompatible output unit is rejected."""
+        with pytest.raises(ValueError, match="Error in converting to"):
+            belt_speed_from_motor_revolutions_gear_ratio_and_pulley_diameter(
+                1440 * u.rpm, 12.15 * u.dimensionless, 1080 * u.mm, unit="meter"
+            )
+
+    def test_gear_ratio_from_belt_speed_basic(self):
+        """Test i = pi * D_eff * n_motor / v."""
+        result = gear_ratio_from_belt_speed_motor_revolutions_and_pulley_diameter(
+            6.7 * u.meter / u.second, 1442 * u.rpm, 1080 * u.mm
+        )
+        assert result.units == u.dimensionless
+        assert result.magnitude == pytest.approx(pi * 1.08 * (1442 / 60) / 6.7)
+        assert result.magnitude == pytest.approx(12.17, rel=1e-3)
+
+    def test_gear_ratio_from_belt_speed_zero_motor_revolutions(self):
+        """Test zero motor revolutions are rejected."""
+        with pytest.raises(ValueError, match="motor_revolutions must be positive"):
+            gear_ratio_from_belt_speed_motor_revolutions_and_pulley_diameter(
+                6.7 * u.meter / u.second, 0 * u.rpm, 1080 * u.mm
+            )
+
+    def test_pulley_diameter_from_belt_speed_basic(self):
+        """Test D_eff = v * i / (pi * n_motor) with millimeter output."""
+        result = pulley_diameter_from_belt_speed_motor_revolutions_and_gear_ratio(
+            6.7 * u.meter / u.second,
+            1442 * u.rpm,
+            12.17 * u.dimensionless,
+            unit="millimeter",
+        )
+        assert result.magnitude == pytest.approx(
+            6.7 * 12.17 / (pi * (1442 / 60)) * 1000
+        )
+        assert result.magnitude == pytest.approx(1080.0, rel=1e-3)
+
+    def test_pulley_diameter_from_belt_speed_zero_gear_ratio(self):
+        """Test zero gear ratio is rejected."""
+        with pytest.raises(ValueError, match="gear_ratio must be positive"):
+            pulley_diameter_from_belt_speed_motor_revolutions_and_gear_ratio(
+                6.7 * u.meter / u.second, 1440 * u.rpm, 0 * u.dimensionless
+            )
+
+    def test_motor_revolutions_from_belt_speed_basic(self):
+        """Test n_motor = v * i / (pi * D_eff) with rpm output."""
+        result = motor_revolutions_from_belt_speed_gear_ratio_and_pulley_diameter(
+            6.7 * u.meter / u.second, 12.17 * u.dimensionless, 1080 * u.mm, unit="rpm"
+        )
+        assert result.magnitude == pytest.approx(6.7 * 12.17 / (pi * 1.08) * 60)
+        assert result.magnitude == pytest.approx(1442.0, rel=1e-3)
+
+    def test_motor_revolutions_from_belt_speed_zero_belt_speed(self):
+        """Test zero belt speed is rejected."""
+        with pytest.raises(ValueError, match="belt_speed must be positive"):
+            motor_revolutions_from_belt_speed_gear_ratio_and_pulley_diameter(
+                0 * u.meter / u.second, 12.15 * u.dimensionless, 1080 * u.mm
+            )
+
+    def test_drive_train_reference_case(self):
+        """Test the reference case D_eff, n_sync, s, n_p, i (inverse) and v (forward)."""
+        # D_shell = 1050 mm, t = 15 mm -> D_eff = 1080 mm
+        drive_diameter = (
+            effective_pulley_diameter_from_shell_diameter_and_lagging_thickness(
+                1050 * u.mm, 15 * u.mm, unit="millimeter"
+            )
+        )
+        # f = 50 Hz, p = 2 -> n_sync = 1500 rpm; n_m = 1442 rpm -> s
+        n_sync = synchronous_revolutions_from_supply_frequency_and_pole_pairs(
+            50 * u.Hz, 2, unit="rpm"
+        )
+        slip = slip_from_synchronous_revolutions_and_motor_revolutions(
+            n_sync, 1442 * u.rpm
+        )
+        n_motor = motor_revolutions_from_synchronous_revolutions_and_slip(
+            n_sync, slip, unit="rpm"
+        )
+        # Inverse: v = 6.7 m/s, D_eff = 1.08 m -> n_p, then i = n_m / n_p
+        n_pulley = pulley_revolutions_from_belt_speed(
+            6.7 * u.meter / u.second, drive_diameter, unit="rpm"
+        )
+        ratio = gear_ratio_from_motor_revolutions_and_pulley_revolutions(
+            n_motor, n_pulley
+        )
+        ratio_direct = gear_ratio_from_belt_speed_motor_revolutions_and_pulley_diameter(
+            6.7 * u.meter / u.second, n_motor, drive_diameter
+        )
+        # Forward: i = 12.17, n_m = 1442 rpm, D_eff = 1.08 m -> v
+        v = belt_speed_from_motor_revolutions_gear_ratio_and_pulley_diameter(
+            1442 * u.rpm, 12.17 * u.dimensionless, 1.08 * u.meter
+        )
+        # Round-trips back to D_eff and n_m from the computed ratio
+        diameter = pulley_diameter_from_belt_speed_motor_revolutions_and_gear_ratio(
+            6.7 * u.meter / u.second, n_motor, ratio, unit="millimeter"
+        )
+        motor = motor_revolutions_from_belt_speed_gear_ratio_and_pulley_diameter(
+            6.7 * u.meter / u.second, ratio, drive_diameter, unit="rpm"
+        )
+
+        assert drive_diameter.magnitude == pytest.approx(1080.0)
+        assert n_sync.magnitude == pytest.approx(1500.0)
+        assert slip.magnitude == pytest.approx(58 / 1500)
+        assert n_motor.magnitude == pytest.approx(1442.0)
+        assert n_pulley.magnitude == pytest.approx(118.48, rel=1e-4)
+        assert ratio.magnitude == pytest.approx(12.17, rel=1e-4)
+        assert ratio_direct.magnitude == pytest.approx(ratio.magnitude)
+        assert v.to(u.meter / u.second).magnitude == pytest.approx(6.7, rel=1e-4)
+        assert diameter.magnitude == pytest.approx(1080.0)
+        assert motor.magnitude == pytest.approx(1442.0)
 
 
 # Tests for torque_from_mechanical_power_and_revolutions
