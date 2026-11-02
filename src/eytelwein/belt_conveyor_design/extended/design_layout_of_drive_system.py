@@ -1,24 +1,979 @@
+import numpy as np
 from pint import Quantity
 
 from eytelwein.belt_conveyor_design.extended._design_layout_of_drive_system import (
-    _mechanical_torque_from_belt_force,
-    _mechanical_power_from_torque_and_belt_speed,
-    _pulley_revolutions_from_belt_speed,
-    _number_of_revolutions_from_translatory_speed,
-    _translatory_speed_from_number_of_revolutions,
+    _belt_speed_from_motor_revolutions_gear_ratio_and_pulley_diameter,
     _belt_speed_from_pulley_revolutions,
-    _angle_of_inclination_from_horizontal_length_and_lift,
+    _effective_pulley_diameter_from_shell_diameter_and_lagging_thickness,
+    _gear_ratio_from_belt_speed_motor_revolutions_and_pulley_diameter,
+    _gear_ratio_from_motor_revolutions_and_pulley_revolutions,
+    _lagging_thickness_from_effective_and_shell_diameter,
+    _mechanical_power_from_torque_and_belt_speed,
     _mechanical_power_from_torque_and_revolutions,
-    _torque_from_mechanical_power_and_revolutions,
-    _revolutions_from_mechanical_power_and_torque,
+    _mechanical_torque_from_belt_force,
+    _motor_revolutions_from_belt_speed_gear_ratio_and_pulley_diameter,
+    _motor_revolutions_from_pulley_revolutions_and_gear_ratio,
+    _motor_revolutions_from_synchronous_revolutions_and_slip,
+    _number_of_revolutions_from_translatory_speed,
     _pulley_diameter_from_belt_speed_and_revolutions,
+    _pulley_diameter_from_belt_speed_motor_revolutions_and_gear_ratio,
+    _pulley_revolutions_from_belt_speed,
+    _pulley_revolutions_from_motor_revolutions_and_gear_ratio,
     _radius_from_translatory_speed_and_revolutions,
+    _revolutions_from_mechanical_power_and_torque,
+    _shell_diameter_from_effective_pulley_diameter_and_lagging_thickness,
+    _slip_from_synchronous_revolutions_and_motor_revolutions,
+    _synchronous_revolutions_from_supply_frequency_and_pole_pairs,
+    _torque_from_mechanical_power_and_revolutions,
+    _translatory_speed_from_number_of_revolutions,
+    _angle_of_inclination_from_horizontal_length_and_lift,
 )
 
 from eytelwein.main.units import get_unit_registry
+from eytelwein.main.validation import validate_positive_count
 
 # Get the unit registry
 u = get_unit_registry()
+
+
+def effective_pulley_diameter_from_shell_diameter_and_lagging_thickness(
+    shell_diameter: Quantity,
+    lagging_thickness: Quantity,
+    unit: str = "meter",
+    precision: int | None = None,
+) -> Quantity:
+    """
+    Calculate the effective pulley diameter from shell diameter and lagging thickness.
+
+    The effective diameter is measured at the belt contact surface and is the
+    diameter to use in belt speed calculations.
+
+    Parameters
+    ----------
+    shell_diameter : Quantity
+        Pulley shell diameter [length], must be positive.
+    lagging_thickness : Quantity
+        Lagging thickness [length], must be non-negative.
+    unit : str, optional
+        Output unit for the effective pulley diameter (default is "meter").
+    precision : int | None, optional
+        Number of decimal places for rounding (default is None, no rounding).
+
+    Returns
+    -------
+    Quantity
+        Effective pulley diameter in the requested unit.
+
+    Raises
+    ------
+    ValueError
+        If unit conversion fails, the output unit is invalid or incompatible,
+        shell_diameter is not positive, or lagging_thickness is negative.
+
+    Notes
+    -----
+    D_eff = D_shell + 2 * t_lagging
+    """
+    try:
+        shell_m = shell_diameter.to(u.meter).magnitude
+        lagging_m = lagging_thickness.to(u.meter).magnitude
+    except Exception as e:
+        raise ValueError(f"Error in converting units: {e}")
+
+    if np.any(shell_m <= 0):
+        raise ValueError("shell_diameter must be positive")
+    if np.any(lagging_m < 0):
+        raise ValueError("lagging_thickness must be non-negative")
+
+    try:
+        pint_unit = u.parse_units(unit)
+    except Exception as e:
+        raise ValueError(f"Invalid unit: {unit}. Error: {e}")
+
+    result_magnitude = (
+        _effective_pulley_diameter_from_shell_diameter_and_lagging_thickness(
+            shell_m, lagging_m
+        )
+    )
+    result = result_magnitude * u.meter
+
+    try:
+        result = result.to(pint_unit)
+    except Exception as e:
+        raise ValueError(f"Error in converting to {unit}: {e}")
+
+    if precision is not None:
+        result = np.round(result, precision)
+
+    return result
+
+
+def shell_diameter_from_effective_pulley_diameter_and_lagging_thickness(
+    effective_pulley_diameter: Quantity,
+    lagging_thickness: Quantity,
+    unit: str = "meter",
+    precision: int | None = None,
+) -> Quantity:
+    """
+    Calculate the pulley shell diameter from effective diameter and lagging thickness.
+
+    Parameters
+    ----------
+    effective_pulley_diameter : Quantity
+        Effective pulley diameter at the belt contact [length], must be positive
+        and exceed twice the lagging thickness.
+    lagging_thickness : Quantity
+        Lagging thickness [length], must be non-negative.
+    unit : str, optional
+        Output unit for the shell diameter (default is "meter").
+    precision : int | None, optional
+        Number of decimal places for rounding (default is None, no rounding).
+
+    Returns
+    -------
+    Quantity
+        Pulley shell diameter in the requested unit.
+
+    Raises
+    ------
+    ValueError
+        If unit conversion fails, the output unit is invalid or incompatible,
+        effective_pulley_diameter is not positive, lagging_thickness is
+        negative, or effective_pulley_diameter does not exceed twice
+        lagging_thickness.
+
+    Notes
+    -----
+    D_shell = D_eff - 2 * t_lagging
+    """
+    try:
+        effective_m = effective_pulley_diameter.to(u.meter).magnitude
+        lagging_m = lagging_thickness.to(u.meter).magnitude
+    except Exception as e:
+        raise ValueError(f"Error in converting units: {e}")
+
+    if np.any(effective_m <= 0):
+        raise ValueError("effective_pulley_diameter must be positive")
+    if np.any(lagging_m < 0):
+        raise ValueError("lagging_thickness must be non-negative")
+    if np.any(effective_m <= 2 * lagging_m):
+        raise ValueError(
+            "effective_pulley_diameter must exceed twice the lagging_thickness"
+        )
+
+    try:
+        pint_unit = u.parse_units(unit)
+    except Exception as e:
+        raise ValueError(f"Invalid unit: {unit}. Error: {e}")
+
+    result_magnitude = (
+        _shell_diameter_from_effective_pulley_diameter_and_lagging_thickness(
+            effective_m, lagging_m
+        )
+    )
+    result = result_magnitude * u.meter
+
+    try:
+        result = result.to(pint_unit)
+    except Exception as e:
+        raise ValueError(f"Error in converting to {unit}: {e}")
+
+    if precision is not None:
+        result = np.round(result, precision)
+
+    return result
+
+
+def lagging_thickness_from_effective_and_shell_diameter(
+    effective_pulley_diameter: Quantity,
+    shell_diameter: Quantity,
+    unit: str = "millimeter",
+    precision: int | None = None,
+) -> Quantity:
+    """
+    Calculate the lagging thickness from effective and shell diameters.
+
+    Parameters
+    ----------
+    effective_pulley_diameter : Quantity
+        Effective pulley diameter at the belt contact [length], must be positive
+        and not smaller than shell_diameter.
+    shell_diameter : Quantity
+        Pulley shell diameter [length], must be positive.
+    unit : str, optional
+        Output unit for the lagging thickness (default is "millimeter").
+    precision : int | None, optional
+        Number of decimal places for rounding (default is None, no rounding).
+
+    Returns
+    -------
+    Quantity
+        Lagging thickness in the requested unit.
+
+    Raises
+    ------
+    ValueError
+        If unit conversion fails, the output unit is invalid or incompatible,
+        either diameter is not positive, or effective_pulley_diameter is
+        smaller than shell_diameter.
+
+    Notes
+    -----
+    t_lagging = (D_eff - D_shell) / 2
+    """
+    try:
+        effective_m = effective_pulley_diameter.to(u.meter).magnitude
+        shell_m = shell_diameter.to(u.meter).magnitude
+    except Exception as e:
+        raise ValueError(f"Error in converting units: {e}")
+
+    if np.any(effective_m <= 0):
+        raise ValueError("effective_pulley_diameter must be positive")
+    if np.any(shell_m <= 0):
+        raise ValueError("shell_diameter must be positive")
+    if np.any(effective_m < shell_m):
+        raise ValueError(
+            "effective_pulley_diameter must be greater than or equal to shell_diameter"
+        )
+
+    try:
+        pint_unit = u.parse_units(unit)
+    except Exception as e:
+        raise ValueError(f"Invalid unit: {unit}. Error: {e}")
+
+    result_magnitude = _lagging_thickness_from_effective_and_shell_diameter(
+        effective_m, shell_m
+    )
+    result = result_magnitude * u.meter
+
+    try:
+        result = result.to(pint_unit)
+    except Exception as e:
+        raise ValueError(f"Error in converting to {unit}: {e}")
+
+    if precision is not None:
+        result = np.round(result, precision)
+
+    return result
+
+
+def pulley_revolutions_from_motor_revolutions_and_gear_ratio(
+    motor_revolutions: Quantity,
+    gear_ratio: Quantity,
+    unit: str = "rps",
+    precision: int | None = None,
+) -> Quantity:
+    """
+    Calculate the pulley revolutions from motor revolutions and gear ratio.
+
+    Parameters
+    ----------
+    motor_revolutions : Quantity
+        Motor speed [revolution / time], must be non-negative.
+    gear_ratio : Quantity
+        Gearbox transmission ratio i = n_motor / n_pulley [dimensionless],
+        must be positive.
+    unit : str, optional
+        Output unit for the pulley revolutions (default is "rps").
+    precision : int | None, optional
+        Number of decimal places for rounding (default is None, no rounding).
+
+    Returns
+    -------
+    Quantity
+        Pulley speed in the requested unit.
+
+    Raises
+    ------
+    ValueError
+        If unit conversion fails, the output unit is invalid or incompatible,
+        motor_revolutions is negative, or gear_ratio is not positive.
+
+    Notes
+    -----
+    n_pulley = n_motor / i
+    """
+    try:
+        motor_rps = motor_revolutions.to(u.revolution / u.second).magnitude
+        ratio = gear_ratio.to(u.dimensionless).magnitude
+    except Exception as e:
+        raise ValueError(f"Error in converting units: {e}")
+
+    if np.any(motor_rps < 0):
+        raise ValueError("motor_revolutions must be non-negative")
+    if np.any(ratio <= 0):
+        raise ValueError("gear_ratio must be positive")
+
+    try:
+        pint_unit = u.parse_units(unit)
+    except Exception as e:
+        raise ValueError(f"Invalid unit: {unit}. Error: {e}")
+
+    result_magnitude = _pulley_revolutions_from_motor_revolutions_and_gear_ratio(
+        motor_rps, ratio
+    )
+    result = result_magnitude * u.revolution / u.second
+
+    try:
+        result = result.to(pint_unit)
+    except Exception as e:
+        raise ValueError(f"Error in converting to {unit}: {e}")
+
+    if precision is not None:
+        result = np.round(result, precision)
+
+    return result
+
+
+def motor_revolutions_from_pulley_revolutions_and_gear_ratio(
+    pulley_revolutions: Quantity,
+    gear_ratio: Quantity,
+    unit: str = "rps",
+    precision: int | None = None,
+) -> Quantity:
+    """
+    Calculate the motor revolutions from pulley revolutions and gear ratio.
+
+    Parameters
+    ----------
+    pulley_revolutions : Quantity
+        Pulley speed [revolution / time], must be non-negative.
+    gear_ratio : Quantity
+        Gearbox transmission ratio i = n_motor / n_pulley [dimensionless],
+        must be positive.
+    unit : str, optional
+        Output unit for the motor revolutions (default is "rps").
+    precision : int | None, optional
+        Number of decimal places for rounding (default is None, no rounding).
+
+    Returns
+    -------
+    Quantity
+        Motor speed in the requested unit.
+
+    Raises
+    ------
+    ValueError
+        If unit conversion fails, the output unit is invalid or incompatible,
+        pulley_revolutions is negative, or gear_ratio is not positive.
+
+    Notes
+    -----
+    n_motor = n_pulley * i
+    """
+    try:
+        pulley_rps = pulley_revolutions.to(u.revolution / u.second).magnitude
+        ratio = gear_ratio.to(u.dimensionless).magnitude
+    except Exception as e:
+        raise ValueError(f"Error in converting units: {e}")
+
+    if np.any(pulley_rps < 0):
+        raise ValueError("pulley_revolutions must be non-negative")
+    if np.any(ratio <= 0):
+        raise ValueError("gear_ratio must be positive")
+
+    try:
+        pint_unit = u.parse_units(unit)
+    except Exception as e:
+        raise ValueError(f"Invalid unit: {unit}. Error: {e}")
+
+    result_magnitude = _motor_revolutions_from_pulley_revolutions_and_gear_ratio(
+        pulley_rps, ratio
+    )
+    result = result_magnitude * u.revolution / u.second
+
+    try:
+        result = result.to(pint_unit)
+    except Exception as e:
+        raise ValueError(f"Error in converting to {unit}: {e}")
+
+    if precision is not None:
+        result = np.round(result, precision)
+
+    return result
+
+
+def gear_ratio_from_motor_revolutions_and_pulley_revolutions(
+    motor_revolutions: Quantity,
+    pulley_revolutions: Quantity,
+    unit: str = "dimensionless",
+    precision: int | None = None,
+) -> Quantity:
+    """
+    Calculate the gear ratio from motor and pulley revolutions.
+
+    Parameters
+    ----------
+    motor_revolutions : Quantity
+        Motor speed [revolution / time], must be positive.
+    pulley_revolutions : Quantity
+        Pulley speed [revolution / time], must be positive.
+    unit : str, optional
+        Output unit for the gear ratio (default is "dimensionless").
+    precision : int | None, optional
+        Number of decimal places for rounding (default is None, no rounding).
+
+    Returns
+    -------
+    Quantity
+        Gearbox transmission ratio in the requested unit.
+
+    Raises
+    ------
+    ValueError
+        If unit conversion fails, the output unit is invalid or incompatible,
+        or either speed is not positive.
+
+    Notes
+    -----
+    i = n_motor / n_pulley
+    """
+    try:
+        motor_rps = motor_revolutions.to(u.revolution / u.second).magnitude
+        pulley_rps = pulley_revolutions.to(u.revolution / u.second).magnitude
+    except Exception as e:
+        raise ValueError(f"Error in converting units: {e}")
+
+    if np.any(motor_rps <= 0):
+        raise ValueError("motor_revolutions must be positive")
+    if np.any(pulley_rps <= 0):
+        raise ValueError("pulley_revolutions must be positive")
+
+    try:
+        pint_unit = u.parse_units(unit)
+    except Exception as e:
+        raise ValueError(f"Invalid unit: {unit}. Error: {e}")
+
+    result_magnitude = _gear_ratio_from_motor_revolutions_and_pulley_revolutions(
+        motor_rps, pulley_rps
+    )
+    result = result_magnitude * u.dimensionless
+
+    try:
+        result = result.to(pint_unit)
+    except Exception as e:
+        raise ValueError(f"Error in converting to {unit}: {e}")
+
+    if precision is not None:
+        result = np.round(result, precision)
+
+    return result
+
+
+def synchronous_revolutions_from_supply_frequency_and_pole_pairs(
+    supply_frequency: Quantity,
+    pole_pairs: int,
+    unit: str = "rps",
+    precision: int | None = None,
+) -> Quantity:
+    """
+    Calculate the synchronous revolutions from supply frequency and pole pairs.
+
+    Parameters
+    ----------
+    supply_frequency : Quantity
+        Supply frequency [1 / time], must be positive.
+    pole_pairs : int
+        Number of motor pole pairs, must be a positive integer.
+    unit : str, optional
+        Output unit for the synchronous revolutions (default is "rps").
+    precision : int | None, optional
+        Number of decimal places for rounding (default is None, no rounding).
+
+    Returns
+    -------
+    Quantity
+        Synchronous speed in the requested unit.
+
+    Raises
+    ------
+    ValueError
+        If pole_pairs is not a positive integer, unit conversion fails, the
+        output unit is invalid or incompatible, or supply_frequency is not
+        positive.
+
+    Notes
+    -----
+    n_sync = f / p
+
+    pole_pairs is a discrete configuration count describing the motor winding
+    layout, not a measured value. It is therefore a plain ``int`` rather than a
+    Quantity, consistent with other configuration counts in Eytelwein.
+    """
+    validate_positive_count(pole_pairs, "pole_pairs")
+
+    try:
+        frequency_hz = supply_frequency.to(u.hertz).magnitude
+    except Exception as e:
+        raise ValueError(f"Error in converting units: {e}")
+
+    if np.any(frequency_hz <= 0):
+        raise ValueError("supply_frequency must be positive")
+
+    try:
+        pint_unit = u.parse_units(unit)
+    except Exception as e:
+        raise ValueError(f"Invalid unit: {unit}. Error: {e}")
+
+    result_magnitude = _synchronous_revolutions_from_supply_frequency_and_pole_pairs(
+        frequency_hz, pole_pairs
+    )
+    result = result_magnitude * u.revolution / u.second
+
+    try:
+        result = result.to(pint_unit)
+    except Exception as e:
+        raise ValueError(f"Error in converting to {unit}: {e}")
+
+    if precision is not None:
+        result = np.round(result, precision)
+
+    return result
+
+
+def motor_revolutions_from_synchronous_revolutions_and_slip(
+    synchronous_revolutions: Quantity,
+    slip: Quantity,
+    unit: str = "rps",
+    precision: int | None = None,
+) -> Quantity:
+    """
+    Calculate the motor revolutions from synchronous revolutions and slip.
+
+    Parameters
+    ----------
+    synchronous_revolutions : Quantity
+        Synchronous speed [revolution / time], must be positive.
+    slip : Quantity
+        Motor slip [dimensionless], must satisfy 0 <= slip < 1.
+    unit : str, optional
+        Output unit for the motor revolutions (default is "rps").
+    precision : int | None, optional
+        Number of decimal places for rounding (default is None, no rounding).
+
+    Returns
+    -------
+    Quantity
+        Motor speed in the requested unit.
+
+    Raises
+    ------
+    ValueError
+        If unit conversion fails, the output unit is invalid or incompatible,
+        synchronous_revolutions is not positive, or slip is outside [0, 1).
+
+    Notes
+    -----
+    n_motor = n_sync * (1 - s)
+    """
+    try:
+        sync_rps = synchronous_revolutions.to(u.revolution / u.second).magnitude
+        slip_dim = slip.to(u.dimensionless).magnitude
+    except Exception as e:
+        raise ValueError(f"Error in converting units: {e}")
+
+    if np.any(sync_rps <= 0):
+        raise ValueError("synchronous_revolutions must be positive")
+    if np.any((slip_dim < 0) | (slip_dim >= 1)):
+        raise ValueError("slip must satisfy 0 <= slip < 1")
+
+    try:
+        pint_unit = u.parse_units(unit)
+    except Exception as e:
+        raise ValueError(f"Invalid unit: {unit}. Error: {e}")
+
+    result_magnitude = _motor_revolutions_from_synchronous_revolutions_and_slip(
+        sync_rps, slip_dim
+    )
+    result = result_magnitude * u.revolution / u.second
+
+    try:
+        result = result.to(pint_unit)
+    except Exception as e:
+        raise ValueError(f"Error in converting to {unit}: {e}")
+
+    if precision is not None:
+        result = np.round(result, precision)
+
+    return result
+
+
+def slip_from_synchronous_revolutions_and_motor_revolutions(
+    synchronous_revolutions: Quantity,
+    motor_revolutions: Quantity,
+    unit: str = "dimensionless",
+    precision: int | None = None,
+) -> Quantity:
+    """
+    Calculate the motor slip from synchronous and motor revolutions.
+
+    Parameters
+    ----------
+    synchronous_revolutions : Quantity
+        Synchronous speed [revolution / time], must be positive.
+    motor_revolutions : Quantity
+        Motor speed [revolution / time], must be non-negative and not exceed
+        synchronous_revolutions.
+    unit : str, optional
+        Output unit for the slip (default is "dimensionless").
+    precision : int | None, optional
+        Number of decimal places for rounding (default is None, no rounding).
+
+    Returns
+    -------
+    Quantity
+        Motor slip in the requested unit.
+
+    Raises
+    ------
+    ValueError
+        If unit conversion fails, the output unit is invalid or incompatible,
+        synchronous_revolutions is not positive, motor_revolutions is negative,
+        or motor_revolutions exceeds synchronous_revolutions.
+
+    Notes
+    -----
+    s = (n_sync - n_motor) / n_sync
+    """
+    try:
+        sync_rps = synchronous_revolutions.to(u.revolution / u.second).magnitude
+        motor_rps = motor_revolutions.to(u.revolution / u.second).magnitude
+    except Exception as e:
+        raise ValueError(f"Error in converting units: {e}")
+
+    if np.any(sync_rps <= 0):
+        raise ValueError("synchronous_revolutions must be positive")
+    if np.any(motor_rps < 0):
+        raise ValueError("motor_revolutions must be non-negative")
+    if np.any(motor_rps > sync_rps):
+        raise ValueError("motor_revolutions must not exceed synchronous_revolutions")
+
+    try:
+        pint_unit = u.parse_units(unit)
+    except Exception as e:
+        raise ValueError(f"Invalid unit: {unit}. Error: {e}")
+
+    result_magnitude = _slip_from_synchronous_revolutions_and_motor_revolutions(
+        sync_rps, motor_rps
+    )
+    result = result_magnitude * u.dimensionless
+
+    try:
+        result = result.to(pint_unit)
+    except Exception as e:
+        raise ValueError(f"Error in converting to {unit}: {e}")
+
+    if precision is not None:
+        result = np.round(result, precision)
+
+    return result
+
+
+def belt_speed_from_motor_revolutions_gear_ratio_and_pulley_diameter(
+    motor_revolutions: Quantity,
+    gear_ratio: Quantity,
+    pulley_diameter: Quantity,
+    unit: str = "meter / second",
+    precision: int | None = None,
+) -> Quantity:
+    """
+    Calculate the belt speed from motor revolutions, gear ratio, and pulley diameter.
+
+    Parameters
+    ----------
+    motor_revolutions : Quantity
+        Motor speed [revolution / time], must be non-negative.
+    gear_ratio : Quantity
+        Gearbox transmission ratio i = n_motor / n_pulley [dimensionless],
+        must be positive.
+    pulley_diameter : Quantity
+        Effective pulley diameter at the belt contact, including lagging
+        [length], must be positive.
+    unit : str, optional
+        Output unit for the belt speed (default is "meter / second").
+    precision : int | None, optional
+        Number of decimal places for rounding (default is None, no rounding).
+
+    Returns
+    -------
+    Quantity
+        Belt speed in the requested unit.
+
+    Raises
+    ------
+    ValueError
+        If unit conversion fails, the output unit is invalid or incompatible,
+        motor_revolutions is negative, or gear_ratio or pulley_diameter is not
+        positive.
+
+    Notes
+    -----
+    v = pi * D_eff * n_motor / i, with D_eff = D_shell + 2 * t_lagging
+    """
+    try:
+        motor_rps = motor_revolutions.to(u.revolution / u.second).magnitude
+        ratio = gear_ratio.to(u.dimensionless).magnitude
+        diameter_m = pulley_diameter.to(u.meter).magnitude
+    except Exception as e:
+        raise ValueError(f"Error in converting units: {e}")
+
+    if np.any(motor_rps < 0):
+        raise ValueError("motor_revolutions must be non-negative")
+    if np.any(ratio <= 0):
+        raise ValueError("gear_ratio must be positive")
+    if np.any(diameter_m <= 0):
+        raise ValueError("pulley_diameter must be positive")
+
+    try:
+        pint_unit = u.parse_units(unit)
+    except Exception as e:
+        raise ValueError(f"Invalid unit: {unit}. Error: {e}")
+
+    result_magnitude = (
+        _belt_speed_from_motor_revolutions_gear_ratio_and_pulley_diameter(
+            motor_rps, ratio, diameter_m
+        )
+    )
+    result = result_magnitude * u.meter / u.second
+
+    try:
+        result = result.to(pint_unit)
+    except Exception as e:
+        raise ValueError(f"Error in converting to {unit}: {e}")
+
+    if precision is not None:
+        result = np.round(result, precision)
+
+    return result
+
+
+def gear_ratio_from_belt_speed_motor_revolutions_and_pulley_diameter(
+    belt_speed: Quantity,
+    motor_revolutions: Quantity,
+    pulley_diameter: Quantity,
+    unit: str = "dimensionless",
+    precision: int | None = None,
+) -> Quantity:
+    """
+    Calculate the gear ratio from belt speed, motor revolutions, and pulley diameter.
+
+    Parameters
+    ----------
+    belt_speed : Quantity
+        Belt speed [length / time], must be positive.
+    motor_revolutions : Quantity
+        Motor speed [revolution / time], must be positive.
+    pulley_diameter : Quantity
+        Effective pulley diameter at the belt contact, including lagging
+        [length], must be positive.
+    unit : str, optional
+        Output unit for the gear ratio (default is "dimensionless").
+    precision : int | None, optional
+        Number of decimal places for rounding (default is None, no rounding).
+
+    Returns
+    -------
+    Quantity
+        Gearbox transmission ratio in the requested unit.
+
+    Raises
+    ------
+    ValueError
+        If unit conversion fails, the output unit is invalid or incompatible,
+        or belt_speed, motor_revolutions, or pulley_diameter is not positive.
+
+    Notes
+    -----
+    i = pi * D_eff * n_motor / v
+    """
+    try:
+        speed_mps = belt_speed.to(u.meter / u.second).magnitude
+        motor_rps = motor_revolutions.to(u.revolution / u.second).magnitude
+        diameter_m = pulley_diameter.to(u.meter).magnitude
+    except Exception as e:
+        raise ValueError(f"Error in converting units: {e}")
+
+    if np.any(speed_mps <= 0):
+        raise ValueError("belt_speed must be positive")
+    if np.any(motor_rps <= 0):
+        raise ValueError("motor_revolutions must be positive")
+    if np.any(diameter_m <= 0):
+        raise ValueError("pulley_diameter must be positive")
+
+    try:
+        pint_unit = u.parse_units(unit)
+    except Exception as e:
+        raise ValueError(f"Invalid unit: {unit}. Error: {e}")
+
+    result_magnitude = (
+        _gear_ratio_from_belt_speed_motor_revolutions_and_pulley_diameter(
+            speed_mps, motor_rps, diameter_m
+        )
+    )
+    result = result_magnitude * u.dimensionless
+
+    try:
+        result = result.to(pint_unit)
+    except Exception as e:
+        raise ValueError(f"Error in converting to {unit}: {e}")
+
+    if precision is not None:
+        result = np.round(result, precision)
+
+    return result
+
+
+def pulley_diameter_from_belt_speed_motor_revolutions_and_gear_ratio(
+    belt_speed: Quantity,
+    motor_revolutions: Quantity,
+    gear_ratio: Quantity,
+    unit: str = "meter",
+    precision: int | None = None,
+) -> Quantity:
+    """
+    Calculate the effective pulley diameter from belt speed, motor revolutions, and gear ratio.
+
+    Parameters
+    ----------
+    belt_speed : Quantity
+        Belt speed [length / time], must be positive.
+    motor_revolutions : Quantity
+        Motor speed [revolution / time], must be positive.
+    gear_ratio : Quantity
+        Gearbox transmission ratio i = n_motor / n_pulley [dimensionless],
+        must be positive.
+    unit : str, optional
+        Output unit for the effective pulley diameter (default is "meter").
+    precision : int | None, optional
+        Number of decimal places for rounding (default is None, no rounding).
+
+    Returns
+    -------
+    Quantity
+        Effective pulley diameter at the belt contact in the requested unit.
+
+    Raises
+    ------
+    ValueError
+        If unit conversion fails, the output unit is invalid or incompatible,
+        or belt_speed, motor_revolutions, or gear_ratio is not positive.
+
+    Notes
+    -----
+    D_eff = v * i / (pi * n_motor)
+    """
+    try:
+        speed_mps = belt_speed.to(u.meter / u.second).magnitude
+        motor_rps = motor_revolutions.to(u.revolution / u.second).magnitude
+        ratio = gear_ratio.to(u.dimensionless).magnitude
+    except Exception as e:
+        raise ValueError(f"Error in converting units: {e}")
+
+    if np.any(speed_mps <= 0):
+        raise ValueError("belt_speed must be positive")
+    if np.any(motor_rps <= 0):
+        raise ValueError("motor_revolutions must be positive")
+    if np.any(ratio <= 0):
+        raise ValueError("gear_ratio must be positive")
+
+    try:
+        pint_unit = u.parse_units(unit)
+    except Exception as e:
+        raise ValueError(f"Invalid unit: {unit}. Error: {e}")
+
+    result_magnitude = (
+        _pulley_diameter_from_belt_speed_motor_revolutions_and_gear_ratio(
+            speed_mps, motor_rps, ratio
+        )
+    )
+    result = result_magnitude * u.meter
+
+    try:
+        result = result.to(pint_unit)
+    except Exception as e:
+        raise ValueError(f"Error in converting to {unit}: {e}")
+
+    if precision is not None:
+        result = np.round(result, precision)
+
+    return result
+
+
+def motor_revolutions_from_belt_speed_gear_ratio_and_pulley_diameter(
+    belt_speed: Quantity,
+    gear_ratio: Quantity,
+    pulley_diameter: Quantity,
+    unit: str = "rps",
+    precision: int | None = None,
+) -> Quantity:
+    """
+    Calculate the motor revolutions from belt speed, gear ratio, and pulley diameter.
+
+    Parameters
+    ----------
+    belt_speed : Quantity
+        Belt speed [length / time], must be positive.
+    gear_ratio : Quantity
+        Gearbox transmission ratio i = n_motor / n_pulley [dimensionless],
+        must be positive.
+    pulley_diameter : Quantity
+        Effective pulley diameter at the belt contact, including lagging
+        [length], must be positive.
+    unit : str, optional
+        Output unit for the motor revolutions (default is "rps").
+    precision : int | None, optional
+        Number of decimal places for rounding (default is None, no rounding).
+
+    Returns
+    -------
+    Quantity
+        Motor speed in the requested unit.
+
+    Raises
+    ------
+    ValueError
+        If unit conversion fails, the output unit is invalid or incompatible,
+        or belt_speed, gear_ratio, or pulley_diameter is not positive.
+
+    Notes
+    -----
+    n_motor = v * i / (pi * D_eff)
+    """
+    try:
+        speed_mps = belt_speed.to(u.meter / u.second).magnitude
+        ratio = gear_ratio.to(u.dimensionless).magnitude
+        diameter_m = pulley_diameter.to(u.meter).magnitude
+    except Exception as e:
+        raise ValueError(f"Error in converting units: {e}")
+
+    if np.any(speed_mps <= 0):
+        raise ValueError("belt_speed must be positive")
+    if np.any(ratio <= 0):
+        raise ValueError("gear_ratio must be positive")
+    if np.any(diameter_m <= 0):
+        raise ValueError("pulley_diameter must be positive")
+
+    try:
+        pint_unit = u.parse_units(unit)
+    except Exception as e:
+        raise ValueError(f"Invalid unit: {unit}. Error: {e}")
+
+    result_magnitude = (
+        _motor_revolutions_from_belt_speed_gear_ratio_and_pulley_diameter(
+            speed_mps, ratio, diameter_m
+        )
+    )
+    result = result_magnitude * u.revolution / u.second
+
+    try:
+        result = result.to(pint_unit)
+    except Exception as e:
+        raise ValueError(f"Error in converting to {unit}: {e}")
+
+    if precision is not None:
+        result = np.round(result, precision)
+
+    return result
 
 
 def mechanical_torque_from_belt_force(
