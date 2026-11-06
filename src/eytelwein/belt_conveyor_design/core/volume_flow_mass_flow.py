@@ -1,5 +1,4 @@
 from pint import Quantity
-import math
 
 from eytelwein.belt_conveyor_design.core._volume_flow_mass_flow import (
     _solve_for_used_belt_width_from_cross_section,
@@ -92,11 +91,9 @@ def partial_cross_section_above_water_fill(
         # Convert usable_belt_width to millimeters
         usable_belt_width_mm = usable_belt_width.to(u.millimeter)
 
-        # Convert troughing_angle to degrees
-        troughing_angle_degree = troughing_angle.to(u.degree)
-
-        # Convert troughing_angle to degrees
-        equivalent_slope_angle_degree = equivalent_slope_angle.to(u.degree)
+        # Convert angles to radians for the private numerical implementation
+        troughing_angle_rad = troughing_angle.to(u.radian)
+        equivalent_slope_angle_rad = equivalent_slope_angle.to(u.radian)
     except Exception as e:
         raise ValueError(f"Error in converting units: {e}")
 
@@ -113,8 +110,8 @@ def partial_cross_section_above_water_fill(
         _partial_cross_section_above_water_fill(
             center_roll_length_mm.magnitude,
             usable_belt_width_mm.magnitude,
-            math.radians(troughing_angle_degree.magnitude),
-            math.radians(equivalent_slope_angle_degree.magnitude),
+            troughing_angle_rad.magnitude,
+            equivalent_slope_angle_rad.magnitude,
         )
         * u.millimeter**2
     )
@@ -168,8 +165,8 @@ def partial_cross_section_at_water_fill(
         # Convert usable_belt_width to millimeters
         usable_belt_width_mm = usable_belt_width.to(u.millimeter)
 
-        # Convert troughing_angle to degrees
-        troughing_angle_degree = troughing_angle.to(u.degree)
+        # Convert troughing_angle to radians for the private numerical implementation
+        troughing_angle_rad = troughing_angle.to(u.radian)
     except Exception as e:
         raise ValueError(f"Error in converting units: {e}")
 
@@ -185,9 +182,7 @@ def partial_cross_section_at_water_fill(
         _partial_cross_section_at_water_fill(
             center_roll_length_mm.magnitude,
             usable_belt_width_mm.magnitude,
-            math.radians(
-                troughing_angle_degree.magnitude
-            ),  # Convert to radians for the private function
+            troughing_angle_rad.magnitude,
         )
         * u.millimeter**2
     )
@@ -244,11 +239,9 @@ def cross_section_of_fill(
         # Convert usable_belt_width to millimeters
         usable_belt_width_mm = usable_belt_width.to(u.millimeter)
 
-        # Convert troughing_angle to degrees
-        troughing_angle_degree = troughing_angle.to(u.degree)
-
-        # Convert troughing_angle to degrees
-        equivalent_slope_angle_degree = equivalent_slope_angle.to(u.degree)
+        # Convert angles to radians for the private numerical implementation
+        troughing_angle_rad = troughing_angle.to(u.radian)
+        equivalent_slope_angle_rad = equivalent_slope_angle.to(u.radian)
     except Exception as e:
         raise ValueError(f"Error in converting units: {e}")
 
@@ -264,8 +257,8 @@ def cross_section_of_fill(
         _cross_section_of_fill(
             center_roll_length_mm.magnitude,
             usable_belt_width_mm.magnitude,
-            math.radians(troughing_angle_degree.magnitude),
-            math.radians(equivalent_slope_angle_degree.magnitude),
+            troughing_angle_rad.magnitude,
+            equivalent_slope_angle_rad.magnitude,
         )
         * u.millimeter**2
     )
@@ -737,8 +730,8 @@ def solve_for_used_belt_width_from_cross_section(
         # Convert all inputs to required units for calculation
         target_area_mm2 = target_cross_section.to(u.millimeter**2)
         center_roll_length_mm = center_roll_length.to(u.millimeter)
-        troughing_angle_degree = troughing_angle.to(u.degree)
-        equivalent_slope_angle_degree = equivalent_slope_angle.to(u.degree)
+        troughing_angle_rad = troughing_angle.to(u.radian)
+        equivalent_slope_angle_rad = equivalent_slope_angle.to(u.radian)
 
         if initial_guess is not None:
             initial_guess_mm = initial_guess.to(u.millimeter).magnitude
@@ -760,8 +753,8 @@ def solve_for_used_belt_width_from_cross_section(
             _solve_for_used_belt_width_from_cross_section(
                 target_area_mm2.magnitude,
                 center_roll_length_mm.magnitude,
-                math.radians(troughing_angle_degree.magnitude),
-                math.radians(equivalent_slope_angle_degree.magnitude),
+                troughing_angle_rad.magnitude,
+                equivalent_slope_angle_rad.magnitude,
                 initial_guess=initial_guess_mm,
             )
             * u.millimeter
@@ -918,9 +911,9 @@ def reduction_factor_inclined_fill_1(
                if there is an error in converting units, or if the calculation results in an invalid value.
     """
     try:
-        # Convert angles to degrees
-        maximal_inclination_angle_degree = maximal_inclination_angle.to(u.degree)
-        dynamic_angle_of_slope_degree = dynamic_angle_of_slope.to(u.degree)
+        # Convert angles to radians for the private numerical implementation
+        maximal_inclination_angle_rad = maximal_inclination_angle.to(u.radian)
+        dynamic_angle_of_slope_rad = dynamic_angle_of_slope.to(u.radian)
     except Exception as e:
         raise ValueError(f"Error in converting units: {e}")
 
@@ -934,8 +927,8 @@ def reduction_factor_inclined_fill_1(
         # Calculate the reduction factor using the private implementation
         reduction_factor = (
             _reduction_factor_inclined_fill_1(
-                maximal_inclination_angle_degree.magnitude,
-                dynamic_angle_of_slope_degree.magnitude,
+                maximal_inclination_angle_rad.magnitude,
+                dynamic_angle_of_slope_rad.magnitude,
             )
             * u.dimensionless
         )

@@ -575,8 +575,8 @@ def _reduction_factor_inclined_fill_1(
     Calculates the reduction factor for inclined fill based on the maximal inclination angle and the dynamic angle of slope.
     This function computes a reduction factor used in material handling or bulk solids transport, where the inclination of the fill affects the flow characteristics. The calculation is based on the cosine squared of the provided angles.
     Args:
-        maximal_inclination_angle (float): The maximal inclination angle of the fill (in degrees).
-        dynamic_angle_of_slope (float): The dynamic angle of slope (in degrees).
+        maximal_inclination_angle (float): The maximal inclination angle of the fill (in radians).
+        dynamic_angle_of_slope (float): The dynamic angle of slope (in radians).
     Returns:
         float: The calculated reduction factor.
     Raises:
@@ -587,11 +587,11 @@ def _reduction_factor_inclined_fill_1(
             "The maximal inclination angle must not be greater than the dynamic angle of slope."
         )
 
-    cos2dmax = math.cos(math.radians(maximal_inclination_angle)) ** 2
-    cos2bdyn = math.cos(math.radians(dynamic_angle_of_slope)) ** 2
+    cos2dmax = math.cos(maximal_inclination_angle) ** 2
+    cos2bdyn = math.cos(dynamic_angle_of_slope) ** 2
 
     if cos2dmax == 1:
-        raise ValueError("Maximal inclination angle cannot be zero degrees.")
+        raise ValueError("Maximal inclination angle cannot be zero radians.")
 
     fraction = (cos2dmax - cos2bdyn) / (1 - cos2dmax)
     sqrt = math.sqrt(fraction)

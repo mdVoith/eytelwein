@@ -365,8 +365,8 @@ class TestLengthOfMaterialOnSideRoll:
 
 class TestReductionFactorInclinedFill1:
     def test_typical_values(self):
-        # Example: maximal_inclination_angle = 10, dynamic_angle_of_slope = 20
-        result = _reduction_factor_inclined_fill_1(10.0, 20.0)
+        # Private helpers operate on radians; public Quantity APIs convert from degrees to radians.
+        result = _reduction_factor_inclined_fill_1(math.radians(10.0), math.radians(20.0))
         cos2dmax = math.cos(math.radians(10.0)) ** 2
         cos2bdyn = math.cos(math.radians(20.0)) ** 2
         expected = math.sqrt((cos2dmax - cos2bdyn) / (1 - cos2dmax))
@@ -379,12 +379,12 @@ class TestReductionFactorInclinedFill1:
 
     def test_maximal_inclination_equals_dynamic_angle(self):
         # Should not raise, but sqrt of zero
-        result = _reduction_factor_inclined_fill_1(20.0, 20.0)
+        result = _reduction_factor_inclined_fill_1(math.radians(20.0), math.radians(20.0))
         assert result == pytest.approx(0.0, abs=1e-12)
 
     def test_negative_maximal_inclination(self):
         # Negative maximal_inclination_angle, but abs is used in check
-        result = _reduction_factor_inclined_fill_1(-10.0, 20.0)
+        result = _reduction_factor_inclined_fill_1(-math.radians(10.0), math.radians(20.0))
         cos2dmax = math.cos(math.radians(-10.0)) ** 2
         cos2bdyn = math.cos(math.radians(20.0)) ** 2
         expected = math.sqrt((cos2dmax - cos2bdyn) / (1 - cos2dmax))
@@ -395,13 +395,13 @@ class TestReductionFactorInclinedFill1:
         with pytest.raises(
             ValueError, match="must not be greater than the dynamic angle of slope"
         ):
-            _reduction_factor_inclined_fill_1(25.0, 20.0)
+            _reduction_factor_inclined_fill_1(math.radians(25.0), math.radians(20.0))
 
     def test_fraction_negative(self):
         # If dynamic_angle_of_slope is much larger, denominator is non-zero but positive
         # With maximal_inclination_angle=0, should raise ValueError from pre-check
         with pytest.raises(ValueError):
-            _reduction_factor_inclined_fill_1(0.0, 30.0)
+            _reduction_factor_inclined_fill_1(0.0, math.radians(30.0))
 
 
 class TestReductionFactorInclinedFill:
