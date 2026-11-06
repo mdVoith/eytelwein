@@ -34,7 +34,7 @@ def height_difference_from_section_length_and_inclination_angle(
     section_length : Quantity
         The length of the conveyor section (typically in meters).
     inclination_angle : Quantity
-        The angle of inclination of the conveyor (typically in degrees).
+        Angles are accepted in degrees and converted to radians internally.
     unit : str, optional
         The desired unit for the output height difference. Default is "meter".
     precision : int | None, optional
@@ -86,7 +86,7 @@ def height_difference_from_section_length_and_inclination_angle(
 def angle_of_inclination_from_height_difference_and_section_length(
     height_difference: Quantity,
     section_length: Quantity,
-    unit: str = "radian",
+    unit: str = "degree",
     precision: int | None = None,
 ) -> Quantity:
     """
@@ -109,7 +109,7 @@ def angle_of_inclination_from_height_difference_and_section_length(
     section_length : Quantity
         The length of the conveyor section (typically in meters).
     unit : str, optional
-        The desired unit for the output angle. Default is "radian". Common alternatives are "degree".
+        The desired unit for the output angle. Default is "degree". Angles are accepted in degrees and converted to radians internally.
     precision : int | None, optional
         The number of decimal places for the result. Default is None. Use None to skip rounding and retain maximum available precision.
 
@@ -186,7 +186,7 @@ def section_length_from_height_difference_and_inclination_angle(
     height_difference : Quantity
         The vertical height difference of the conveyor section (typically in meters).
     inclination_angle : Quantity
-        The angle of inclination of the conveyor (typically in degrees).
+        Angles are accepted in degrees and converted to radians internally.
     unit : str, optional
         The desired unit for the output section length. Default is "meter".
     precision : int | None, optional

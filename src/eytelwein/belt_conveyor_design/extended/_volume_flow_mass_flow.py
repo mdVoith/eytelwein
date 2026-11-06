@@ -20,8 +20,8 @@ def _maximal_cross_section_skirt_board_known_geometry(
     center_roll_length (float): The length of the center roll.
     skirt_board_width (float): The width of the skirt board.
     skirt_board_height (float): The height of the skirt board.
-    troughing_angle (float): The troughing angle in degrees.
-    equivalent_slope_angle (float): The equivalent slope angle in degrees.
+    troughing_angle (float): The troughing angle in radians.
+    equivalent_slope_angle (float): The equivalent slope angle in radians.
 
     Returns:
     float: The maximal cross-sectional area of the skirt board.
@@ -64,8 +64,8 @@ def _required_skirtboard_height_from_cross_section(
     Parameters:
     center_roll_length (float): The length of the center roll.
     skirt_board_width (float): The width of the skirt board.
-    troughing_angle (float): The troughing angle in degrees.
-    equivalent_slope_angle (float): The equivalent slope angle in degrees.
+    troughing_angle (float): The troughing angle in radians.
+    equivalent_slope_angle (float): The equivalent slope angle in radians.
     cross_section (float): The cross-sectional area.
 
     Returns:

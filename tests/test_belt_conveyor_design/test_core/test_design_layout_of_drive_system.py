@@ -198,8 +198,8 @@ class TestAngleOfInclinationFromHeightDifferenceAndSectionLength:
             height_difference, section_length
         )
 
-        # Expected: asin(0/100) = 0 radians (0 degrees)
-        expected = 0 * u.radian
+        # Expected: asin(0/100) = 0 degrees
+        expected = 0 * u.degree
         assert result.magnitude == pytest.approx(expected.magnitude, abs=1e-6)
         assert result.units == expected.units
 
@@ -211,8 +211,8 @@ class TestAngleOfInclinationFromHeightDifferenceAndSectionLength:
         result = angle_of_inclination_from_height_difference_and_section_length(
             height_difference, section_length
         )
-        # Expected: asin(100/100) = asin(1) = pi/2 radians (90 degrees)
-        expected = (math.pi / 2) * u.radian
+        # Expected: asin(100/100) = 90 degrees
+        expected = 90 * u.degree
         assert result.magnitude == pytest.approx(expected.magnitude, abs=1e-3)
         assert result.units == expected.units
 
@@ -224,8 +224,8 @@ class TestAngleOfInclinationFromHeightDifferenceAndSectionLength:
         result = angle_of_inclination_from_height_difference_and_section_length(
             height_difference, section_length
         )
-        # Expected: asin(50/100) = asin(0.5) = pi/6 radians (30 degrees)
-        expected = (math.pi / 6) * u.radian
+        # Expected: asin(50/100) = 30 degrees
+        expected = 30 * u.degree
         assert result.magnitude == pytest.approx(expected.magnitude, abs=1e-3)
         assert result.units == expected.units
 
@@ -237,8 +237,8 @@ class TestAngleOfInclinationFromHeightDifferenceAndSectionLength:
         result = angle_of_inclination_from_height_difference_and_section_length(
             height_difference, section_length
         )
-        # Expected: asin(-50/100) = asin(-0.5) = -pi/6 radians (-30 degrees)
-        expected = -(math.pi / 6) * u.radian
+        # Expected: asin(-50/100) = -30 degrees
+        expected = -30 * u.degree
         assert result.magnitude == pytest.approx(expected.magnitude, abs=1e-3)
         assert result.units == expected.units
 
@@ -250,9 +250,9 @@ class TestAngleOfInclinationFromHeightDifferenceAndSectionLength:
         result = angle_of_inclination_from_height_difference_and_section_length(
             height_difference, section_length
         )
-        # Expected: asin(18/4303) ≈ 0.00418 radians
-        expected = 0.00418 * u.radian
-        assert result.magnitude == pytest.approx(expected.magnitude, abs=1e-3)
+        # Expected: asin(18/4303) ≈ 0.239 degrees
+        expected = 0.239 * u.degree
+        assert result.magnitude == pytest.approx(expected.magnitude, abs=1e-2)
         assert result.units == expected.units
 
     def test_different_length_units(self):
@@ -263,9 +263,9 @@ class TestAngleOfInclinationFromHeightDifferenceAndSectionLength:
         result = angle_of_inclination_from_height_difference_and_section_length(
             height_difference, section_length
         )
-        # Expected: asin(15/100) = asin(0.15) ≈ 0.150798 radians
-        expected = 0.150798 * u.radian
-        assert result.magnitude == pytest.approx(expected.magnitude, abs=1e-3)
+        # Expected: asin(15/100) ≈ 8.63 degrees
+        expected = 8.63 * u.degree
+        assert result.magnitude == pytest.approx(expected.magnitude, abs=1e-2)
         assert result.units == expected.units
 
     def test_mixed_length_units(self):
@@ -277,10 +277,10 @@ class TestAngleOfInclinationFromHeightDifferenceAndSectionLength:
             height_difference, section_length
         )
 
-        # Expected: asin(5/15.24) = asin(0.328) ≈ 0.334 radians
+        # Expected: asin(5/15.24) ≈ 19.1 degrees
         # 50 feet ≈ 15.24 meters
-        expected = 0.334 * u.radian
-        assert result.magnitude == pytest.approx(expected.magnitude, abs=1e-3)
+        expected = 19.1 * u.degree
+        assert result.magnitude == pytest.approx(expected.magnitude, abs=1e-1)
         assert result.units == expected.units
 
     def test_output_in_degrees(self):
@@ -306,8 +306,8 @@ class TestAngleOfInclinationFromHeightDifferenceAndSectionLength:
             height_difference, section_length, precision=1
         )
 
-        # Expected: 0.5236 radians rounded to 1 decimal place = 0.5
-        assert str(result.magnitude).endswith(".5")
+        # Expected: 30 degrees rounded to 1 decimal place = 30.0
+        assert str(result.magnitude).endswith(".0")
 
     def test_invalid_length_unit(self):
         """Test with invalid length unit."""

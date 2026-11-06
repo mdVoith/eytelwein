@@ -148,7 +148,7 @@ def partial_cross_section_at_water_fill(
     Parameters:
     center_roll_length (Quantity): The length of the center roll as a `Quantity` with units of millimeters.
     usable_belt_width (Quantity): The usable width of the belt as a `Quantity` with units of millimeters.
-    troughing_angle (Quantity): The troughing angle as a `Quantity` with units of degrees.
+    troughing_angle (Quantity): Angles are accepted in degrees and converted to radians internally.
     unit (str, optional): The unit for the returned area. Defaults to "millimeter**2".
     precision (int | None, optional): The number of decimal places to round the result to. Defaults to None. Use None to skip rounding and retain maximum available precision.
 
@@ -221,8 +221,8 @@ def cross_section_of_fill(
     Parameters:
     center_roll_length (Quantity): The length of the center roll as a `Quantity` with units of millimeters.
     usable_belt_width (Quantity): The usable width of the belt as a `Quantity` with units of millimeters.
-    troughing_angle (Quantity): The troughing angle as a `Quantity` with units of degrees.
-    equivalent_slope_angle (Quantity): The equivalent slope angle as a `Quantity` with units of degrees.
+    troughing_angle (Quantity): Angles are accepted in degrees and converted to radians internally.
+    equivalent_slope_angle (Quantity): Angles are accepted in degrees and converted to radians internally.
     unit (str, optional): The unit for the returned area. Defaults to "millimeter**2".
     precision (int | None, optional): The number of decimal places to round the result to. Defaults to None. Use None to skip rounding and retain maximum available precision.
 
@@ -898,8 +898,8 @@ def reduction_factor_inclined_fill_1(
                             (1 - cos²(maximal_inclination_angle)))
 
     Parameters:
-    maximal_inclination_angle (Quantity): The maximal inclination angle of the fill as a `Quantity` with units of degrees.
-    dynamic_angle_of_slope (Quantity): The dynamic angle of slope as a `Quantity` with units of degrees.
+    maximal_inclination_angle (Quantity): Angles are accepted in degrees and converted to radians internally.
+    dynamic_angle_of_slope (Quantity): Angles are accepted in degrees and converted to radians internally.
     unit (str, optional): The unit for the returned factor. Defaults to "dimensionless".
     precision (int | None, optional): The number of decimal places to round the result to. Defaults to None. Use None to skip rounding and retain maximum available precision.
 

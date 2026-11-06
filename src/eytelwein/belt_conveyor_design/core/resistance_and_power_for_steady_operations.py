@@ -378,7 +378,7 @@ def friction_resistance_of_skirting_board_from_material_flow(
         Length of the central roller in the 3-roller idler set (typically in m)
     troughing_angle : Quantity
         Troughing angle of the conveyor belt (angle of trough formation).
-        Typically in degrees or radians.
+        Angles are accepted in degrees and converted to radians internally.
     friction_coefficient_material_skirting : Quantity
         Coefficient of friction between material and skirting surface (dimensionless)
     unit : str, optional
@@ -559,7 +559,7 @@ def friction_resistance_per_meter_of_skirting_board_from_material_flow(
         Length of the central roller in the 3-roller idler set (typically in m)
     troughing_angle : Quantity
         Troughing angle of the conveyor belt (angle of trough formation).
-        Typically in degrees or radians.
+        Angles are accepted in degrees and converted to radians internally.
     friction_coefficient_material_skirting : Quantity
         Coefficient of friction between material and skirting surface (dimensionless)
     unit : str, optional
